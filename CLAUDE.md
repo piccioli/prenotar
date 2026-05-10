@@ -15,7 +15,7 @@
 
 | Layer | Scelta |
 |-------|--------|
-| Framework | Laravel 11 (PHP 8.3 via Sail) |
+| Framework | Laravel 11 (PHP 8.4 via Sail) |
 | Admin/panel | Filament 3 |
 | Database | MariaDB 10.11 |
 | Frontend dinamico | Livewire 3 + Alpine.js + TailwindCSS (via Filament) |

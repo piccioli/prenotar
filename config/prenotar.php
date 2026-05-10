@@ -8,7 +8,7 @@ return [
 
     'polizze' => [
         'trasporti' => '403463855',
-        'all_risk'  => '403448078',
+        'all_risk' => '403448078',
     ],
 
     'documenti_giorni_minimi' => 10,
