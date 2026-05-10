@@ -4,48 +4,97 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
+/**
+ * Un user può avere sezione_id XOR sottosezione_id (o entrambi null per admin/gr_manager).
+ * Questo invariante è mantenuto a livello applicativo (factory, policy, UI) e non via DB constraint.
+ */
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
+    use HasRoles;
+    use Notifiable;
+
     protected $fillable = [
         'name',
         'email',
         'password',
+        'codice_cai',
+        'sezione_id',
+        'sottosezione_id',
+        'contact_email',
+        'email_is_fallback',
+        'is_active',
+        'last_login_at',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'email_is_fallback' => 'boolean',
+            'is_active' => 'boolean',
+            'last_login_at' => 'datetime',
         ];
+    }
+
+    /** Email effettiva per notifiche: contact_email se impostata, altrimenti email di login (§3.1). */
+    public function getEffectiveContactEmailAttribute(): string
+    {
+        return $this->contact_email ?? $this->email;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->hasRole('admin');
+    }
+
+    public function isGrManager(): bool
+    {
+        return $this->hasRole('gr_manager');
+    }
+
+    public function isSezione(): bool
+    {
+        return $this->hasRole('sezione');
+    }
+
+    /** @return BelongsTo<Sezione, $this> */
+    public function sezione(): BelongsTo
+    {
+        return $this->belongsTo(Sezione::class);
+    }
+
+    /** @return BelongsTo<Sottosezione, $this> */
+    public function sottosezione(): BelongsTo
+    {
+        return $this->belongsTo(Sottosezione::class);
+    }
+
+    /** @return HasMany<Prenotazione, $this> */
+    public function prenotazioni(): HasMany
+    {
+        return $this->hasMany(Prenotazione::class);
+    }
+
+    /** @return HasMany<Prenotazione, $this> */
+    public function prenotazioniApprovate(): HasMany
+    {
+        return $this->hasMany(Prenotazione::class, 'approvato_da');
     }
 }

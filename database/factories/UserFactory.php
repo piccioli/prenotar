@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Models\Sezione;
+use App\Models\Sottosezione;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -14,16 +16,8 @@ use Illuminate\Support\Str;
  */
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
     protected static ?string $password;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
@@ -32,16 +26,52 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'codice_cai' => null,
+            'sezione_id' => null,
+            'sottosezione_id' => null,
+            'contact_email' => null,
+            'email_is_fallback' => false,
+            'is_active' => true,
+            'last_login_at' => null,
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);
+    }
+
+    public function admin(): static
+    {
+        return $this->afterCreating(fn (User $user) => $user->assignRole('admin'));
+    }
+
+    public function grManager(): static
+    {
+        return $this->afterCreating(fn (User $user) => $user->assignRole('gr_manager'));
+    }
+
+    public function sezione(?Sezione $sezione = null): static
+    {
+        return $this
+            ->state(fn (array $attributes) => [
+                'sezione_id' => $sezione !== null ? $sezione->id : Sezione::factory(),
+                'sottosezione_id' => null,
+                'codice_cai' => (string) fake()->unique()->numberBetween(9200000, 9299999),
+            ])
+            ->afterCreating(fn (User $user) => $user->assignRole('sezione'));
+    }
+
+    public function sottosezione(?Sottosezione $sottosezione = null): static
+    {
+        return $this
+            ->state(fn (array $attributes) => [
+                'sezione_id' => null,
+                'sottosezione_id' => $sottosezione !== null ? $sottosezione->id : Sottosezione::factory(),
+                'codice_cai' => (string) fake()->unique()->numberBetween(9100000, 9199999),
+            ])
+            ->afterCreating(fn (User $user) => $user->assignRole('sezione'));
     }
 }
