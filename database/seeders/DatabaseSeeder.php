@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             TorriSeeder::class,
             AdminDevSeeder::class,
+            LocalDevSeeder::class,
         ]);
     }
 }
