@@ -40,6 +40,8 @@ Dopo `migrate:fresh --seed` sono disponibili questi account (tutti con password 
 | GR Lombardia | `gr@local.test` | `http://localhost/gr` |
 | Sezione (es. Abbiategrasso) | `abbiategrasso@cai.it` | `http://localhost/sezione` |
 
+Ogni ruolo deve usare **il proprio URL di login** (`/admin`, `/gr`, `/sezione`). Se apri `/admin/login` con un account sezione, Filament mostra «dati di accesso non corretti» anche se email e password sono giuste: in quel caso apri **`/sezione/login`**.
+
 Il seeder importa automaticamente tutte le 152 sezioni e 77 sottosezioni CAI Lombardia
 dall'Excel di progettazione (se presente in `DOCUMENTI PER LA PROGETTAZIONE/`) e imposta
 `password` come password su tutti i 230 account.

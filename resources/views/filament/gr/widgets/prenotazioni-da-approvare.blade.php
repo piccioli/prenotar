@@ -1,3 +1,4 @@
+<div class="space-y-4">
 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
     {{-- Card: Da approvare --}}
     <div class="fi-wi-stats-overview-stat relative rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
@@ -31,7 +32,7 @@
 </div>
 
 @if($this->getCountDaApprovare() > 0)
-<div class="mt-4 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
+<div class="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
     <div class="border-b border-gray-100 px-6 py-3 dark:border-white/10">
         <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Richieste in attesa di approvazione</h3>
     </div>
@@ -59,3 +60,4 @@
     </ul>
 </div>
 @endif
+</div>

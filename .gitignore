@@ -24,4 +24,7 @@ yarn-error.log
 
 # Materiali di progettazione (locali, non versionati)
 /DOCUMENTI PER LA PROGETTAZIONE/
+
+# Appunti e file locali (credenziali, promemoria) — non versionare
+/messages/
 .DS_Store

@@ -95,4 +95,15 @@ class PrenotazioneFactory extends Factory
             'pdf_firmato_path' => 'fake/pdf-firmato.pdf',
         ]);
     }
+
+    public function inviatoAssicurazione(): static
+    {
+        return $this->state([
+            'status' => PrenotazioneStatus::InviatoAssicurazione,
+            'approvato_at' => now()->subDays(5),
+            'pdf_firmato_at' => now()->subDays(4),
+            'pdf_firmato_path' => 'fake/pdf-firmato.pdf',
+            'inviato_assicurazione_at' => now()->subDays(2),
+        ]);
+    }
 }
