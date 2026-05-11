@@ -6,6 +6,18 @@ Il formato segue le idee di [Keep a Changelog](https://keepachangelog.com/it/1.1
 
 ## [Non rilasciato]
 
+## [0.2.0] - 2026-05-11
+
+### Aggiunto
+
+- **Import Excel**: `ExcelImportService`, DTO esito import, comando Artisan `sync:excel`; pagina Filament **Importa Excel** e risorsa in sola lettura **ExcelImport** nel pannello admin.
+- **Notifiche primo accesso**: `SetPasswordNotification` con CC di fallback, evento/listener collegati.
+- **Pannelli Filament** (placeholder Fase 2): provider **GR** (`/gr`) e **Sezione** (`/sezione`).
+- **Accesso ai pannelli**: `User::canAccessPanel`, middleware **EnsureContactEmail**, pagina **FirstAccess** per completare i dati di contatto.
+- **Login / reset password** con branding (nome app e logo placeholder).
+- **AdminDevSeeder**: utente admin di sviluppo solo in `local` / `testing`.
+- **Test** su import Excel, flusso auth, accesso ai pannelli e redirect al primo accesso.
+
 ## [0.1.0] - 2026-05-10
 
 ### Aggiunto
