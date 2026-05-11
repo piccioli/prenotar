@@ -6,6 +6,15 @@ Il formato segue le idee di [Keep a Changelog](https://keepachangelog.com/it/1.1
 
 ## [Non rilasciato]
 
+## [0.3.0] - 2026-05-11
+
+### Aggiunto
+
+- **Fase 3 — pannello sezione** (`/sezione`): wizard prenotazione e calendario torri.
+- **State machine prenotazioni** e sistema di notifiche collegato alle transizioni.
+- **LocalDevSeeder**: sezioni e sottosezioni CAI Lombardia, utenti admin e GR per sviluppo locale.
+- **README**: istruzioni `migrate:fresh --seed` e account di sviluppo.
+
 ## [0.2.0] - 2026-05-11
 
 ### Aggiunto
