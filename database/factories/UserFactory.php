@@ -74,4 +74,24 @@ class UserFactory extends Factory
             ])
             ->afterCreating(fn (User $user) => $user->assignRole('sezione'));
     }
+
+    public function withFallbackEmail(): static
+    {
+        return $this->state(function (array $attributes) {
+            $codice = $attributes['codice_cai'] ?? (string) fake()->unique()->numberBetween(9200000, 9299999);
+
+            return [
+                'codice_cai' => $codice,
+                'email' => "{$codice}@grlomct.it",
+                'email_is_fallback' => true,
+            ];
+        });
+    }
+
+    public function withContactEmail(string $email): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'contact_email' => $email,
+        ]);
+    }
 }
