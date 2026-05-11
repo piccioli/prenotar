@@ -19,6 +19,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application version
+    |--------------------------------------------------------------------------
+    |
+    | Semantic version and release date of this deployment (UI, API, support).
+    | Set APP_VERSION and APP_VERSION_DATE when releasing; use ISO Y-m-d for
+    | the date so it parses reliably (format for display in the app / locale).
+    |
+    */
+
+    'version' => env('APP_VERSION', '0.1.0'),
+
+    'version_date' => env('APP_VERSION_DATE', '2026-05-10'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |
