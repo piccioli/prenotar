@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -16,7 +18,7 @@ use Spatie\Permission\Traits\HasRoles;
  * Un user può avere sezione_id XOR sottosezione_id (o entrambi null per admin/gr_manager).
  * Questo invariante è mantenuto a livello applicativo (factory, policy, UI) e non via DB constraint.
  */
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory;
@@ -51,6 +53,20 @@ class User extends Authenticatable
             'is_active' => 'boolean',
             'last_login_at' => 'datetime',
         ];
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        if (! $this->is_active) {
+            return false;
+        }
+
+        return match ($panel->getId()) {
+            'admin' => $this->isAdmin(),
+            'gr' => $this->isGrManager(),
+            'sezione' => $this->isSezione(),
+            default => false,
+        };
     }
 
     /** Email effettiva per notifiche: contact_email se impostata, altrimenti email di login (§3.1). */
