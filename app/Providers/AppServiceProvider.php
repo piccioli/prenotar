@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Events\UserSetPasswordRequested;
+use App\Listeners\SendSetPasswordNotification;
 use App\Models\Prenotazione;
 use App\Models\Sezione;
 use App\Models\Sottosezione;
@@ -14,6 +16,7 @@ use App\Policies\SezionePolicy;
 use App\Policies\SottosezionePolicy;
 use App\Policies\TorrePolicy;
 use App\Policies\UserPolicy;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -28,5 +31,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Torre::class, TorrePolicy::class);
         Gate::policy(Sezione::class, SezionePolicy::class);
         Gate::policy(Sottosezione::class, SottosezionePolicy::class);
+
+        Event::listen(UserSetPasswordRequested::class, SendSetPasswordNotification::class);
     }
 }
