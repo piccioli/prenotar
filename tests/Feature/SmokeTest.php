@@ -5,8 +5,8 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
-it('serves the welcome page', function () {
-    $this->get('/')->assertStatus(200);
+it('redirects the home URL to the Filament admin panel', function () {
+    $this->get('/')->assertRedirect('/admin');
 });
 
 it('connects to the database', function () {
