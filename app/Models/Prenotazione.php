@@ -8,17 +8,31 @@ use App\Enums\PrenotazioneStatus;
 use App\Enums\ResponsabileTipo;
 use Database\Factories\PrenotazioneFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
 /**
+ * @property int $id
+ * @property int|null $torre_id
  * @property PrenotazioneStatus $status
  * @property ResponsabileTipo $responsabile_tipo
+ * @property Carbon $data_inizio_prenotazione
+ * @property Carbon $data_fine_prenotazione
+ * @property Carbon $data_inizio_evento
+ * @property Carbon $data_fine_evento
+ * @property Carbon|null $data_ritiro
+ * @property Carbon|null $data_riconsegna
+ *
+ * @method static Builder<Prenotazione> attive()
+ * @method static Builder<Prenotazione> archiviate()
+ * @method static Builder<Prenotazione> proprietarioOf(\App\Models\User $user)
  */
 class Prenotazione extends Model implements HasMedia
 {
@@ -186,5 +200,27 @@ class Prenotazione extends Model implements HasMedia
     public function scopeProprietarioOf(Builder $query, User $user): Builder
     {
         return $query->where('user_id', $user->id);
+    }
+
+    /** @return Collection<int, Prenotazione> */
+    public static function eventiCalendarioPubblico(
+        Carbon $start,
+        Carbon $end,
+        ?int $torreId = null,
+    ): Collection {
+        $stati = [
+            PrenotazioneStatus::Inviata->value,
+            PrenotazioneStatus::Approvata->value,
+            PrenotazioneStatus::InviatoPdfFirmato->value,
+            PrenotazioneStatus::InviatoAssicurazione->value,
+        ];
+
+        return Prenotazione::query()
+            ->with('torre')
+            ->whereIn('status', $stati)
+            ->where('data_inizio_prenotazione', '<=', $end->toDateString())
+            ->where('data_fine_prenotazione', '>=', $start->toDateString())
+            ->when($torreId !== null, fn (Builder $q): Builder => $q->where('torre_id', $torreId))
+            ->get();
     }
 }

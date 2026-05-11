@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\FirstAccessPage;
-use App\Filament\Sezione\Widgets\PlaceholderWidget;
+use App\Filament\Sezione\Widgets\PrenotazioniDashboardWidget;
 use App\Http\Middleware\EnsureContactEmail;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -21,6 +21,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
 
 class SezionePanelProvider extends PanelProvider
 {
@@ -36,6 +37,9 @@ class SezionePanelProvider extends PanelProvider
             ])
             ->brandName('Prenotar — Sezione')
             ->brandLogo(asset('images/cai-lombardia-placeholder.svg'))
+            ->plugins([
+                FilamentFullCalendarPlugin::make(),
+            ])
             ->discoverResources(in: app_path('Filament/Sezione/Resources'), for: 'App\\Filament\\Sezione\\Resources')
             ->discoverPages(in: app_path('Filament/Sezione/Pages'), for: 'App\\Filament\\Sezione\\Pages')
             ->pages([
@@ -44,7 +48,7 @@ class SezionePanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Sezione/Widgets'), for: 'App\\Filament\\Sezione\\Widgets')
             ->widgets([
-                PlaceholderWidget::class,
+                PrenotazioniDashboardWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
