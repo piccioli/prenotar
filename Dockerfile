@@ -51,6 +51,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY docker/php/php.ini /usr/local/etc/php/conf.d/99-prenotar.ini
+COPY docker/php/fpm-zzz-prenotar.conf /usr/local/etc/php-fpm.d/zzz-prenotar.conf
 
 WORKDIR /var/www/html
 

@@ -8,7 +8,8 @@ ensure_dirs() {
 
 if [ "$(id -u)" = "0" ]; then
     ensure_dirs
-    chown -R www-data:www-data storage bootstrap/cache || true
+    # public/ serve per `storage:link` e `filament:optimize` (symlink in public)
+    chown -R www-data:www-data storage bootstrap/cache public || true
     exec gosu www-data "$0" "$@"
 fi
 

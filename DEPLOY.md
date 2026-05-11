@@ -21,7 +21,7 @@ Health check HTTP: `GET /up` (Laravel 11).
    - `APP_DEBUG=false`, `APP_URL` con **https** se il TLS è davanti allo stack (reverse proxy o CDN).
    - `TRUSTED_PROXIES=*` se c’è un proxy esterno che termina TLS o inoltra header `X-Forwarded-*`.
    - `DB_PASSWORD`, `DB_ROOT_PASSWORD` (root solo per il container MariaDB), `DB_DATABASE`, `DB_USERNAME` (devono coincidere con `MARIADB_*` nel compose — stessi valori in `.env`).
-   - SMTP (`MAIL_*`).
+   - Posta: con `docker-compose.production.yml` è incluso **Mailpit** (cattura SMTP, nessun invio rete). Valori consigliati nel template: `MAIL_HOST=mailpit`, `MAIL_PORT=1025`, `MAIL_SCHEME=null`. Interfaccia web su `http://127.0.0.1:8025` sul server (porta sovrascrivibile con `MAILPIT_UI_PORT` nel compose); per SMTP reale in futuro sostituire `MAIL_*` e rimuovere il servizio `mailpit` dal compose se non serve più.
 3. Con **solo** Docker Compose i host DB/Redis sono già `mariadb` e `redis` (vedi `.env.production.example`).
 4. **Allegati**: `FILESYSTEM_DISK=local` persiste sotto `storage/app` nel volume `app_storage`. Per S3 valorizza `AWS_*` (vedi anche `config/filesystems.php`).
 
@@ -38,6 +38,27 @@ docker compose -f docker-compose.production.yml up -d
 
 - **HTTP**: porta host `80` di default. Per cambiarla: `HTTP_PUBLISH=8080` nel `.env` o in shell prima di `up`.
 - **TLS**: termina HTTPS davanti a questo stack (es. reverse proxy aziendale, Traefik, Caddy) oppure estendi il compose con un servizio che espone 443.
+- **Dominio pubblico** (es. `https://prenotar.montagnaservizi.it`): il proxy esterno deve inoltrare verso la porta pubblicata dallo stack (default `80` su `HTTP_PUBLISH`) impostando `Host`, `X-Forwarded-Proto: https`, `X-Forwarded-For` e gli altri header previsti dalla tua infrastruttura. In `.env` usa `APP_URL=https://prenotar.montagnaservizi.it` e `TRUSTED_PROXIES=*` (o gli IP del proxy) come nel template.
+
+Esempio sintetico **Nginx** (TLS gestito da questo server; upstream = stack Docker sulla porta host `80`):
+
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name prenotar.montagnaservizi.it;
+    # ssl_certificate /path/fullchain.pem;
+    # ssl_certificate_key /path/privkey.pem;
+
+    location / {
+        proxy_pass http://127.0.0.1:80;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+    }
+}
+```
 
 ---
 
@@ -65,6 +86,7 @@ Opzionale: migrazioni automatiche ad ogni avvio del container `app` — imposta 
 | `scheduler`| `php artisan schedule:work` |
 | `mariadb`  | Dati in volume `mariadb_data` |
 | `redis`    | Code, sessioni, cache; volume `redis_data` (AOF) |
+| `mailpit`  | SMTP di sviluppo/cattura (porta 1025 interna); UI su `127.0.0.1:8025` (host) |
 
 Allegati e file privati medialibrary: volume **`app_storage`** montato su `storage/app` per `app`, `queue` e `scheduler`.
 
