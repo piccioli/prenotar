@@ -1,0 +1,116 @@
+# Stack produzione Prenotar (Nginx + PHP-FPM + MariaDB + Redis + worker + scheduler).
+# Uso: copia .env.production.example in .env, valorizza segreti e DB_*, poi:
+#   docker compose -f docker-compose.production.yml build
+#   docker compose -f docker-compose.production.yml up -d
+# Prima installazione DB: docker compose -f docker-compose.production.yml exec app php artisan migrate --force
+
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: nginx
+    ports:
+      - "${HTTP_PUBLISH:-80}:80"
+    depends_on:
+      - app
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app
+    env_file:
+      - .env
+    environment:
+      AUTORUN_OPTIMIZE: "${AUTORUN_OPTIMIZE:-1}"
+      AUTORUN_MIGRATIONS: "${AUTORUN_MIGRATIONS:-0}"
+    volumes:
+      - app_storage:/var/www/html/storage/app
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app
+    entrypoint: ["/usr/local/bin/docker-entrypoint-worker.sh"]
+    command:
+      - php
+      - artisan
+      - queue:work
+      - redis
+      - --sleep=3
+      - --tries=3
+      - --max-time=3600
+    env_file:
+      - .env
+    environment:
+      AUTORUN_OPTIMIZE: "0"
+    volumes:
+      - app_storage:/var/www/html/storage/app
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      app:
+        condition: service_started
+    restart: unless-stopped
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app
+    entrypoint: ["/usr/local/bin/docker-entrypoint-worker.sh"]
+    command: [php, artisan, schedule:work]
+    env_file:
+      - .env
+    environment:
+      AUTORUN_OPTIMIZE: "0"
+    volumes:
+      - app_storage:/var/www/html/storage/app
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      app:
+        condition: service_started
+    restart: unless-stopped
+
+  mariadb:
+    image: mariadb:10.11
+    environment:
+      MARIADB_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
+      MARIADB_DATABASE: "${DB_DATABASE}"
+      MARIADB_USER: "${DB_USERNAME}"
+      MARIADB_PASSWORD: "${DB_PASSWORD}"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+volumes:
+  mariadb_data:
+  redis_data:
+  app_storage:

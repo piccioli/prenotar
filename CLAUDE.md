@@ -6,6 +6,7 @@
 **Scopo**: Sistema di prenotazione delle 2 torri di arrampicata mobili CityWall (CST, €38.131,10 cad.) del CAI GR Lombardia.
 **Scope**: Solo CAI GR Lombardia — 152 sezioni + 77 sottosezioni, ~230 account totali.
 **URL produzione**: `https://prenotar.montagnaservizi.it`
+**Deploy**: checklist in [`DEPLOY.md`](./DEPLOY.md); template env [`.env.production.example`](./.env.production.example).
 **Repository**: `prenotar`
 **Documento di riferimento** (locale, non versionato): `./DOCUMENTI PER LA PROGETTAZIONE/PIANO_REALIZZAZIONE.md`
 
@@ -29,7 +30,8 @@
 | Settings | spatie/laravel-settings |
 | Impersonate | stechstudio/filament-impersonate |
 | Queue | Redis + (Horizon in Fase 7) |
-| Container | Laravel Sail (Docker Compose) |
+| Container dev | Laravel Sail (Docker Compose) |
+| Container prod | `docker-compose.production.yml` + `Dockerfile` multi-stage (Nginx, PHP-FPM, MariaDB, Redis, queue, scheduler) |
 | Code quality | Pint (preset laravel) + Larastan level 6 + Pest |
 
 ---

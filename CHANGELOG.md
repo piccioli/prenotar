@@ -6,6 +6,11 @@ Il formato segue le idee di [Keep a Changelog](https://keepachangelog.com/it/1.1
 
 ## [Non rilasciato]
 
+### Aggiunto
+
+- **Deploy produzione**: guida [`DEPLOY.md`](./DEPLOY.md), template [`.env.production.example`](./.env.production.example), variabile opzionale `TRUSTED_PROXIES` e trust proxy in `bootstrap/app.php` dietro reverse proxy.
+- **Stack Docker produzione**: `Dockerfile` multi-stage (asset Vite, Composer, PHP-FPM, immagine Nginx), `docker-compose.production.yml` (MariaDB 10.11, Redis 7, worker, `schedule:work`, volumi DB/storage), script entrypoint in `docker/php/`, config Nginx in `docker/nginx/`.
+
 ## [0.3.0] - 2026-05-11
 
 ### Aggiunto

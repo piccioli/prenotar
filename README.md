@@ -54,7 +54,20 @@ dall'Excel di progettazione (se presente in `DOCUMENTI PER LA PROGETTAZIONE/`) e
 ## Documentazione tecnica
 
 - **Guida operativa**: [`CLAUDE.md`](./CLAUDE.md) — stack, comandi, convenzioni, mappa pannelli, roadmap fasi.
+- **Deploy produzione (Docker)**: [`DEPLOY.md`](./DEPLOY.md) — `docker-compose.production.yml`, build, migrazioni, volumi.
+- **Template env produzione**: [`.env.production.example`](./.env.production.example) (copia in `.env` sul server e compila i segreti).
 - **Piano di realizzazione**: `DOCUMENTI PER LA PROGETTAZIONE/PIANO_REALIZZAZIONE.md` (locale, non versionato).
+
+### Produzione con Docker
+
+```bash
+cp .env.production.example .env   # poi valorizza APP_KEY, DB_*, MAIL_*, ecc.
+docker compose -f docker-compose.production.yml build
+docker compose -f docker-compose.production.yml up -d
+docker compose -f docker-compose.production.yml exec app php artisan migrate --force
+```
+
+Dettagli (porte, TLS davanti allo stack, aggiornamenti): [`DEPLOY.md`](./DEPLOY.md).
 
 ## Tecnologie principali
 
