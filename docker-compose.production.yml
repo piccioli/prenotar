@@ -1,4 +1,5 @@
 # Stack produzione Prenotar (Nginx + PHP-FPM + MariaDB + Redis + worker + scheduler).
+# Sviluppo Docker: in `.env` imposta `COMPOSER_INSTALL_DEV=1` (Composer con dev deps, es. Faker per seed demo) e `APP_ENV=local`.
 # Uso: copia .env.production.example in .env, valorizza segreti e DB_*, poi:
 #   docker compose -f docker-compose.production.yml build
 #   docker compose -f docker-compose.production.yml up -d
@@ -10,6 +11,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: nginx
+      args:
+        COMPOSER_INSTALL_DEV: ${COMPOSER_INSTALL_DEV:-0}
     ports:
       - "${HTTP_PUBLISH:-80}:80"
     depends_on:
@@ -21,6 +24,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: app
+      args:
+        COMPOSER_INSTALL_DEV: ${COMPOSER_INSTALL_DEV:-0}
     env_file:
       - .env
     environment:
@@ -42,6 +47,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: app
+      args:
+        COMPOSER_INSTALL_DEV: ${COMPOSER_INSTALL_DEV:-0}
     entrypoint: ["/usr/local/bin/docker-entrypoint-worker.sh"]
     command:
       - php
@@ -73,6 +80,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: app
+      args:
+        COMPOSER_INSTALL_DEV: ${COMPOSER_INSTALL_DEV:-0}
     entrypoint: ["/usr/local/bin/docker-entrypoint-worker.sh"]
     command: [php, artisan, schedule:work]
     env_file:

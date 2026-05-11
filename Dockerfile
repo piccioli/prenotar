@@ -15,29 +15,40 @@ RUN npm run build
 
 FROM composer:2 AS vendor
 
+ARG COMPOSER_INSTALL_DEV=0
+
 WORKDIR /app
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
 COPY composer.json composer.lock ./
 
-RUN composer install \
-    --no-dev \
-    --no-scripts \
-    --no-autoloader \
-    --prefer-dist \
-    --ignore-platform-reqs
+RUN if [ "$COMPOSER_INSTALL_DEV" = "1" ]; then \
+      composer install --no-scripts --no-autoloader --prefer-dist --ignore-platform-reqs; \
+    else \
+      composer install --no-dev --no-scripts --no-autoloader --prefer-dist --ignore-platform-reqs; \
+    fi
 
 COPY . .
 
 COPY --from=assets /app/public/build ./public/build
 
-RUN composer dump-autoload --optimize --no-dev --no-interaction \
-    && cp .env.production.example .env \
-    && php artisan key:generate --force --no-interaction \
-    && php artisan package:discover --ansi --no-interaction \
-    && php artisan filament:upgrade --ansi --no-interaction || true \
-    && rm -f .env
+RUN mkdir -p bootstrap/cache storage/framework/sessions storage/framework/views storage/framework/cache/data \
+    && if [ "$COMPOSER_INSTALL_DEV" = "1" ]; then \
+      composer dump-autoload --optimize --no-interaction \
+      && cp .env.production.example .env \
+      && php artisan key:generate --force --no-interaction \
+      && php artisan package:discover --ansi --no-interaction \
+      && php artisan filament:upgrade --ansi --no-interaction || true \
+      && rm -f .env; \
+    else \
+      composer dump-autoload --optimize --no-dev --no-interaction \
+      && cp .env.production.example .env \
+      && php artisan key:generate --force --no-interaction \
+      && php artisan package:discover --ansi --no-interaction \
+      && php artisan filament:upgrade --ansi --no-interaction || true \
+      && rm -f .env; \
+    fi
 
 FROM php:8.4-fpm-bookworm AS app
 

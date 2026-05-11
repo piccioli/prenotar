@@ -24,10 +24,14 @@ use Illuminate\Support\Facades\Hash;
  *
  * Uso: sail artisan migrate:fresh --seed
  *      oppure: sail artisan db:seed --class=LocalDevSeeder
+ *
+ * File Excel (in ordine): `DOCUMENTI PER LA PROGETTAZIONE/<nome>.xlsx`,
+ * poi `storage/app/private/<nome>.{xlsx,xls}`; se in `storage/app/private/` c’è un solo
+ * file .xlsx/.xls viene usato quello.
  */
 class LocalDevSeeder extends Seeder
 {
-    private const EXCEL_PATH = 'DOCUMENTI PER LA PROGETTAZIONE/2026_MS_Sezioni_SottoSezioni_GR_Gruppi Regionali ETS.xlsx';
+    private const EXCEL_FILENAME = '2026_MS_Sezioni_SottoSezioni_GR_Gruppi Regionali ETS.xlsx';
 
     private const DEMO_NOME_PREFIX = '[DEV] ';
 
@@ -44,6 +48,36 @@ class LocalDevSeeder extends Seeder
         $this->creaPrenotazioniDemoCalendario();
     }
 
+    private function resolveExcelPath(): ?string
+    {
+        $documenti = base_path('DOCUMENTI PER LA PROGETTAZIONE/'.self::EXCEL_FILENAME);
+        if (is_file($documenti)) {
+            return $documenti;
+        }
+
+        $baseName = pathinfo(self::EXCEL_FILENAME, PATHINFO_FILENAME);
+        foreach (['xlsx', 'xls', 'XLSX', 'XLS'] as $ext) {
+            $candidate = storage_path("app/private/{$baseName}.{$ext}");
+            if (is_file($candidate)) {
+                return $candidate;
+            }
+        }
+
+        $privateDir = storage_path('app/private');
+        if (! is_dir($privateDir)) {
+            return null;
+        }
+
+        $matches = [];
+        foreach (glob($privateDir.'/*.{xlsx,xls,XLSX,XLS}', GLOB_BRACE) ?: [] as $file) {
+            if (is_file($file)) {
+                $matches[] = $file;
+            }
+        }
+
+        return count($matches) === 1 ? $matches[0] : null;
+    }
+
     private function importaSeSeVuoto(): void
     {
         if (Sezione::count() > 0) {
@@ -52,16 +86,16 @@ class LocalDevSeeder extends Seeder
             return;
         }
 
-        $path = base_path(self::EXCEL_PATH);
+        $path = $this->resolveExcelPath();
 
-        if (! file_exists($path)) {
-            $this->command->warn('File Excel non trovato: '.self::EXCEL_PATH);
+        if ($path === null) {
+            $this->command->warn('File Excel non trovato (DOCUMENTI PER LA PROGETTAZIONE/'.self::EXCEL_FILENAME.' o storage/app/private/).');
             $this->command->warn('Esegui prima l\'import manuale dal pannello /admin.');
 
             return;
         }
 
-        $this->command->info('Importazione sezioni/sottosezioni CAI Lombardia...');
+        $this->command->info('Importazione sezioni/sottosezioni CAI Lombardia da: '.$path);
 
         // Sopprime le email di SetPassword durante il seeding
         Event::fake([UserSetPasswordRequested::class]);
@@ -124,6 +158,12 @@ class LocalDevSeeder extends Seeder
 
     private function creaPrenotazioniDemoCalendario(): void
     {
+        if (! class_exists(\Faker\Factory::class)) {
+            $this->command->warn('Faker non installato (es. `composer install --no-dev`): prenotazioni demo calendario saltate.');
+
+            return;
+        }
+
         $torri = Torre::query()->where('is_active', true)->orderBy('id')->get();
         if ($torri->isEmpty()) {
             $this->command->warn('Nessuna torre attiva — prenotazioni demo calendario saltate.');
