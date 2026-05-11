@@ -104,13 +104,13 @@ docker compose -f docker-compose.production.yml exec app php artisan about
 Immagine applicativa (PHP-FPM):
 
 ```bash
-docker build --target app -t prenotar-app:0.3.0 .
+docker build --target app -t prenotar-app:0.4.0 .
 ```
 
 Immagine Nginx (solo `public/` + config):
 
 ```bash
-docker build --target nginx -t prenotar-nginx:0.3.0 .
+docker build --target nginx -t prenotar-nginx:0.4.0 .
 ```
 
 ---
