@@ -2,14 +2,16 @@
 
 declare(strict_types=1);
 
-namespace App\Filament\Sezione\Resources\PrenotazioneResource\Pages;
+namespace App\Filament\Gr\Resources\PrenotazioneResource\Pages;
 
 use App\Enums\PrenotazioneStatus;
 use App\Enums\ResponsabileTipo;
-use App\Filament\Sezione\Resources\PrenotazioneResource;
+use App\Filament\Gr\Resources\PrenotazioneResource;
 use App\Models\Prenotazione;
+use App\Models\Torre;
 use App\Services\PrenotazioneStateMachine;
 use Filament\Actions;
+use Filament\Forms;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\Tabs;
@@ -35,24 +37,78 @@ class ViewPrenotazione extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\EditAction::make()
-                ->visible(fn (): bool => auth()->user()->can('update', $this->prenotazione())),
-
-            Actions\Action::make('invia_richiesta')
-                ->label('Invia richiesta al GR')
-                ->icon('heroicon-o-paper-airplane')
+            Actions\Action::make('approva')
+                ->label('Approva')
+                ->icon('heroicon-o-check-circle')
                 ->color('success')
-                ->visible(fn (): bool => $this->prenotazione()->status === PrenotazioneStatus::Bozza
-                    && $this->prenotazione()->hasMedia('delibera_consiglio')
-                    && auth()->user()->can('update', $this->prenotazione()))
-                ->requiresConfirmation()
-                ->action(function (): void {
-                    app(PrenotazioneStateMachine::class)->inviaRichiesta($this->prenotazione(), auth()->user());
-                    Notification::make()
-                        ->title('Richiesta inviata')
-                        ->success()
-                        ->send();
-                    $this->refreshFormData(['status']);
+                ->visible(fn (): bool => $this->prenotazione()->status === PrenotazioneStatus::Inviata
+                    && auth()->user()->can('approve', $this->prenotazione()))
+                ->form([
+                    Forms\Components\Select::make('torre_id_override')
+                        ->label('Torre da assegnare')
+                        ->helperText('Lascia vuoto per mantenere la torre scelta dalla sezione.')
+                        ->options(Torre::where('is_active', true)->pluck('nome', 'id'))
+                        ->nullable()
+                        ->searchable(),
+                ])
+                ->action(function (array $data): void {
+                    $pren = $this->prenotazione();
+                    $torreId = filled($data['torre_id_override'] ?? null)
+                        ? (int) $data['torre_id_override']
+                        : null;
+                    app(PrenotazioneStateMachine::class)->approva($pren, auth()->user(), $torreId);
+                    Notification::make()->title('Prenotazione approvata')->success()->send();
+                    $this->redirect(PrenotazioneResource::getUrl('index'));
+                }),
+
+            Actions\Action::make('rifiuta')
+                ->label('Rifiuta')
+                ->icon('heroicon-o-x-circle')
+                ->color('danger')
+                ->visible(fn (): bool => $this->prenotazione()->status === PrenotazioneStatus::Inviata
+                    && auth()->user()->can('reject', $this->prenotazione()))
+                ->form([
+                    Forms\Components\Textarea::make('motivo')
+                        ->label('Motivo del rifiuto')
+                        ->required()
+                        ->maxLength(1000)
+                        ->rows(4),
+                ])
+                ->action(function (array $data): void {
+                    app(PrenotazioneStateMachine::class)->rifiuta(
+                        $this->prenotazione(),
+                        auth()->user(),
+                        $data['motivo'],
+                    );
+                    Notification::make()->title('Prenotazione rifiutata')->warning()->send();
+                    $this->redirect(PrenotazioneResource::getUrl('index'));
+                }),
+
+            Actions\Action::make('reassign_torre')
+                ->label('Riassegna torre')
+                ->icon('heroicon-o-arrow-path')
+                ->color('warning')
+                ->visible(fn (): bool => in_array(
+                    $this->prenotazione()->status,
+                    [PrenotazioneStatus::Approvata, PrenotazioneStatus::InviatoPdfFirmato],
+                    strict: true,
+                ) && auth()->user()->can('reassignTorre', $this->prenotazione()))
+                ->form([
+                    Forms\Components\Select::make('torre_id')
+                        ->label('Nuova torre')
+                        ->options(Torre::where('is_active', true)->pluck('nome', 'id'))
+                        ->required()
+                        ->searchable(),
+                ])
+                ->action(function (array $data): void {
+                    app(PrenotazioneStateMachine::class)->reassignTorre(
+                        $this->prenotazione(),
+                        auth()->user(),
+                        (int) $data['torre_id'],
+                    );
+                    Notification::make()->title('Torre riassegnata')->success()->send();
+                    $this->refreshFormData(['torre_id']);
+                    $this->redirect(PrenotazioneResource::getUrl('view', ['record' => $this->prenotazione()]));
                 }),
         ];
     }
@@ -66,6 +122,9 @@ class ViewPrenotazione extends ViewRecord
                         ->schema([
                             Section::make('Prenotazione torre')
                                 ->schema([
+                                    TextEntry::make('proprietario_label')
+                                        ->label('Sezione / Sottosezione')
+                                        ->getStateUsing(fn (Prenotazione $record): string => $record->proprietario_label),
                                     TextEntry::make('status')
                                         ->label('Stato')
                                         ->badge()

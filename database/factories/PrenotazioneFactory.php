@@ -85,4 +85,14 @@ class PrenotazioneFactory extends Factory
             'archived_at' => now(),
         ]);
     }
+
+    public function inviatoPdfFirmato(): static
+    {
+        return $this->state([
+            'status' => PrenotazioneStatus::InviatoPdfFirmato,
+            'approvato_at' => now(),
+            'pdf_firmato_at' => now(),
+            'pdf_firmato_path' => 'fake/pdf-firmato.pdf',
+        ]);
+    }
 }

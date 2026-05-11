@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers\Filament;
 
-use App\Filament\Gr\Widgets\PlaceholderWidget;
+use App\Filament\Gr\Widgets\PrenotazioniDaApprovareWidget;
 use App\Filament\Pages\FirstAccessPage;
 use App\Http\Middleware\EnsureContactEmail;
 use Filament\Http\Middleware\Authenticate;
@@ -21,6 +21,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
 
 class GrPanelProvider extends PanelProvider
 {
@@ -42,9 +43,12 @@ class GrPanelProvider extends PanelProvider
                 Pages\Dashboard::class,
                 FirstAccessPage::class,
             ])
+            ->plugins([
+                FilamentFullCalendarPlugin::make(),
+            ])
             ->discoverWidgets(in: app_path('Filament/Gr/Widgets'), for: 'App\\Filament\\Gr\\Widgets')
             ->widgets([
-                PlaceholderWidget::class,
+                PrenotazioniDaApprovareWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

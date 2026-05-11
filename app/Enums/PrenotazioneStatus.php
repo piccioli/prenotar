@@ -43,4 +43,17 @@ enum PrenotazioneStatus: string
             self::Concluso => 'Conclusa',
         };
     }
+
+    public function color(): string
+    {
+        return match ($this) {
+            self::Bozza => 'gray',
+            self::Inviata => 'warning',
+            self::Approvata => 'success',
+            self::Annullata => 'danger',
+            self::InviatoPdfFirmato => 'info',
+            self::InviatoAssicurazione => 'primary',
+            self::Concluso => 'gray',
+        };
+    }
 }

@@ -4,7 +4,15 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Events\PrenotazioneApprovata;
+use App\Events\PrenotazioneInviata;
+use App\Events\PrenotazioneRifiutata;
+use App\Events\PrenotazioneTorreRiassegnata;
 use App\Events\UserSetPasswordRequested;
+use App\Listeners\SendPrenotazioneApprovataNotification;
+use App\Listeners\SendPrenotazioneInviataNotification;
+use App\Listeners\SendPrenotazioneRifiutataNotification;
+use App\Listeners\SendPrenotazioneTorreRiassegnataNotification;
 use App\Listeners\SendSetPasswordNotification;
 use App\Models\Prenotazione;
 use App\Models\Sezione;
@@ -33,5 +41,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Sottosezione::class, SottosezionePolicy::class);
 
         Event::listen(UserSetPasswordRequested::class, SendSetPasswordNotification::class);
+        Event::listen(PrenotazioneInviata::class, SendPrenotazioneInviataNotification::class);
+        Event::listen(PrenotazioneApprovata::class, SendPrenotazioneApprovataNotification::class);
+        Event::listen(PrenotazioneRifiutata::class, SendPrenotazioneRifiutataNotification::class);
+        Event::listen(PrenotazioneTorreRiassegnata::class, SendPrenotazioneTorreRiassegnataNotification::class);
     }
 }

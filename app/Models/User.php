@@ -75,6 +75,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->contact_email ?? $this->email;
     }
 
+    public function routeNotificationForMail(): string
+    {
+        return $this->effective_contact_email;
+    }
+
     public function isAdmin(): bool
     {
         return $this->hasRole('admin');

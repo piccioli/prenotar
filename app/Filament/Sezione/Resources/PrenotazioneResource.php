@@ -478,15 +478,7 @@ class PrenotazioneResource extends Resource
                     ->label('Stato')
                     ->badge()
                     ->formatStateUsing(fn (PrenotazioneStatus $state): string => $state->label())
-                    ->color(fn (PrenotazioneStatus $state): string => match ($state) {
-                        PrenotazioneStatus::Bozza => 'gray',
-                        PrenotazioneStatus::Inviata => 'warning',
-                        PrenotazioneStatus::Approvata => 'success',
-                        PrenotazioneStatus::Annullata => 'danger',
-                        PrenotazioneStatus::InviatoPdfFirmato => 'info',
-                        PrenotazioneStatus::InviatoAssicurazione => 'primary',
-                        PrenotazioneStatus::Concluso => 'gray',
-                    }),
+                    ->color(fn (PrenotazioneStatus $state): string => $state->color()),
 
                 Tables\Columns\IconColumn::make('has_delibera')
                     ->label('Delibera')
