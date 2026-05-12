@@ -9,11 +9,15 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Torre extends Model
 {
     /** @use HasFactory<TorreFactory> */
     use HasFactory;
+
+    use LogsActivity;
 
     protected $table = 'torri';
 
@@ -32,6 +36,15 @@ class Torre extends Model
         return [
             'is_active' => 'boolean',
         ];
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('torre');
     }
 
     /** @return HasMany<Prenotazione, $this> */

@@ -69,7 +69,7 @@
 
 **URL locali**:
 - App: `http://localhost`
-- MailPit UI: `http://localhost:8025`
+- MailPit UI: `http://localhost:8026`
 - MariaDB: porta `3306` (host `127.0.0.1` da fuori container)
 
 > Usare SEMPRE Sail per eseguire comandi PHP/Composer. Non usare `php artisan` o `composer` da host — produce drift di estensioni PHP.
@@ -153,13 +153,13 @@ Ogni transizione registra un record in `prenotazione_history` (autore + timestam
 
 | Fase | Contenuto | Status |
 |------|-----------|--------|
-| **0** | Setup (questo file) | ✅ in corso |
-| 1 | Migrazioni + modelli + seeders + policy | ⏳ |
-| 2 | Excel import + auth + fallback email | ⏳ |
-| 3 | Pannello /sezione + wizard prenotazione + calendario | ⏳ |
-| 4 | Pannello /gr + state machine + notifiche email | ⏳ |
-| 5 | Template PDF (Richiesta parete + Modulo 3) | ⏳ |
-| 6 | Pannello /admin + impersonate UI + audit log | ⏳ |
+| **0** | Setup (questo file) | ✅ |
+| 1 | Migrazioni + modelli + seeders + policy | ✅ |
+| 2 | Excel import + auth + fallback email | ✅ |
+| 3 | Pannello /sezione + wizard prenotazione + calendario | ✅ |
+| 4 | Pannello /gr + state machine + notifiche email | ✅ |
+| 5 | Template PDF (Richiesta parete + Modulo 3) | ✅ |
+| 6 | Pannello /admin + impersonate UI + audit log | ✅ |
 | 7 | Job archiviazione + reminder + Horizon | ⏳ |
 | 8 | UAT + polish + deploy staging | ⏳ |
 

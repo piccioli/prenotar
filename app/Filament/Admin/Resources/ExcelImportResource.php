@@ -16,7 +16,7 @@ class ExcelImportResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
-    protected static ?string $navigationLabel = 'Cronologia import';
+    protected static ?string $navigationLabel = 'Import Excel';
 
     protected static ?string $navigationGroup = 'Gestione';
 

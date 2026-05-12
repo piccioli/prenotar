@@ -7,11 +7,15 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Lab404\Impersonate\Models\Impersonate;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
@@ -24,6 +28,8 @@ class User extends Authenticatable implements FilamentUser
     use HasFactory;
 
     use HasRoles;
+    use Impersonate;
+    use LogsActivity;
     use Notifiable;
 
     protected $fillable = [
@@ -78,6 +84,32 @@ class User extends Authenticatable implements FilamentUser
     public function routeNotificationForMail(): string
     {
         return $this->effective_contact_email;
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'email', 'codice_cai', 'sezione_id', 'sottosezione_id', 'is_active', 'email_is_fallback'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('user');
+    }
+
+    public function canImpersonate(): bool
+    {
+        return $this->isAdmin();
+    }
+
+    public function canBeImpersonated(): bool
+    {
+        return $this->is_active && ! $this->isAdmin();
+    }
+
+    /** @param Builder<User> $query
+     *  @return Builder<User> */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_active', true);
     }
 
     public function isAdmin(): bool

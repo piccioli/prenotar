@@ -50,12 +50,18 @@ class LocalDevSeeder extends Seeder
             return;
         }
 
-        $this->importaSeSeVuoto();
-        $this->impostaPassword();
-        $this->creaAdmin();
-        $this->creaGr();
-        $this->creaGrSettings();
-        $this->creaPrenotazioniDemoCalendario();
+        activity()->disableLogging();
+
+        try {
+            $this->importaSeSeVuoto();
+            $this->impostaPassword();
+            $this->creaAdmin();
+            $this->creaGr();
+            $this->creaGrSettings();
+            $this->creaPrenotazioniDemoCalendario();
+        } finally {
+            activity()->enableLogging();
+        }
     }
 
     private function resolveExcelPath(): ?string

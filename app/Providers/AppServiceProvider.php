@@ -30,9 +30,12 @@ use App\Policies\SezionePolicy;
 use App\Policies\SottosezionePolicy;
 use App\Policies\TorrePolicy;
 use App\Policies\UserPolicy;
+use App\Services\AuditLogger;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Lab404\Impersonate\Events\LeaveImpersonation;
+use Lab404\Impersonate\Events\TakeImpersonation;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -54,5 +57,29 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(PrenotazioneDateModificate::class, SendPrenotazioneDateModificateNotification::class);
         Event::listen(PrenotazionePdfFirmatoCaricato::class, SendPrenotazionePdfFirmatoCaricatoNotification::class);
         Event::listen(PrenotazioneInviataAssicurazione::class, SendModulo3ToAssicurazione::class);
+
+        Event::listen(TakeImpersonation::class, function (TakeImpersonation $event): void {
+            app(AuditLogger::class)->logAdminAction(
+                'user.impersonate_begin',
+                $event->impersonated,
+                'Impersonate avviato da admin',
+                [
+                    'admin_id' => $event->impersonator->getAuthIdentifier(),
+                    'target_id' => $event->impersonated->getAuthIdentifier(),
+                ],
+            );
+        });
+
+        Event::listen(LeaveImpersonation::class, function (LeaveImpersonation $event): void {
+            app(AuditLogger::class)->logAdminAction(
+                'user.impersonate_end',
+                $event->impersonated,
+                'Impersonate terminato',
+                [
+                    'admin_id' => $event->impersonator->getAuthIdentifier(),
+                    'target_id' => $event->impersonated->getAuthIdentifier(),
+                ],
+            );
+        });
     }
 }

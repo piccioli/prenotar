@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -40,6 +42,7 @@ class Prenotazione extends Model implements HasMedia
     use HasFactory;
 
     use InteractsWithMedia;
+    use LogsActivity;
     use SoftDeletes;
 
     protected $table = 'prenotazioni';
@@ -130,6 +133,15 @@ class Prenotazione extends Model implements HasMedia
             ->singleFile()
             ->acceptsMimeTypes(['application/pdf'])
             ->useDisk('local');
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['status', 'torre_id', 'data_inizio_prenotazione', 'data_fine_prenotazione', 'nome_evento'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('prenotazione');
     }
 
     /** Etichetta del proprietario (risolve BUG-05: label distintiva sezione/sottosezione). */
