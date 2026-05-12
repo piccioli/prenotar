@@ -6,6 +6,21 @@ Il formato segue le idee di [Keep a Changelog](https://keepachangelog.com/it/1.1
 
 ## [Non rilasciato]
 
+## [0.7.0] - 2026-05-12
+
+### Aggiunto
+
+- **Fase 6 — pannello admin** (`/admin`): log attività (Spatie Activity Log), risorse Filament per utenti, torri e prenotazioni; integrazione **impersonate** e miglioramenti operativi al pannello tecnico.
+
+### Modificato
+
+- **Filament (admin / GR / sezione)**: colonne e campi data usano `placeholder('—')` al posto di `default('—')` dove la data è opzionale, per evitare errori di formattazione con valori non data.
+- **UserResource (admin)**: rimossa la colonna «Sezione» ridondante rispetto al nominativo account; **filtro per sezione** invariato.
+
+### Altri
+
+- **LocalDevSeeder**: asset di demo (es. foto torri) e descrizioni più ricche per le torri in sviluppo locale.
+
 ## [0.6.0] - 2026-05-12
 
 ### Aggiunto
