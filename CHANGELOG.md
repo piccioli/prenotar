@@ -6,6 +6,22 @@ Il formato segue le idee di [Keep a Changelog](https://keepachangelog.com/it/1.1
 
 ## [Non rilasciato]
 
+## [0.6.0] - 2026-05-12
+
+### Aggiunto
+
+- **Fase 5 — PDF e assicurazione**: servizio `PdfGenerator` con template Blade **Richiesta parete** e **Modulo 3**; azioni GR su `ViewPrenotazione` per scaricare PDF, caricare PDF firmato (Spatie Media Library) e inviare il Modulo 3 all’assicurazione (`Modulo3Mail`, vista email dedicata).
+- **State machine**: transizioni e validazioni per caricamento PDF firmato e invio assicurazione; eventi `PrenotazionePdfFirmatoCaricato`, `PrenotazioneInviataAssicurazione`; listener per notifica sezione e invio Modulo 3.
+- **Test** di copertura su generazione PDF, caricamento PDF firmato, invio assicurazione e flusso workflow GR.
+
+### Modificato
+
+- **Prenotazione**: PDF firmato gestito come media collection invece del campo `pdf_firmato_path` (migrazione di rimozione colonna).
+
+### Altri
+
+- **LocalDevSeeder**: impostazioni GR di default, permessi aggiornati e asset di demo (documenti GR) per sviluppo locale.
+
 ## [0.5.0] - 2026-05-12
 
 ### Aggiunto
