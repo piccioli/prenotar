@@ -6,6 +6,23 @@ Il formato segue le idee di [Keep a Changelog](https://keepachangelog.com/it/1.1
 
 ## [Non rilasciato]
 
+## [0.9.0] - 2026-05-12
+
+### Aggiunto
+
+- **Ambiente staging**: `docker-compose.staging.yml`, template **`.env.staging.example`** e sezione dedicata in **`DEPLOY.md`** (build, avvio, note operative).
+- **Documentazione UAT e utenti**: **`UAT_CHECKLIST.md`** (prove manuali prima del go-live) e **`LINEE_GUIDA_PRESIDENTI.md`** (uso pannello sezione/sottosezione).
+- **`resources/docs/screenshots/`**: directory per screenshot di supporto alla documentazione (`.gitkeep`).
+
+### Modificato
+
+- **Filament (admin, GR, sezione)**: **gruppi di navigazione** e **ordinamento** delle voci di menu per coerenza tra pannelli; piccoli aggiustamenti alle risorse admin (etichette / organizzazione).
+- **`LocalDevSeeder`**: allineamenti minori allo staging / contesto locale.
+
+### Altri
+
+- **`CLAUDE.md`**: eccezione documentata — su richiesta esplicita di **minor release** eseguire anche push di branch e tag su `origin`.
+
 ## [0.8.0] - 2026-05-12
 
 ### Aggiunto
