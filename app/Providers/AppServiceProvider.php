@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Events\PrenotazioneApprovata;
+use App\Events\PrenotazioneDateModificate;
 use App\Events\PrenotazioneInviata;
 use App\Events\PrenotazioneRifiutata;
 use App\Events\PrenotazioneTorreRiassegnata;
 use App\Events\UserSetPasswordRequested;
 use App\Listeners\SendPrenotazioneApprovataNotification;
+use App\Listeners\SendPrenotazioneDateModificateNotification;
 use App\Listeners\SendPrenotazioneInviataNotification;
 use App\Listeners\SendPrenotazioneRifiutataNotification;
 use App\Listeners\SendPrenotazioneTorreRiassegnataNotification;
@@ -45,5 +47,6 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(PrenotazioneApprovata::class, SendPrenotazioneApprovataNotification::class);
         Event::listen(PrenotazioneRifiutata::class, SendPrenotazioneRifiutataNotification::class);
         Event::listen(PrenotazioneTorreRiassegnata::class, SendPrenotazioneTorreRiassegnataNotification::class);
+        Event::listen(PrenotazioneDateModificate::class, SendPrenotazioneDateModificateNotification::class);
     }
 }

@@ -11,6 +11,7 @@ use App\Models\Sezione;
 use App\Models\Torre;
 use App\Models\User;
 use App\Services\Import\ExcelImportService;
+use Faker\Factory;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
@@ -158,7 +159,7 @@ class LocalDevSeeder extends Seeder
 
     private function creaPrenotazioniDemoCalendario(): void
     {
-        if (! class_exists(\Faker\Factory::class)) {
+        if (! class_exists(Factory::class)) {
             $this->command->warn('Faker non installato (es. `composer install --no-dev`): prenotazioni demo calendario saltate.');
 
             return;

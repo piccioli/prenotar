@@ -110,6 +110,51 @@ class ViewPrenotazione extends ViewRecord
                     $this->refreshFormData(['torre_id']);
                     $this->redirect(PrenotazioneResource::getUrl('view', ['record' => $this->prenotazione()]));
                 }),
+
+            Actions\Action::make('change_dates')
+                ->label('Modifica date trasporto')
+                ->icon('heroicon-o-calendar')
+                ->color('info')
+                ->visible(fn (): bool => in_array(
+                    $this->prenotazione()->status,
+                    [PrenotazioneStatus::Inviata, PrenotazioneStatus::Approvata, PrenotazioneStatus::InviatoPdfFirmato],
+                    strict: true,
+                ) && auth()->user()->can('changeDates', $this->prenotazione()))
+                ->form(function (): array {
+                    $p = $this->prenotazione();
+
+                    return [
+                        Forms\Components\DatePicker::make('data_ritiro')
+                            ->label('Data ritiro')
+                            ->default($p->data_ritiro?->toDateString())
+                            ->native(false)
+                            ->displayFormat('d/m/Y'),
+
+                        Forms\Components\DatePicker::make('data_riconsegna')
+                            ->label('Data riconsegna')
+                            ->default($p->data_riconsegna?->toDateString())
+                            ->native(false)
+                            ->displayFormat('d/m/Y')
+                            ->afterOrEqual('data_ritiro'),
+
+                        Forms\Components\Textarea::make('motivo')
+                            ->label('Motivo della modifica')
+                            ->required()
+                            ->maxLength(1000)
+                            ->rows(3),
+                    ];
+                })
+                ->action(function (array $data): void {
+                    app(PrenotazioneStateMachine::class)->changeDates(
+                        $this->prenotazione(),
+                        auth()->user(),
+                        filled($data['data_ritiro']) ? (string) $data['data_ritiro'] : null,
+                        filled($data['data_riconsegna']) ? (string) $data['data_riconsegna'] : null,
+                        $data['motivo'],
+                    );
+                    Notification::make()->title('Date trasporto aggiornate')->success()->send();
+                    $this->redirect(PrenotazioneResource::getUrl('view', ['record' => $this->prenotazione()]));
+                }),
         ];
     }
 

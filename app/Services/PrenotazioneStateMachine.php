@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Enums\PrenotazioneStatus;
 use App\Events\PrenotazioneApprovata;
+use App\Events\PrenotazioneDateModificate;
 use App\Events\PrenotazioneInviata;
 use App\Events\PrenotazioneRifiutata;
 use App\Events\PrenotazioneTorreRiassegnata;
@@ -153,9 +154,59 @@ final class PrenotazioneStateMachine
         event(new PrenotazioneRifiutata($p->fresh(), $motivo));
     }
 
-    public function changeDates(Prenotazione $p, User $u, string $dataInizio, string $dataFine): never
-    {
-        throw new \BadMethodCallException('Implementazione Fase 5.');
+    public function changeDates(
+        Prenotazione $p,
+        User $u,
+        ?string $dataRitiro,
+        ?string $dataRiconsegna,
+        string $motivo,
+    ): void {
+        $statiConsentiti = [
+            PrenotazioneStatus::Inviata,
+            PrenotazioneStatus::Approvata,
+            PrenotazioneStatus::InviatoPdfFirmato,
+        ];
+
+        if (! in_array($p->status, $statiConsentiti, strict: true)) {
+            throw new DomainException(
+                'La modifica delle date di trasporto è consentita solo dopo l\'invio della richiesta '.
+                'e prima dell\'invio all\'assicurazione.'
+            );
+        }
+
+        if (trim($motivo) === '') {
+            throw new InvalidArgumentException('Il motivo della modifica date è obbligatorio.');
+        }
+
+        $vecchioRitiro = $p->data_ritiro?->toDateString();
+        $vecchiaRiconsegna = $p->data_riconsegna?->toDateString();
+
+        if ($dataRitiro === $vecchioRitiro && $dataRiconsegna === $vecchiaRiconsegna) {
+            throw new DomainException('Nessuna data è stata effettivamente modificata.');
+        }
+
+        DB::transaction(function () use ($p, $u, $dataRitiro, $dataRiconsegna, $motivo, $vecchioRitiro, $vecchiaRiconsegna): void {
+            $p->update([
+                'data_ritiro' => $dataRitiro,
+                'data_riconsegna' => $dataRiconsegna,
+            ]);
+
+            PrenotazioneHistory::create([
+                'prenotazione_id' => $p->id,
+                'user_id' => $u->id,
+                'status_from' => $p->status,
+                'status_to' => $p->status,
+                'note' => sprintf(
+                    'Date trasporto modificate (ritiro: %s → %s; riconsegna: %s → %s). Motivo: %s',
+                    $vecchioRitiro ?? '—', $dataRitiro ?? '—',
+                    $vecchiaRiconsegna ?? '—', $dataRiconsegna ?? '—',
+                    $motivo,
+                ),
+                'created_at' => now(),
+            ]);
+        });
+
+        event(new PrenotazioneDateModificate($p->fresh(), $vecchioRitiro, $vecchiaRiconsegna, $motivo));
     }
 
     public function reassignTorre(Prenotazione $p, User $u, int $torreId): void
