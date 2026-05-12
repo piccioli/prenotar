@@ -97,10 +97,7 @@ class UserResource extends Resource
                 TextColumn::make('roles.name')
                     ->label('Ruolo')
                     ->badge(),
-                TextColumn::make('sezione.nominativo')
-                    ->label('Sezione')
-                    ->limit(25)
-                    ->default('—'),
+
                 IconColumn::make('is_active')
                     ->label('Attivo')
                     ->boolean(),
