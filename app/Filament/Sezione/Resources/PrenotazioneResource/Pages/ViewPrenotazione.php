@@ -128,9 +128,9 @@ class ViewPrenotazione extends ViewRecord
                                 ->schema([
                                     TextEntry::make('azienda_trasporto')->label('Azienda trasporto'),
                                     TextEntry::make('targa_autoveicolo')->label('Targa')->default('—'),
-                                    TextEntry::make('data_ritiro')->label('Data ritiro')->date('d/m/Y')->default('—'),
+                                    TextEntry::make('data_ritiro')->label('Data ritiro')->date('d/m/Y')->placeholder('—'),
                                     TextEntry::make('luogo_ritiro')->label('Luogo ritiro')->default('—'),
-                                    TextEntry::make('data_riconsegna')->label('Data riconsegna')->date('d/m/Y')->default('—'),
+                                    TextEntry::make('data_riconsegna')->label('Data riconsegna')->date('d/m/Y')->placeholder('—'),
                                     TextEntry::make('luogo_riconsegna')->label('Luogo riconsegna')->default('—'),
                                 ])->columns(3),
 

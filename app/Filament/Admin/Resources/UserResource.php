@@ -115,7 +115,7 @@ class UserResource extends Resource
                     ->label('Ultimo accesso')
                     ->dateTime('d/m/Y H:i')
                     ->sortable()
-                    ->default('—'),
+                    ->placeholder('—'),
             ])
             ->filters([
                 SelectFilter::make('roles')
