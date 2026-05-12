@@ -6,6 +6,20 @@ Il formato segue le idee di [Keep a Changelog](https://keepachangelog.com/it/1.1
 
 ## [Non rilasciato]
 
+## [0.8.0] - 2026-05-12
+
+### Aggiunto
+
+- **Fase 7 — code, reminder e Horizon**: **Laravel Horizon** (config, `HorizonServiceProvider`, accesso da pannello admin, snapshot schedulato); worker Horizon in **Docker produzione** e servizio in **Sail** (`compose.yaml`); coda default Redis in `config/queue.php`.
+- **Job**: `ArchiveCompletedReservations`; `SendReminderT10` e `SendReminderT2gg` con notifiche dedicate; flag su `prenotazioni` per evitare invii duplicati (migrazione).
+- **Comando** `prenotazioni:nightly` (`RunNightlyTasks`) che accoda i job notturni; **scheduler** in `routes/console.php` (esecuzione giornaliera `05:00` `Europe/Rome`, `onOneServer` / `withoutOverlapping`).
+- **Dominio**: evento `PrenotazioneConclusa` e transizione **concludi** in **state machine**; in pannello **GR**, azione manuale **«Segna come conclusa»** su prenotazioni dopo invio assicurazione (in aggiunta al job notturno).
+- **Test** su Horizon (accesso admin), job di archiviazione e reminder, transizione concludi.
+
+### Modificato
+
+- **`DEPLOY.md`**: istruzioni aggiornate per stack con Horizon e job notturni.
+
 ## [0.7.0] - 2026-05-12
 
 ### Aggiunto
