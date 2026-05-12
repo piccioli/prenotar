@@ -23,9 +23,9 @@ class AuditLogResource extends Resource
 
     protected static ?string $navigationLabel = 'Audit log';
 
-    protected static ?string $navigationGroup = 'Audit';
+    protected static ?string $navigationGroup = 'Diagnostica';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 3;
 
     public static function canCreate(): bool
     {

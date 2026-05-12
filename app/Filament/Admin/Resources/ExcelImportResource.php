@@ -20,7 +20,7 @@ class ExcelImportResource extends Resource
 
     protected static ?string $navigationGroup = 'Gestione';
 
-    protected static ?int $navigationSort = 11;
+    protected static ?int $navigationSort = 4;
 
     public static function table(Table $table): Table
     {

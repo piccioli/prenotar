@@ -28,9 +28,9 @@ class TorreResource extends Resource
 
     protected static ?string $navigationLabel = 'Torri';
 
-    protected static ?string $navigationGroup = 'Anagrafiche';
+    protected static ?string $navigationGroup = 'Gestione';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
     {

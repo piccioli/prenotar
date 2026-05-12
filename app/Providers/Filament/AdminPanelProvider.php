@@ -47,9 +47,10 @@ class AdminPanelProvider extends PanelProvider
             ->navigationItems([
                 NavigationItem::make('Horizon')
                     ->url('/horizon')
+                    ->openUrlInNewTab()
                     ->icon('heroicon-o-queue-list')
                     ->group('Diagnostica')
-                    ->sort(10)
+                    ->sort(2)
                     ->visible(fn (): bool => auth()->user()?->isAdmin() === true),
             ])
             ->discoverWidgets(in: app_path('Filament/Admin/Widgets'), for: 'App\\Filament\\Admin\\Widgets')

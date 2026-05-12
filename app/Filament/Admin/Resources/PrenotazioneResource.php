@@ -31,7 +31,7 @@ class PrenotazioneResource extends Resource
 
     protected static ?string $navigationLabel = 'Prenotazioni';
 
-    protected static ?string $navigationGroup = 'Operatività (diagnostica)';
+    protected static ?string $navigationGroup = 'Gestione';
 
     protected static ?int $navigationSort = 1;
 
