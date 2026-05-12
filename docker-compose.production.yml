@@ -42,7 +42,7 @@ services:
         condition: service_started
     restart: unless-stopped
 
-  queue:
+  horizon:
     build:
       context: .
       dockerfile: Dockerfile
@@ -50,14 +50,7 @@ services:
       args:
         COMPOSER_INSTALL_DEV: ${COMPOSER_INSTALL_DEV:-0}
     entrypoint: ["/usr/local/bin/docker-entrypoint-worker.sh"]
-    command:
-      - php
-      - artisan
-      - queue:work
-      - redis
-      - --sleep=3
-      - --tries=3
-      - --max-time=3600
+    command: [php, artisan, horizon]
     env_file:
       - .env
     environment:

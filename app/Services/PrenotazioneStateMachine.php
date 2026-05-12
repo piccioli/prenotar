@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Enums\PrenotazioneStatus;
 use App\Events\PrenotazioneApprovata;
+use App\Events\PrenotazioneConclusa;
 use App\Events\PrenotazioneDateModificate;
 use App\Events\PrenotazioneInviata;
 use App\Events\PrenotazioneInviataAssicurazione;
@@ -315,8 +316,32 @@ final class PrenotazioneStateMachine
         event(new PrenotazioneInviataAssicurazione($p->fresh()));
     }
 
-    public function concludi(Prenotazione $p): never
+    public function concludi(Prenotazione $p, ?User $actor = null): void
     {
-        throw new \BadMethodCallException('Implementazione Fase 7.');
+        if ($p->status !== PrenotazioneStatus::InviatoAssicurazione) {
+            throw new DomainException("Conclusione non permessa dallo stato {$p->status->value}.");
+        }
+
+        DB::transaction(function () use ($p, $actor): void {
+            $oldStatus = $p->status;
+            $p->update([
+                'status' => PrenotazioneStatus::Concluso,
+                'concluso_at' => now(),
+                'archived_at' => now(),
+            ]);
+
+            PrenotazioneHistory::create([
+                'prenotazione_id' => $p->id,
+                'user_id' => $actor?->id,
+                'status_from' => $oldStatus,
+                'status_to' => PrenotazioneStatus::Concluso,
+                'note' => $actor === null
+                    ? '[SISTEMA] Conclusione automatica post-evento.'
+                    : 'Conclusione manuale.',
+                'created_at' => now(),
+            ]);
+        });
+
+        event(new PrenotazioneConclusa($p->fresh(), $actor));
     }
 }

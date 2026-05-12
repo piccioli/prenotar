@@ -82,13 +82,13 @@ Opzionale: migrazioni automatiche ad ogni avvio del container `app` — imposta 
 |------------|--------|
 | `nginx`    | Static da `public/`, FastCGI verso PHP-FPM |
 | `app`      | `php-fpm`, cache config/route/view/event + `filament:optimize` all’avvio (disattivabile con `AUTORUN_OPTIMIZE=0`) |
-| `queue`    | `php artisan queue:work redis` |
-| `scheduler`| `php artisan schedule:work` |
+| `horizon`  | `php artisan horizon` — gestisce le queue Redis (sostituisce `queue:work`). Dashboard su `/horizon` (solo admin). |
+| `scheduler`| `php artisan schedule:work` — cron notturno `prenotazioni:nightly` (archiviazione + reminder) alle 05:00 Europe/Rome |
 | `mariadb`  | Dati in volume `mariadb_data` |
 | `redis`    | Code, sessioni, cache; volume `redis_data` (AOF) |
 | `mailpit`  | SMTP di sviluppo/cattura (porta 1025 interna); UI su `127.0.0.1:8025` (host) |
 
-Allegati e file privati medialibrary: volume **`app_storage`** montato su `storage/app` per `app`, `queue` e `scheduler`.
+Allegati e file privati medialibrary: volume **`app_storage`** montato su `storage/app` per `app`, `horizon` e `scheduler`.
 
 ---
 
@@ -115,8 +115,16 @@ docker compose -f docker-compose.production.yml restart app
 ## 7. Log e diagnostica
 
 ```bash
-docker compose -f docker-compose.production.yml logs -f app queue scheduler nginx
+docker compose -f docker-compose.production.yml logs -f app horizon scheduler nginx
 docker compose -f docker-compose.production.yml exec app php artisan about
+docker compose -f docker-compose.production.yml exec app php artisan horizon:status
+```
+
+Dashboard Horizon: accessibile solo agli admin su `/horizon`. Per un graceful restart di Horizon dopo deploy:
+
+```bash
+docker compose -f docker-compose.production.yml exec app php artisan horizon:terminate
+# Il container `horizon` si riavvia automaticamente (restart: unless-stopped)
 ```
 
 ---

@@ -229,6 +229,24 @@ class ViewPrenotazione extends ViewRecord
                     Notification::make()->title('Modulo 3 inviato all\'assicurazione')->success()->send();
                     $this->redirect(PrenotazioneResource::getUrl('view', ['record' => $this->prenotazione()]));
                 }),
+
+            Actions\Action::make('concludi')
+                ->label('Segna come conclusa')
+                ->icon('heroicon-o-check-badge')
+                ->color('gray')
+                ->visible(fn (): bool => $this->prenotazione()->status === PrenotazioneStatus::InviatoAssicurazione
+                    && auth()->user()->can('markConcluso', $this->prenotazione()))
+                ->requiresConfirmation()
+                ->modalHeading('Concludi prenotazione')
+                ->modalDescription('Marca la prenotazione come CONCLUSA. Questa operazione è normalmente eseguita automaticamente dal sistema il giorno dopo la fine dell\'evento.')
+                ->action(function (): void {
+                    app(PrenotazioneStateMachine::class)->concludi(
+                        $this->prenotazione(),
+                        auth()->user(),
+                    );
+                    Notification::make()->title('Prenotazione conclusa')->success()->send();
+                    $this->redirect(PrenotazioneResource::getUrl('index'));
+                }),
         ];
     }
 

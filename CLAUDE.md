@@ -29,7 +29,7 @@
 | Media | spatie/laravel-medialibrary |
 | Settings | spatie/laravel-settings |
 | Impersonate | stechstudio/filament-impersonate |
-| Queue | Redis + (Horizon in Fase 7) |
+| Queue | Redis + Laravel Horizon |
 | Container dev | Laravel Sail (Docker Compose) |
 | Container prod | `docker-compose.production.yml` + `Dockerfile` multi-stage (Nginx, PHP-FPM, MariaDB, Redis, queue, scheduler) |
 | Code quality | Pint (preset laravel) + Larastan level 6 + Pest |
@@ -160,7 +160,7 @@ Ogni transizione registra un record in `prenotazione_history` (autore + timestam
 | 4 | Pannello /gr + state machine + notifiche email | ✅ |
 | 5 | Template PDF (Richiesta parete + Modulo 3) | ✅ |
 | 6 | Pannello /admin + impersonate UI + audit log | ✅ |
-| 7 | Job archiviazione + reminder + Horizon | ⏳ |
+| 7 | Job archiviazione + reminder + Horizon | ✅ |
 | 8 | UAT + polish + deploy staging | ⏳ |
 
 ---

@@ -80,6 +80,8 @@ class Prenotazione extends Model implements HasMedia
         'inviato_assicurazione_at',
         'concluso_at',
         'archived_at',
+        'reminder_t10_inviato_at',
+        'reminder_t2gg_inviato_at',
     ];
 
     protected function casts(): array
@@ -98,6 +100,8 @@ class Prenotazione extends Model implements HasMedia
             'inviato_assicurazione_at' => 'datetime',
             'concluso_at' => 'datetime',
             'archived_at' => 'datetime',
+            'reminder_t10_inviato_at' => 'datetime',
+            'reminder_t2gg_inviato_at' => 'datetime',
         ];
     }
 

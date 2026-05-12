@@ -10,6 +10,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationItem;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -42,6 +43,14 @@ class AdminPanelProvider extends PanelProvider
             ->pages([
                 Pages\Dashboard::class,
                 FirstAccessPage::class,
+            ])
+            ->navigationItems([
+                NavigationItem::make('Horizon')
+                    ->url('/horizon')
+                    ->icon('heroicon-o-queue-list')
+                    ->group('Diagnostica')
+                    ->sort(10)
+                    ->visible(fn (): bool => auth()->user()?->isAdmin() === true),
             ])
             ->discoverWidgets(in: app_path('Filament/Admin/Widgets'), for: 'App\\Filament\\Admin\\Widgets')
             ->widgets([

@@ -73,6 +73,21 @@ services:
                 - ping
             retries: 3
             timeout: 5s
+    horizon:
+        image: 'sail-8.4/app'
+        command: ['php', 'artisan', 'horizon']
+        environment:
+            WWWUSER: '${WWWUSER}'
+            LARAVEL_SAIL: 1
+        volumes:
+            - '.:/var/www/html'
+        networks:
+            - sail
+        depends_on:
+            - laravel.test
+            - mariadb
+            - redis
+        restart: unless-stopped
 networks:
     sail:
         driver: bridge
