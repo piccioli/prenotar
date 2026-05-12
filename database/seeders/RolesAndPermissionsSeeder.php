@@ -15,6 +15,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'prenotazioni' => [
             'view-any', 'view', 'create', 'update', 'delete',
             'approve', 'reject', 'change-dates', 'reassign-torre',
+            'load-signed-pdf',
             'generate-pdf-richiesta', 'generate-pdf-modulo3',
             'send-insurance', 'mark-concluso',
             'force-state', 'hard-delete',
@@ -55,6 +56,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'sezione' => [
             'prenotazioni:view-any', 'prenotazioni:view',
             'prenotazioni:create', 'prenotazioni:update', 'prenotazioni:delete',
+            'prenotazioni:load-signed-pdf',
             'sezioni:view',
             'sottosezioni:view',
             'torri:view-any', 'torri:view',

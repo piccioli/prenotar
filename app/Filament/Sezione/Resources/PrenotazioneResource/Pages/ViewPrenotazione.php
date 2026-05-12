@@ -10,6 +10,7 @@ use App\Filament\Sezione\Resources\PrenotazioneResource;
 use App\Models\Prenotazione;
 use App\Services\PrenotazioneStateMachine;
 use Filament\Actions;
+use Filament\Forms;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\Tabs;
@@ -17,6 +18,7 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Http\UploadedFile;
 
 class ViewPrenotazione extends ViewRecord
 {
@@ -53,6 +55,40 @@ class ViewPrenotazione extends ViewRecord
                         ->success()
                         ->send();
                     $this->refreshFormData(['status']);
+                }),
+
+            Actions\Action::make('upload_pdf_firmato')
+                ->label('Carica PDF firmato')
+                ->icon('heroicon-o-arrow-up-tray')
+                ->color('success')
+                ->visible(fn (): bool => auth()->user()->can('loadSignedPdf', $this->prenotazione()))
+                ->form([
+                    Forms\Components\FileUpload::make('pdf')
+                        ->label('PDF della richiesta firmato dal Presidente')
+                        ->acceptedFileTypes(['application/pdf'])
+                        ->required()
+                        ->disk('local')
+                        ->visibility('private')
+                        ->maxSize(10240),
+                ])
+                ->action(function (array $data): void {
+                    $file = $data['pdf'];
+                    if (is_string($file)) {
+                        $file = new UploadedFile(
+                            storage_path('app/livewire-tmp/'.$file),
+                            $file,
+                            'application/pdf',
+                            null,
+                            true,
+                        );
+                    }
+                    app(PrenotazioneStateMachine::class)->caricaPdfFirmato(
+                        $this->prenotazione(),
+                        auth()->user(),
+                        $file,
+                    );
+                    Notification::make()->title('PDF firmato caricato')->success()->send();
+                    $this->redirect(PrenotazioneResource::getUrl('view', ['record' => $this->prenotazione()]));
                 }),
         ];
     }

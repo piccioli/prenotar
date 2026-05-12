@@ -74,7 +74,6 @@ class Prenotazione extends Model implements HasMedia
         'approvato_at',
         'motivo_rifiuto',
         'pdf_firmato_at',
-        'pdf_firmato_path',
         'inviato_assicurazione_at',
         'concluso_at',
         'archived_at',
@@ -125,6 +124,11 @@ class Prenotazione extends Model implements HasMedia
 
         $this->addMediaCollection('altri')
             ->acceptsMimeTypes($allowedMimeTypes)
+            ->useDisk('local');
+
+        $this->addMediaCollection('pdf_firmato')
+            ->singleFile()
+            ->acceptsMimeTypes(['application/pdf'])
             ->useDisk('local');
     }
 

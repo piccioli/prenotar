@@ -72,6 +72,14 @@ class PrenotazionePolicy
         return $user->isGrManager() && $user->hasPermissionTo('prenotazioni:reassign-torre');
     }
 
+    public function loadSignedPdf(User $user, Prenotazione $prenotazione): bool
+    {
+        return $user->isSezione()
+            && $user->hasPermissionTo('prenotazioni:load-signed-pdf')
+            && $user->id === $prenotazione->user_id
+            && $prenotazione->status === PrenotazioneStatus::Approvata;
+    }
+
     public function generatePdfRichiesta(User $user, Prenotazione $prenotazione): bool
     {
         return $user->isGrManager() && $user->hasPermissionTo('prenotazioni:generate-pdf-richiesta');

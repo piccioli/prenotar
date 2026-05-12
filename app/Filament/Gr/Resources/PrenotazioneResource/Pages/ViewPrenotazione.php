@@ -9,7 +9,9 @@ use App\Enums\ResponsabileTipo;
 use App\Filament\Gr\Resources\PrenotazioneResource;
 use App\Models\Prenotazione;
 use App\Models\Torre;
+use App\Services\PdfGenerator;
 use App\Services\PrenotazioneStateMachine;
+use App\Settings\GrSettings;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Infolists\Components\RepeatableEntry;
@@ -153,6 +155,78 @@ class ViewPrenotazione extends ViewRecord
                         $data['motivo'],
                     );
                     Notification::make()->title('Date trasporto aggiornate')->success()->send();
+                    $this->redirect(PrenotazioneResource::getUrl('view', ['record' => $this->prenotazione()]));
+                }),
+
+            Actions\Action::make('download_richiesta')
+                ->label('Scarica Richiesta parete')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('gray')
+                ->visible(fn (): bool => in_array(
+                    $this->prenotazione()->status,
+                    [
+                        PrenotazioneStatus::Approvata,
+                        PrenotazioneStatus::InviatoPdfFirmato,
+                        PrenotazioneStatus::InviatoAssicurazione,
+                        PrenotazioneStatus::Concluso,
+                    ],
+                    strict: true,
+                ) && auth()->user()->can('generatePdfRichiesta', $this->prenotazione()))
+                ->action(function () {
+                    $p = $this->prenotazione();
+
+                    return response()->streamDownload(
+                        fn () => print (app(PdfGenerator::class)->richiestaParete($p)->output()),
+                        "Richiesta_parete_{$p->id}.pdf",
+                        ['Content-Type' => 'application/pdf'],
+                    );
+                }),
+
+            Actions\Action::make('download_modulo3')
+                ->label('Scarica Modulo 3')
+                ->icon('heroicon-o-document-text')
+                ->color('gray')
+                ->visible(fn (): bool => in_array(
+                    $this->prenotazione()->status,
+                    [
+                        PrenotazioneStatus::Approvata,
+                        PrenotazioneStatus::InviatoPdfFirmato,
+                        PrenotazioneStatus::InviatoAssicurazione,
+                        PrenotazioneStatus::Concluso,
+                    ],
+                    strict: true,
+                ) && auth()->user()->can('generatePdfModulo3', $this->prenotazione()))
+                ->action(function () {
+                    $p = $this->prenotazione();
+                    $settings = app(GrSettings::class);
+
+                    return response()->streamDownload(
+                        fn () => print (app(PdfGenerator::class)->modulo3($p, $settings)->output()),
+                        "Modulo3_{$p->id}.pdf",
+                        ['Content-Type' => 'application/pdf'],
+                    );
+                }),
+
+            Actions\Action::make('invia_assicurazione')
+                ->label('Invia all\'assicurazione')
+                ->icon('heroicon-o-envelope')
+                ->color('warning')
+                ->visible(fn (): bool => $this->prenotazione()->status === PrenotazioneStatus::InviatoPdfFirmato
+                    && auth()->user()->can('sendInsurance', $this->prenotazione()))
+                ->requiresConfirmation()
+                ->modalHeading('Invia Modulo 3 all\'assicurazione')
+                ->modalDescription(function (): string {
+                    $emails = app(GrSettings::class)->emails_assicurazione;
+                    $lista = implode(', ', $emails ?: ['(nessun destinatario configurato)']);
+
+                    return "Verrà inviata un'email con il Modulo 3 allegato a: {$lista}. Questa azione cambia lo stato della prenotazione a INVIATO_ASSICURAZIONE.";
+                })
+                ->action(function (): void {
+                    app(PrenotazioneStateMachine::class)->inviaAssicurazione(
+                        $this->prenotazione(),
+                        auth()->user(),
+                    );
+                    Notification::make()->title('Modulo 3 inviato all\'assicurazione')->success()->send();
                     $this->redirect(PrenotazioneResource::getUrl('view', ['record' => $this->prenotazione()]));
                 }),
         ];

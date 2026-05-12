@@ -8,6 +8,8 @@ use App\Enums\PrenotazioneStatus;
 use App\Events\PrenotazioneApprovata;
 use App\Events\PrenotazioneDateModificate;
 use App\Events\PrenotazioneInviata;
+use App\Events\PrenotazioneInviataAssicurazione;
+use App\Events\PrenotazionePdfFirmatoCaricato;
 use App\Events\PrenotazioneRifiutata;
 use App\Events\PrenotazioneTorreRiassegnata;
 use App\Models\Prenotazione;
@@ -17,6 +19,7 @@ use App\Rules\NoOverlapTorre;
 use App\Rules\UnicaPrenotazioneAttivaPerUser;
 use App\Settings\GrSettings;
 use DomainException;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use InvalidArgumentException;
@@ -256,14 +259,60 @@ final class PrenotazioneStateMachine
         event(new PrenotazioneTorreRiassegnata($p->fresh(), $oldTorreId ?? 0));
     }
 
-    public function caricaPdfFirmato(Prenotazione $p, User $u, string $path): never
+    public function caricaPdfFirmato(Prenotazione $p, User $u, UploadedFile $file): void
     {
-        throw new \BadMethodCallException('Implementazione Fase 5.');
+        if ($p->status !== PrenotazioneStatus::Approvata) {
+            throw new DomainException('Il caricamento del PDF firmato è consentito solo da stato APPROVATA.');
+        }
+        if ($p->user_id !== $u->id) {
+            throw new DomainException('Solo la sezione proprietaria può caricare il PDF firmato.');
+        }
+
+        DB::transaction(function () use ($p, $u, $file): void {
+            $p->clearMediaCollection('pdf_firmato');
+            $p->addMedia($file)->toMediaCollection('pdf_firmato');
+
+            $p->update([
+                'status' => PrenotazioneStatus::InviatoPdfFirmato,
+                'pdf_firmato_at' => now(),
+            ]);
+
+            PrenotazioneHistory::create([
+                'prenotazione_id' => $p->id,
+                'user_id' => $u->id,
+                'status_from' => PrenotazioneStatus::Approvata,
+                'status_to' => PrenotazioneStatus::InviatoPdfFirmato,
+                'note' => 'PDF firmato caricato dalla sezione.',
+                'created_at' => now(),
+            ]);
+        });
+
+        event(new PrenotazionePdfFirmatoCaricato($p->fresh()));
     }
 
-    public function inviaAssicurazione(Prenotazione $p, User $u): never
+    public function inviaAssicurazione(Prenotazione $p, User $u): void
     {
-        throw new \BadMethodCallException('Implementazione Fase 5.');
+        if ($p->status !== PrenotazioneStatus::InviatoPdfFirmato) {
+            throw new DomainException('Invio assicurazione consentito solo da stato INVIATO_PDF_FIRMATO.');
+        }
+
+        DB::transaction(function () use ($p, $u): void {
+            $p->update([
+                'status' => PrenotazioneStatus::InviatoAssicurazione,
+                'inviato_assicurazione_at' => now(),
+            ]);
+
+            PrenotazioneHistory::create([
+                'prenotazione_id' => $p->id,
+                'user_id' => $u->id,
+                'status_from' => PrenotazioneStatus::InviatoPdfFirmato,
+                'status_to' => PrenotazioneStatus::InviatoAssicurazione,
+                'note' => 'Modulo 3 inviato alla compagnia assicurativa.',
+                'created_at' => now(),
+            ]);
+        });
+
+        event(new PrenotazioneInviataAssicurazione($p->fresh()));
     }
 
     public function concludi(Prenotazione $p): never

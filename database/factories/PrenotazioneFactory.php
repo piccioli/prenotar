@@ -57,7 +57,6 @@ class PrenotazioneFactory extends Factory
             'approvato_at' => null,
             'motivo_rifiuto' => null,
             'pdf_firmato_at' => null,
-            'pdf_firmato_path' => null,
             'inviato_assicurazione_at' => null,
             'concluso_at' => null,
             'archived_at' => null,
@@ -92,7 +91,6 @@ class PrenotazioneFactory extends Factory
             'status' => PrenotazioneStatus::InviatoPdfFirmato,
             'approvato_at' => now(),
             'pdf_firmato_at' => now(),
-            'pdf_firmato_path' => 'fake/pdf-firmato.pdf',
         ]);
     }
 
@@ -102,7 +100,6 @@ class PrenotazioneFactory extends Factory
             'status' => PrenotazioneStatus::InviatoAssicurazione,
             'approvato_at' => now()->subDays(5),
             'pdf_firmato_at' => now()->subDays(4),
-            'pdf_firmato_path' => 'fake/pdf-firmato.pdf',
             'inviato_assicurazione_at' => now()->subDays(2),
         ]);
     }
