@@ -178,7 +178,10 @@ class PrenotazioneResource extends Resource
                     }),
             ])
             ->bulkActions([BulkActionGroup::make([])])
-            ->defaultSort('created_at', 'desc');
+            ->defaultSort('created_at', 'desc')
+            ->emptyStateHeading('Nessuna prenotazione')
+            ->emptyStateDescription('Non ci sono prenotazioni che corrispondono ai criteri di ricerca.')
+            ->emptyStateIcon('heroicon-o-clipboard-document-list');
     }
 
     /** @return Builder<Prenotazione> */

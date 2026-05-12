@@ -24,7 +24,7 @@ class TorreResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
 
-    protected static ?string $navigationLabel = 'Carte d\'identità torri';
+    protected static ?string $navigationLabel = 'Torri';
 
     protected static ?string $modelLabel = 'Torre';
 

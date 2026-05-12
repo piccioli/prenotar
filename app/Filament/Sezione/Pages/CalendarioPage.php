@@ -20,6 +20,8 @@ class CalendarioPage extends Page
 
     protected static ?string $slug = 'calendario';
 
+    protected static ?int $navigationSort = 15;
+
     public ?int $filtroTorreId = null;
 
     public function updatedFiltroTorreId(): void

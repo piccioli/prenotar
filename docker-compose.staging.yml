@@ -1,0 +1,134 @@
+# Stack staging Prenotar — UAT + test con dati reali.
+# Stack separato da produzione: volumi, porte e DB distinti.
+# Uso:
+#   cp .env.staging.example .env.staging  # poi valorizza APP_KEY, DB_PASSWORD, DB_ROOT_PASSWORD
+#   docker compose -f docker-compose.staging.yml --env-file .env.staging build
+#   docker compose -f docker-compose.staging.yml --env-file .env.staging up -d
+# Prima inizializzazione:
+#   docker compose -f docker-compose.staging.yml --env-file .env.staging exec app php artisan migrate --force
+#   docker compose -f docker-compose.staging.yml --env-file .env.staging exec app php artisan db:seed --class=LocalDevSeeder
+
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: nginx
+      args:
+        COMPOSER_INSTALL_DEV: ${COMPOSER_INSTALL_DEV:-1}
+    ports:
+      - "${HTTP_PUBLISH:-8081}:80"
+    depends_on:
+      - app
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app
+      args:
+        COMPOSER_INSTALL_DEV: ${COMPOSER_INSTALL_DEV:-1}
+    env_file:
+      - .env.staging
+    environment:
+      AUTORUN_OPTIMIZE: "${AUTORUN_OPTIMIZE:-1}"
+      AUTORUN_MIGRATIONS: "${AUTORUN_MIGRATIONS:-0}"
+    volumes:
+      - app_staging_storage:/var/www/html/storage/app
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      mailpit:
+        condition: service_started
+    restart: unless-stopped
+
+  horizon:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app
+      args:
+        COMPOSER_INSTALL_DEV: ${COMPOSER_INSTALL_DEV:-1}
+    entrypoint: ["/usr/local/bin/docker-entrypoint-worker.sh"]
+    command: [php, artisan, horizon]
+    env_file:
+      - .env.staging
+    environment:
+      AUTORUN_OPTIMIZE: "0"
+    volumes:
+      - app_staging_storage:/var/www/html/storage/app
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      mailpit:
+        condition: service_started
+      app:
+        condition: service_started
+    restart: unless-stopped
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app
+      args:
+        COMPOSER_INSTALL_DEV: ${COMPOSER_INSTALL_DEV:-1}
+    entrypoint: ["/usr/local/bin/docker-entrypoint-worker.sh"]
+    command: [php, artisan, schedule:work]
+    env_file:
+      - .env.staging
+    environment:
+      AUTORUN_OPTIMIZE: "0"
+    volumes:
+      - app_staging_storage:/var/www/html/storage/app
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      mailpit:
+        condition: service_started
+      app:
+        condition: service_started
+    restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit:latest
+    # SMTP 1025 solo sulla rete Docker; UI su localhost host porta 8027 (no conflitto con prod su 8025).
+    ports:
+      - "127.0.0.1:${MAILPIT_UI_PORT:-8027}:8025"
+    restart: unless-stopped
+
+  mariadb:
+    image: mariadb:10.11
+    environment:
+      MARIADB_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
+      MARIADB_DATABASE: "${DB_DATABASE}"
+      MARIADB_USER: "${DB_USERNAME}"
+      MARIADB_PASSWORD: "${DB_PASSWORD}"
+    volumes:
+      - mariadb_staging_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_staging_data:/data
+    restart: unless-stopped
+
+volumes:
+  mariadb_staging_data:
+  redis_staging_data:
+  app_staging_storage:

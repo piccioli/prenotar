@@ -257,7 +257,7 @@ class PrenotazioneResource extends Resource
                         ]))),
 
                     Forms\Components\Placeholder::make('avviso_delibera')
-                        ->label('')
+                        ->label('Passo successivo')
                         ->content('Dopo aver salvato la bozza, carica la delibera del consiglio dalla pagina di modifica per poter inviare la richiesta al GR.'),
                 ]),
         ];
@@ -486,15 +486,15 @@ class PrenotazioneResource extends Resource
                     ->getStateUsing(fn (Prenotazione $record): bool => $record->hasMedia('delibera_consiglio')),
             ])
             ->filters([
-                SelectFilter::make('torre_id')
-                    ->label('Torre')
-                    ->options(Torre::where('is_active', true)->pluck('nome', 'id')),
-
                 SelectFilter::make('status')
                     ->label('Stato')
                     ->options(collect(PrenotazioneStatus::cases())->mapWithKeys(
                         fn (PrenotazioneStatus $s) => [$s->value => $s->label()]
                     )),
+
+                SelectFilter::make('torre_id')
+                    ->label('Torre')
+                    ->options(Torre::where('is_active', true)->pluck('nome', 'id')),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
@@ -521,7 +521,10 @@ class PrenotazioneResource extends Resource
                             ->send();
                     }),
             ])
-            ->bulkActions([]);
+            ->bulkActions([])
+            ->emptyStateHeading('Nessuna prenotazione')
+            ->emptyStateDescription('Non ci sono prenotazioni che corrispondono ai criteri di ricerca.')
+            ->emptyStateIcon('heroicon-o-clipboard-document-list');
     }
 
     public static function getPages(): array

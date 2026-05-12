@@ -161,6 +161,80 @@ docker build --target nginx -t prenotar-nginx:0.4.0 .
 
 ---
 
+## Ambiente staging (UAT)
+
+Stack Docker separato sullo stesso host del server produzione. Volumi, porte e database distinti — no interferenza con prod.
+
+### Prerequisiti
+
+- Subdominio `staging.prenotar.montagnaservizi.it` puntato all'IP server.
+- File `.env.staging` valorizzato (copia da `.env.staging.example`).
+
+### Configurazione reverse-proxy Nginx (staging)
+
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name staging.prenotar.montagnaservizi.it;
+    # ssl_certificate /path/fullchain.pem;
+    # ssl_certificate_key /path/privkey.pem;
+
+    location / {
+        proxy_pass http://127.0.0.1:8081;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+    }
+}
+```
+
+### Build e avvio
+
+```bash
+docker compose -f docker-compose.staging.yml --env-file .env.staging build
+docker compose -f docker-compose.staging.yml --env-file .env.staging up -d
+```
+
+### Prima inizializzazione (UAT)
+
+```bash
+docker compose -f docker-compose.staging.yml --env-file .env.staging exec app php artisan migrate --force
+docker compose -f docker-compose.staging.yml --env-file .env.staging exec app php artisan db:seed --class=LocalDevSeeder
+```
+
+Il `LocalDevSeeder` importa le 152 sezioni + 77 sottosezioni da Excel reale, imposta password `password` su tutti gli account, crea admin + GR dev e popola le impostazioni del presidente GR con firma e documento d'identità.
+
+**Credenziali UAT**:
+- Admin: `admin@local.test` / `password`
+- GR: `gr@local.test` / `password`
+- Sezioni: tutte con password `password` (email da Excel reale)
+
+Mail interceptata da Mailpit — UI su `http://127.0.0.1:8027` sul server.
+
+### Aggiornamento staging
+
+```bash
+git pull
+docker compose -f docker-compose.staging.yml --env-file .env.staging build
+docker compose -f docker-compose.staging.yml --env-file .env.staging up -d
+docker compose -f docker-compose.staging.yml --env-file .env.staging exec app php artisan migrate --force
+```
+
+### Reset completo staging
+
+```bash
+docker compose -f docker-compose.staging.yml --env-file .env.staging down -v
+docker compose -f docker-compose.staging.yml --env-file .env.staging up -d
+docker compose -f docker-compose.staging.yml --env-file .env.staging exec app php artisan migrate --force
+docker compose -f docker-compose.staging.yml --env-file .env.staging exec app php artisan db:seed --class=LocalDevSeeder
+```
+
+**Mai** usare `down -v` sulla produzione — cancella tutti i dati.
+
+---
+
 ## Sviluppo locale
 
 Resta **Laravel Sail** (`./vendor/bin/sail`). Non usare `docker-compose.production.yml` per il day-to-day in locale.
