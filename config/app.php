@@ -28,9 +28,9 @@ return [
     |
     */
 
-    'version' => env('APP_VERSION', '0.4.0'),
+    'version' => env('APP_VERSION', '0.5.0'),
 
-    'version_date' => env('APP_VERSION_DATE', '2026-05-11'),
+    'version_date' => env('APP_VERSION_DATE', '2026-05-12'),
 
     /*
     |--------------------------------------------------------------------------

@@ -6,6 +6,23 @@ Il formato segue le idee di [Keep a Changelog](https://keepachangelog.com/it/1.1
 
 ## [Non rilasciato]
 
+## [0.5.0] - 2026-05-12
+
+### Aggiunto
+
+- **Modifica date prenotazione** (pannello GR): flusso `changeDates` nella state machine, evento `PrenotazioneDateModificate`, notifica email, pagina **Impostazioni** GR e test di copertura.
+- **Produzione — Mailpit**: servizio opzionale in `docker-compose.production.yml` per invii di prova; aggiornamenti a `DEPLOY.md` e al template `.env`.
+- **Build Docker**: variabile `COMPOSER_INSTALL_DEV` per installare dipendenze di sviluppo nell’immagine (seed demo con Faker).
+
+### Modificato
+
+- **LocalDevSeeder**: risoluzione file Excel da `DOCUMENTI` o `storage/app/private` (`.xls` e file unico in private); skip demo se Faker non è disponibile.
+- **PHP-FPM in produzione**: permessi su `public/` per `storage:link` / `filament:optimize`; log FPM su file in `storage/logs` per evitare errori di permesso su `/proc/self/fd/2` dopo `gosu`.
+
+### Altri
+
+- **`.gitignore`**: directory `messages/` esclusa dal repository.
+
 ## [0.4.0] - 2026-05-11
 
 ### Aggiunto
