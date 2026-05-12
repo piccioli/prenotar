@@ -11,11 +11,13 @@ use App\Models\Sezione;
 use App\Models\Torre;
 use App\Models\User;
 use App\Services\Import\ExcelImportService;
+use App\Settings\GrSettings;
 use Faker\Factory;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Seeder per ambienti local/testing.
@@ -26,13 +28,19 @@ use Illuminate\Support\Facades\Hash;
  * Uso: sail artisan migrate:fresh --seed
  *      oppure: sail artisan db:seed --class=LocalDevSeeder
  *
- * File Excel (in ordine): `DOCUMENTI PER LA PROGETTAZIONE/<nome>.xlsx`,
- * poi `storage/app/private/<nome>.{xlsx,xls}`; se in `storage/app/private/` c’è un solo
- * file .xlsx/.xls viene usato quello.
+ * File Excel (in ordine di ricerca):
+ *   1. `database/seeders/LocalDevSeedersAssets/<nome>.xlsx`
+ *   2. `DOCUMENTI PER LA PROGETTAZIONE/<nome>.xlsx`
+ *   3. `storage/app/private/<nome>.{xlsx,xls}` (singolo file)
+ *
+ * Dati presidente GR prelevati dalla carta d’identità reale in LocalDevSeedersAssets/:
+ *   Emilio Aldeghi — nato a Lecco — 11/04/1958
  */
 class LocalDevSeeder extends Seeder
 {
     private const EXCEL_FILENAME = '2026_MS_Sezioni_SottoSezioni_GR_Gruppi Regionali ETS.xlsx';
+
+    private const ASSETS_DIR = __DIR__.'/LocalDevSeedersAssets';
 
     private const DEMO_NOME_PREFIX = '[DEV] ';
 
@@ -46,16 +54,25 @@ class LocalDevSeeder extends Seeder
         $this->impostaPassword();
         $this->creaAdmin();
         $this->creaGr();
+        $this->creaGrSettings();
         $this->creaPrenotazioniDemoCalendario();
     }
 
     private function resolveExcelPath(): ?string
     {
+        // 1. Cerca prima nella directory assets del seeder
+        $assets = self::ASSETS_DIR.'/'.self::EXCEL_FILENAME;
+        if (is_file($assets)) {
+            return $assets;
+        }
+
+        // 2. Poi in DOCUMENTI PER LA PROGETTAZIONE/
         $documenti = base_path('DOCUMENTI PER LA PROGETTAZIONE/'.self::EXCEL_FILENAME);
         if (is_file($documenti)) {
             return $documenti;
         }
 
+        // 3. Infine in storage/app/private/ (singolo file xlsx/xls)
         $baseName = pathinfo(self::EXCEL_FILENAME, PATHINFO_FILENAME);
         foreach (['xlsx', 'xls', 'XLSX', 'XLS'] as $ext) {
             $candidate = storage_path("app/private/{$baseName}.{$ext}");
@@ -77,6 +94,38 @@ class LocalDevSeeder extends Seeder
         }
 
         return count($matches) === 1 ? $matches[0] : null;
+    }
+
+    private function creaGrSettings(): void
+    {
+        $settings = app(GrSettings::class);
+
+        $settings->presidente_nome = 'Emilio Aldeghi';
+        $settings->presidente_nato_a = 'Lecco';
+        $settings->presidente_data_nascita = '1958-04-11';
+        $settings->emails_notifiche_gr = ['gr@local.test'];
+        $settings->emails_assicurazione = ['assicurazione@local.test'];
+
+        $destDir = 'gr/presidente';
+        Storage::disk('local')->makeDirectory($destDir);
+
+        $firma = self::ASSETS_DIR.'/DOC_Presidente_GR_Lombardia_FIRMA.jpg';
+        if (is_file($firma)) {
+            $destFirma = $destDir.'/DOC_Presidente_GR_Lombardia_FIRMA.jpg';
+            Storage::disk('local')->put($destFirma, file_get_contents($firma));
+            $settings->firma_presidente_path = $destFirma;
+        }
+
+        $ci = self::ASSETS_DIR.'/DOC_Presidente_GR_Lombardia_Carta_di_identita.pdf';
+        if (is_file($ci)) {
+            $destCi = $destDir.'/DOC_Presidente_GR_Lombardia_Carta_di_identita.pdf';
+            Storage::disk('local')->put($destCi, file_get_contents($ci));
+            $settings->documento_presidente_path = $destCi;
+        }
+
+        $settings->save();
+
+        $this->command->info('GrSettings: presidente Emilio Aldeghi, firma e CI copiati in storage/app/private/gr/presidente/');
     }
 
     private function importaSeSeVuoto(): void
