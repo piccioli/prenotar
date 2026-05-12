@@ -167,7 +167,7 @@ Ogni transizione registra un record in `prenotazione_history` (autore + timestam
 
 ## Cosa NON fare automaticamente
 
-- **Niente `git push`** senza conferma esplicita dell'utente.
+- **Niente `git push`** senza conferma esplicita dell’utente, **salvo** quando chiede una **minor release** (`versione X.Y.0`, changelog, tag): in quel caso eseguire anche `git push origin <branch>` e `git push origin vX.Y.0` (o `git push origin --tags` se servono più tag insieme).
 - **Niente `git push --force`** mai.
 - **Niente mock del DB** nei test feature — usare `RefreshDatabase` su MariaDB reale.
 - **Niente import Excel** con dati reali in test — usare factory.
