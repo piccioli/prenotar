@@ -49,3 +49,14 @@ Started: Mer  8 Lug 2026 16:40:51 CEST
   - Le migrazioni "aggiungi colonna" successive alla create_prenotazioni_table originale seguono il pattern: `Schema::table('prenotazioni', fn (Blueprint $table) => ...)` con `->after('colonna_precedente')` per mantenere l'ordine leggibile, e down() con dropColumn simmetrico (vedi add_reminder_flags_to_prenotazioni.php).
   - US-005 (UI toggle mezzo privato) consumerà direttamente questi due enum e le due colonne appena introdotte nello stesso file toccato da US-001 (CreatePrenotazione.php) — nessun lavoro di schema aggiuntivo necessario per quella story.
 ---
+
+## [2026-07-08] - US-004
+- Aggiunte le colonne di audit per la conferma di lettura del manuale d'istruzioni per-torre: `manuale_letto_confermato_at` (timestamp nullable) e `manuale_letto_torre_id` (FK nullable verso `torri.id`, nullOnDelete).
+- File modificati:
+  - database/migrations/2026_07_08_180000_add_manuale_letto_to_prenotazioni.php (nuova, `foreignId('manuale_letto_torre_id')->nullable()->constrained('torri')->nullOnDelete()`, down() con `dropConstrainedForeignId` + `dropColumn`)
+  - app/Models/Prenotazione.php (aggiunti i due campi a `$fillable`, cast `datetime` per `manuale_letto_confermato_at`, docblock @property aggiornato)
+- Verifiche eseguite: `sail artisan migrate` (nuova migrazione applicata senza errori sullo schema esistente), `sail composer qa` = pint passed + phpstan 0 errori + 228 test passed (nessun nuovo test necessario, story è solo schema come le acceptance criteria richiedono — nessun nuovo comportamento utente da testare, la UI arriva in US-007).
+- **Learnings for future iterations:**
+  - Per una colonna FK nullable aggiunta in una migrazione successiva (non quella di creazione tabella), usare `$table->foreignId('col')->nullable()->after('precedente')->constrained('tabella')->nullOnDelete()`; nel down() usare `dropConstrainedForeignId('col')` (droppa sia la FK che la colonna) invece di `dropColumn` + drop manuale della foreign key.
+  - US-007 (UI flag lettura manuale) consumerà direttamente queste due colonne nello stesso file toccato da US-001/US-005 (CreatePrenotazione.php) — nessun lavoro di schema aggiuntivo necessario per quella story.
+---

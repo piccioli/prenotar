@@ -29,6 +29,8 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property ResponsabileTipo $responsabile_tipo
  * @property TipoMezzo $tipo_mezzo
  * @property CategoriaPatente|null $categoria_patente_privato
+ * @property Carbon|null $manuale_letto_confermato_at
+ * @property int|null $manuale_letto_torre_id
  * @property Carbon $data_inizio_prenotazione
  * @property Carbon $data_fine_prenotazione
  * @property Carbon $data_inizio_evento
@@ -72,6 +74,8 @@ class Prenotazione extends Model implements HasMedia
         'targa_autoveicolo',
         'tipo_mezzo',
         'categoria_patente_privato',
+        'manuale_letto_confermato_at',
+        'manuale_letto_torre_id',
         'responsabile_nome',
         'responsabile_titolo_cai',
         'responsabile_telefono',
@@ -96,6 +100,7 @@ class Prenotazione extends Model implements HasMedia
             'responsabile_tipo' => ResponsabileTipo::class,
             'tipo_mezzo' => TipoMezzo::class,
             'categoria_patente_privato' => CategoriaPatente::class,
+            'manuale_letto_confermato_at' => 'datetime',
             'data_inizio_evento' => 'date',
             'data_fine_evento' => 'date',
             'data_inizio_prenotazione' => 'date',
