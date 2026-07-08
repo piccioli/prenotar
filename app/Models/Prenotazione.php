@@ -74,7 +74,6 @@ class Prenotazione extends Model implements HasMedia
         'categoria_patente_privato',
         'responsabile_nome',
         'responsabile_titolo_cai',
-        'responsabile_codice_cai',
         'responsabile_telefono',
         'responsabile_email',
         'responsabile_tipo',

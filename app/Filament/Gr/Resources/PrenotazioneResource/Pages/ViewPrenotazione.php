@@ -301,7 +301,6 @@ class ViewPrenotazione extends ViewRecord
                                         ->label('Qualifica')
                                         ->formatStateUsing(fn (mixed $state): string => $state instanceof ResponsabileTipo ? $state->label() : (string) $state),
                                     TextEntry::make('responsabile_titolo_cai')->label('Titolo CAI')->default('—'),
-                                    TextEntry::make('responsabile_codice_cai')->label('Codice CAI')->default('—'),
                                     TextEntry::make('responsabile_telefono')->label('Telefono'),
                                     TextEntry::make('responsabile_email')->label('Email'),
                                 ])->columns(3),

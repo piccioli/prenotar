@@ -205,15 +205,9 @@ class PrenotazioneResource extends Resource
                             )),
                     ]),
 
-                    Forms\Components\Grid::make(2)->schema([
-                        Forms\Components\TextInput::make('responsabile_titolo_cai')
-                            ->label('Titolo CAI')
-                            ->maxLength(255),
-
-                        Forms\Components\TextInput::make('responsabile_codice_cai')
-                            ->label('Codice CAI')
-                            ->maxLength(50),
-                    ]),
+                    Forms\Components\TextInput::make('responsabile_titolo_cai')
+                        ->label('Titolo CAI')
+                        ->maxLength(255),
 
                     Forms\Components\Grid::make(2)->schema([
                         Forms\Components\TextInput::make('responsabile_telefono')
@@ -381,15 +375,9 @@ class PrenotazioneResource extends Resource
                             )),
                     ]),
 
-                    Forms\Components\Grid::make(2)->schema([
-                        Forms\Components\TextInput::make('responsabile_titolo_cai')
-                            ->label('Titolo CAI')
-                            ->maxLength(255),
-
-                        Forms\Components\TextInput::make('responsabile_codice_cai')
-                            ->label('Codice CAI')
-                            ->maxLength(50),
-                    ]),
+                    Forms\Components\TextInput::make('responsabile_titolo_cai')
+                        ->label('Titolo CAI')
+                        ->maxLength(255),
 
                     Forms\Components\Grid::make(2)->schema([
                         Forms\Components\TextInput::make('responsabile_telefono')

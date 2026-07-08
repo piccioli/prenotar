@@ -88,10 +88,6 @@
         <td class="value">{{ $p->responsabile_titolo_cai ?? '—' }}</td>
     </tr>
     <tr>
-        <td class="label">Codice CAI</td>
-        <td class="value">{{ $p->responsabile_codice_cai ?? '—' }}</td>
-    </tr>
-    <tr>
         <td class="label">Telefono</td>
         <td class="value">{{ $p->responsabile_telefono ?? '—' }}</td>
     </tr>

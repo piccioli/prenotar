@@ -20,6 +20,22 @@ Started: Mer  8 Lug 2026 16:40:51 CEST
   - Nessun browser tool disponibile in questo ambiente: la verifica UI è stata fatta tramite Feature test HTTP reali (non solo unit/mock).
 ---
 
+## [2026-07-08] - US-003
+- Rimosso completamente il campo `responsabile_codice_cai` (segnalato come non verificabile) da database, modello, form Filament (Sezione create/edit), infolist di dettaglio (Sezione e Gr) e template PDF "Richiesta parete". Il campo `responsabile_titolo_cai` (diverso, non toccato) resta invariato.
+- File modificati:
+  - database/migrations/2026_07_08_170000_drop_responsabile_codice_cai_from_prenotazioni.php (nuova, dropColumn / down ripristina la colonna con `->after('responsabile_titolo_cai')`)
+  - app/Models/Prenotazione.php (rimosso da `$fillable`; non era presente nel docblock `@property`, quindi nessuna modifica lì)
+  - database/factories/PrenotazioneFactory.php (rimossa riga `'responsabile_codice_cai' => null`)
+  - app/Filament/Sezione/Resources/PrenotazioneResource.php (rimosso il TextInput in entrambe le definizioni di form — quella a step del wizard/create e quella a Section per l'edit — la Grid::make(2) che accoppiava titolo_cai+codice_cai è stata sciolta lasciando titolo_cai come campo singolo)
+  - app/Filament/Sezione/Resources/PrenotazioneResource/Pages/ViewPrenotazione.php e app/Filament/Gr/Resources/PrenotazioneResource/Pages/ViewPrenotazione.php (rimosso il TextEntry corrispondente nell'infolist "Responsabile in loco")
+  - resources/views/pdf/richiesta_parete.blade.php (rimossa la riga tabella "Codice CAI")
+  - Admin non referenziava il campo, nessuna modifica necessaria lì. Nessun test esistente referenziava il campo (verificato con grep su tests/), quindi nessun test da aggiornare.
+- Verifiche eseguite: `grep -r responsabile_codice_cai` su app/, resources/, database/factories/, tests/ (residuo solo nella nuova migrazione stessa e in documentazione/prd, come atteso), `sail artisan migrate` (nuova migrazione applicata senza errori), `sail composer qa` = pint passed + phpstan 0 errori + 228 test passed.
+- **Learnings for future iterations:**
+  - `PrenotazioneResource.php` definisce il form del "Responsabile in loco" in DUE punti distinti (uno per lo step del wizard di create, uno per la Section usata in edit/altre view) — quando si tocca un campo di quello step bisogna cercare e modificare entrambe le occorrenze, non solo la prima trovata.
+  - US-006 ("UI: rimozione campo codice CAI dal form responsabile") risulta già completamente soddisfatta da questa story: tutte le sue acceptance criteria (rimozione dal form Sezione, da infolist Gr/Admin, dal PDF, nessun test residuo) sono già verificate qui. La prossima iterazione su US-006 dovrebbe limitarsi a ri-verificare (grep + test) e marcarla passata, senza codice aggiuntivo previsto.
+---
+
 ## [2026-07-08] - US-002
 - Implementati i due nuovi enum e le relative colonne per distinguere trasporto con mezzo aziendale vs privato (con categoria patente).
 - File modificati:
