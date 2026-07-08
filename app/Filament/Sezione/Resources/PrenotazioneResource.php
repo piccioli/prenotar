@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Filament\Sezione\Resources;
 
+use App\Enums\CategoriaPatente;
 use App\Enums\PrenotazioneStatus;
 use App\Enums\ResponsabileTipo;
+use App\Enums\TipoMezzo;
 use App\Filament\Sezione\Resources\PrenotazioneResource\Pages;
 use App\Filament\Sezione\Widgets\CalendarioPrenotazioniWidget;
 use App\Models\Prenotazione;
@@ -186,6 +188,24 @@ class PrenotazioneResource extends Resource
                             ->label('Targa autoveicolo')
                             ->maxLength(20),
                     ]),
+
+                    Forms\Components\Radio::make('tipo_mezzo')
+                        ->label('Tipo mezzo')
+                        ->options(collect(TipoMezzo::cases())->mapWithKeys(
+                            fn (TipoMezzo $t) => [$t->value => $t->label()]
+                        ))
+                        ->default(TipoMezzo::Aziendale->value)
+                        ->required()
+                        ->live()
+                        ->inline(),
+
+                    Forms\Components\Select::make('categoria_patente_privato')
+                        ->label('Categoria patente')
+                        ->options(collect(CategoriaPatente::cases())->mapWithKeys(
+                            fn (CategoriaPatente $c) => [$c->value => $c->label()]
+                        ))
+                        ->visible(fn (Forms\Get $get): bool => $get('tipo_mezzo') === TipoMezzo::Privato->value)
+                        ->required(fn (Forms\Get $get): bool => $get('tipo_mezzo') === TipoMezzo::Privato->value),
                 ]),
 
             Forms\Components\Wizard\Step::make('Responsabile in loco')
@@ -241,6 +261,19 @@ class PrenotazioneResource extends Resource
                             $get('data_inizio_prenotazione'),
                             $get('data_fine_prenotazione'),
                         ]))),
+
+                    Forms\Components\Placeholder::make('riepilogo_trasporto')
+                        ->label('Trasporto')
+                        ->content(function (Forms\Get $get): string {
+                            $tipoMezzo = TipoMezzo::tryFrom((string) $get('tipo_mezzo'));
+
+                            return implode(' — ', array_filter([
+                                $tipoMezzo?->label(),
+                                $tipoMezzo === TipoMezzo::Privato
+                                    ? 'Patente '.(CategoriaPatente::tryFrom((string) $get('categoria_patente_privato'))?->label() ?? '—')
+                                    : null,
+                            ]));
+                        }),
 
                     Forms\Components\Placeholder::make('riepilogo_responsabile')
                         ->label('Responsabile in loco')
@@ -357,6 +390,24 @@ class PrenotazioneResource extends Resource
                             ->label('Targa autoveicolo')
                             ->maxLength(20),
                     ]),
+
+                    Forms\Components\Radio::make('tipo_mezzo')
+                        ->label('Tipo mezzo')
+                        ->options(collect(TipoMezzo::cases())->mapWithKeys(
+                            fn (TipoMezzo $t) => [$t->value => $t->label()]
+                        ))
+                        ->default(TipoMezzo::Aziendale->value)
+                        ->required()
+                        ->live()
+                        ->inline(),
+
+                    Forms\Components\Select::make('categoria_patente_privato')
+                        ->label('Categoria patente')
+                        ->options(collect(CategoriaPatente::cases())->mapWithKeys(
+                            fn (CategoriaPatente $c) => [$c->value => $c->label()]
+                        ))
+                        ->visible(fn (Forms\Get $get): bool => $get('tipo_mezzo') === TipoMezzo::Privato->value)
+                        ->required(fn (Forms\Get $get): bool => $get('tipo_mezzo') === TipoMezzo::Privato->value),
                 ]),
 
             Forms\Components\Section::make('Responsabile in loco')

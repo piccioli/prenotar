@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Filament\Sezione\Resources\PrenotazioneResource\Pages;
 
+use App\Enums\CategoriaPatente;
 use App\Enums\PrenotazioneStatus;
 use App\Enums\ResponsabileTipo;
+use App\Enums\TipoMezzo;
 use App\Filament\Sezione\Resources\PrenotazioneResource;
 use App\Models\Prenotazione;
 use App\Services\PrenotazioneStateMachine;
@@ -126,6 +128,13 @@ class ViewPrenotazione extends ViewRecord
 
                             Section::make('Logistica trasporto')
                                 ->schema([
+                                    TextEntry::make('tipo_mezzo')
+                                        ->label('Tipo mezzo')
+                                        ->formatStateUsing(fn (mixed $state): string => $state instanceof TipoMezzo ? $state->label() : (string) $state),
+                                    TextEntry::make('categoria_patente_privato')
+                                        ->label('Categoria patente')
+                                        ->visible(fn (Prenotazione $record): bool => $record->tipo_mezzo === TipoMezzo::Privato)
+                                        ->formatStateUsing(fn (mixed $state): string => $state instanceof CategoriaPatente ? $state->label() : (string) $state),
                                     TextEntry::make('azienda_trasporto')->label('Azienda trasporto'),
                                     TextEntry::make('targa_autoveicolo')->label('Targa')->default('—'),
                                     TextEntry::make('data_ritiro')->label('Data ritiro')->date('d/m/Y')->placeholder('—'),

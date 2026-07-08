@@ -60,3 +60,16 @@ Started: Mer  8 Lug 2026 16:40:51 CEST
   - Per una colonna FK nullable aggiunta in una migrazione successiva (non quella di creazione tabella), usare `$table->foreignId('col')->nullable()->after('precedente')->constrained('tabella')->nullOnDelete()`; nel down() usare `dropConstrainedForeignId('col')` (droppa sia la FK che la colonna) invece di `dropColumn` + drop manuale della foreign key.
   - US-007 (UI flag lettura manuale) consumerà direttamente queste due colonne nello stesso file toccato da US-001/US-005 (CreatePrenotazione.php) — nessun lavoro di schema aggiuntivo necessario per quella story.
 ---
+
+## [2026-07-08] - US-005
+- Implementata la UI del wizard per dichiarare il tipo di mezzo (aziendale/privato) con categoria patente obbligatoria in caso di mezzo privato, usando gli enum e le colonne introdotti in US-002.
+- File modificati:
+  - app/Filament/Sezione/Resources/PrenotazioneResource.php (radio `tipo_mezzo` + select `categoria_patente_privato` condizionale/`required` via `Forms\Get`, aggiunti sia allo step wizard di create sia alla Section usata in edit; placeholder di riepilogo "Trasporto" nello step finale del wizard)
+  - app/Filament/Sezione/Resources/PrenotazioneResource/Pages/ViewPrenotazione.php e app/Filament/Gr/Resources/PrenotazioneResource/Pages/ViewPrenotazione.php (TextEntry `tipo_mezzo` e `categoria_patente_privato`, quest'ultimo visibile solo se il mezzo è privato)
+  - tests/Feature/Sezione/PrenotazioneTipoMezzoValidationTest.php (nuovo, 3 test: privato senza patente → errore di validazione; privato con patente → salva; aziendale default → nessuna patente richiesta)
+- Verifiche eseguite: `sail composer qa` = pint passed + phpstan 0 errori + 231 test passati (`sail composer test` isolato confermato in precedenza).
+- **Learnings for future iterations:**
+  - Confermato il pattern "doppia occorrenza" già annotato in US-003: `PrenotazioneResource.php` definisce il form Logistica/Trasporto sia nello step del wizard (`wizardSteps()`) sia nella Section di `form()` per l'edit — ogni nuovo campo va aggiunto in entrambi i punti.
+  - Per campi condizionali Filament basati su un altro campo dello stesso step, usare `Forms\Get $get` sia in `visible()` che in `required()` (non serve `live()` sul campo dipendente, solo sul campo che lo controlla, qui `tipo_mezzo`).
+  - US-007 può riusare lo stesso step "torre" del wizard senza toccare questo file per la parte trasporto: nessuna interferenza prevista con questa story.
+---
