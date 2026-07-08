@@ -7,8 +7,10 @@ namespace App\Filament\Sezione\Resources\PrenotazioneResource\Pages;
 use App\Enums\PrenotazioneStatus;
 use App\Filament\Sezione\Resources\PrenotazioneResource;
 use App\Models\Prenotazione;
+use Filament\Forms\Components\Actions\Action as WizardAction;
 use Filament\Forms\Components\Wizard;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Resources\Pages\CreateRecord\Concerns\HasWizard;
@@ -58,6 +60,9 @@ class CreatePrenotazione extends CreateRecord
         return $form->schema([
             Wizard::make(PrenotazioneResource::wizardSteps())
                 ->skippable(false)
+                ->nextAction(fn (WizardAction $action) => $action->disabled(
+                    fn (Get $get): bool => filled($get('torre_id')) && ! $get('manuale_letto_confirm')
+                ))
                 ->submitAction(new HtmlString(
                     '<button type="submit" class="fi-btn fi-btn-size-md fi-btn-color-primary fi-color-custom fi-ac-btn-action px-3 py-2">Salva come bozza</button>'
                 )),

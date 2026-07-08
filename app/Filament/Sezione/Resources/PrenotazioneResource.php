@@ -25,6 +25,7 @@ use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\HtmlString;
 
 class PrenotazioneResource extends Resource
 {
@@ -94,6 +95,11 @@ class PrenotazioneResource extends Resource
                             ->options(Torre::where('is_active', true)->pluck('nome', 'id'))
                             ->placeholder('Nessuna preferenza — il GR assegnerà la torre disponibile')
                             ->live()
+                            ->afterStateUpdated(function (Forms\Set $set): void {
+                                $set('manuale_letto_confirm', false);
+                                $set('manuale_letto_confermato_at', null);
+                                $set('manuale_letto_torre_id', null);
+                            })
                             ->rules(fn (Forms\Get $get): array => [
                                 new NoOverlapTorre(
                                     torreId: $get('torre_id') ? (int) $get('torre_id') : null,
@@ -103,6 +109,40 @@ class PrenotazioneResource extends Resource
                             ])
                             ->helperText('Puoi lasciare vuoto. Il GR assegnerà la torre in fase di approvazione.'),
                     ]),
+
+                    Forms\Components\Placeholder::make('manuale_link')
+                        ->hiddenLabel()
+                        ->visible(fn (Forms\Get $get): bool => filled($get('torre_id')))
+                        ->content(function (Forms\Get $get): HtmlString {
+                            $torre = Torre::find($get('torre_id'));
+
+                            if (! $torre || blank($torre->manuale_pdf_path)) {
+                                return new HtmlString('<span class="text-sm text-gray-500 dark:text-gray-400">Manuale non ancora disponibile.</span>');
+                            }
+
+                            return new HtmlString(sprintf(
+                                '<a href="%s" target="_blank" rel="noopener" class="text-sm font-medium text-primary-600 underline hover:text-primary-500">Visualizza/scarica il manuale d\'istruzioni della torre selezionata</a>',
+                                e(asset('storage/'.$torre->manuale_pdf_path))
+                            ));
+                        }),
+
+                    Forms\Components\Checkbox::make('manuale_letto_confirm')
+                        ->label('Ho letto e compreso il manuale d\'istruzioni')
+                        ->live()
+                        ->dehydrated(false)
+                        ->default(false)
+                        ->visible(fn (Forms\Get $get): bool => filled($get('torre_id')))
+                        ->rules(fn (Forms\Get $get): array => filled($get('torre_id')) ? ['accepted'] : [])
+                        ->validationMessages([
+                            'accepted' => 'Devi confermare di aver letto il manuale d\'istruzioni prima di proseguire.',
+                        ])
+                        ->afterStateUpdated(function (?bool $state, Forms\Set $set, Forms\Get $get): void {
+                            $set('manuale_letto_confermato_at', $state ? now() : null);
+                            $set('manuale_letto_torre_id', $state ? $get('torre_id') : null);
+                        }),
+
+                    Forms\Components\Hidden::make('manuale_letto_confermato_at'),
+                    Forms\Components\Hidden::make('manuale_letto_torre_id'),
 
                     Forms\Components\Livewire::make(CalendarioPrenotazioniWidget::class)
                         ->columnSpanFull(),
