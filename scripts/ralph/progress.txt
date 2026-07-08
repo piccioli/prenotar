@@ -73,3 +73,16 @@ Started: Mer  8 Lug 2026 16:40:51 CEST
   - Per campi condizionali Filament basati su un altro campo dello stesso step, usare `Forms\Get $get` sia in `visible()` che in `required()` (non serve `live()` sul campo dipendente, solo sul campo che lo controlla, qui `tipo_mezzo`).
   - US-007 può riusare lo stesso step "torre" del wizard senza toccare questo file per la parte trasporto: nessuna interferenza prevista con questa story.
 ---
+
+## [2026-07-08] - US-006
+- Story di sola verifica, nessun codice modificato: tutte le acceptance criteria erano già soddisfatte dall'implementazione di US-003 (rimozione completa di responsabile_codice_cai da DB/modello/form/infolist/PDF), come già annotato nei "Learnings" di quella iterazione.
+- Verifiche eseguite in questa iterazione:
+  - `grep -rn "responsabile_codice_cai" app/ resources/ database/factories/ tests/` → nessun risultato.
+  - Verifica mirata su Admin PrenotazioneResource (form + ViewPrenotazione infolist) → nessun riferimento al campo.
+  - Verifica su entrambi i template PDF (`resources/views/pdf/richiesta_parete.blade.php` e `modulo3.blade.php`) → nessun riferimento al campo.
+  - La colonna resta definita nella migrazione originale `create_prenotazioni_table` (non modificata, come da vincolo) ma viene droppata dalla migrazione successiva introdotta in US-003 — comportamento atteso.
+  - `sail composer qa` → pint passed, phpstan 0 errori, 231 test passati (nessuna regressione).
+- Nessun file modificato in questa iterazione (solo prd.json e progress.txt).
+- **Learnings for future iterations:**
+  - Quando una story precedente segnala nei suoi "Learnings" che una story successiva è già soddisfatta, non fidarsi ciecamente: rieseguire comunque i grep/test mirati alle sue acceptance criteria specifiche (qui: anche Admin resource e template Modulo 3, non solo i punti esplicitamente citati in US-003) prima di marcarla passata.
+---

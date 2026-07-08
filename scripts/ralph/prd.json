@@ -104,8 +104,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 6,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Gia soddisfatta interamente dall'implementazione di US-003 (rimozione completa del campo da DB/modello/form/infolist/PDF). Verificato in questa iterazione con grep -r su app/, resources/, database/, tests/ (nessun residuo) e sail composer qa (pint passed, phpstan 0 errori, 231 test passati). Nessun codice aggiuntivo necessario."
     },
     {
       "id": "US-007",
