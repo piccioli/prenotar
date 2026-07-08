@@ -19,3 +19,17 @@ Started: Mer  8 Lug 2026 16:40:51 CEST
   - Il controllo esistente lato submit (`UnicaPrenotazioneAttivaPerUser`, in `app/Filament/Sezione/Resources/PrenotazioneResource.php` e `PrenotazioneStateMachine`) NON è stato toccato, come richiesto dalle acceptance criteria — resta una rete di sicurezza aggiuntiva keyed su `user_id`, distinta dal nuovo controllo keyed su `sezione_id`/`sottosezione_id`.
   - Nessun browser tool disponibile in questo ambiente: la verifica UI è stata fatta tramite Feature test HTTP reali (non solo unit/mock).
 ---
+
+## [2026-07-08] - US-002
+- Implementati i due nuovi enum e le relative colonne per distinguere trasporto con mezzo aziendale vs privato (con categoria patente).
+- File modificati:
+  - app/Enums/TipoMezzo.php (nuovo, backed string enum: Aziendale='aziendale', Privato='privato', con label())
+  - app/Enums/CategoriaPatente.php (nuovo, backed string enum: B='B', BE='BE', label() restituisce "B+E" per BE)
+  - database/migrations/2026_07_08_164918_add_tipo_mezzo_to_prenotazioni.php (nuova, aggiunge tipo_mezzo string default 'aziendale' e categoria_patente_privato string nullable, dopo azienda_trasporto)
+  - app/Models/Prenotazione.php (aggiunti tipo_mezzo/categoria_patente_privato a $fillable, casts() e docblock @property)
+- Verifiche eseguite: `sail artisan migrate` (nuova migrazione applicata senza errori su schema esistente), `sail composer test` (228 passed, invariati — story è solo schema, nessun nuovo comportamento utente da testare in questa iterazione, la UI arriva in US-005), `sail composer phpstan` (0 errori), `sail composer pint` (passed).
+- **Learnings for future iterations:**
+  - Pattern enum di dominio confermato: enum PHP backed string in app/Enums/, con metodo label() a match esplicito per ogni case (vedi ResponsabileTipo.php come riferimento). Le option Filament si costruiscono con `collect(Enum::cases())->mapWithKeys(fn ($c) => [$c->value => $c->label()])` (vedi PrenotazioneResource.php righe ~203, ~379).
+  - Le migrazioni "aggiungi colonna" successive alla create_prenotazioni_table originale seguono il pattern: `Schema::table('prenotazioni', fn (Blueprint $table) => ...)` con `->after('colonna_precedente')` per mantenere l'ordine leggibile, e down() con dropColumn simmetrico (vedi add_reminder_flags_to_prenotazioni.php).
+  - US-005 (UI toggle mezzo privato) consumerà direttamente questi due enum e le due colonne appena introdotte nello stesso file toccato da US-001 (CreatePrenotazione.php) — nessun lavoro di schema aggiuntivo necessario per quella story.
+---
