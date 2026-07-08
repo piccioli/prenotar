@@ -6,6 +6,7 @@ namespace App\Filament\Sezione\Resources\PrenotazioneResource\Pages;
 
 use App\Enums\PrenotazioneStatus;
 use App\Filament\Sezione\Resources\PrenotazioneResource;
+use App\Models\Prenotazione;
 use Filament\Forms\Components\Wizard;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -18,6 +19,39 @@ class CreatePrenotazione extends CreateRecord
     use HasWizard;
 
     protected static string $resource = PrenotazioneResource::class;
+
+    protected static string $view = 'filament.sezione.resources.prenotazione-resource.pages.create-prenotazione';
+
+    public ?Prenotazione $prenotazioneAttiva = null;
+
+    public function mount(): void
+    {
+        $this->authorizeAccess();
+
+        $this->prenotazioneAttiva = $this->trovaPrenotazioneAttivaEsistente();
+
+        if ($this->prenotazioneAttiva === null) {
+            $this->fillForm();
+        }
+
+        $this->previousUrl = url()->previous();
+    }
+
+    /** Blocco anticipato (§BUG risolto): impedisce l'accesso al wizard se sezione/sottosezione ha già una prenotazione non conclusa/annullata. */
+    private function trovaPrenotazioneAttivaEsistente(): ?Prenotazione
+    {
+        $user = auth()->user();
+
+        return Prenotazione::query()
+            ->attive()
+            ->when(
+                $user->sottosezione_id !== null,
+                fn ($query) => $query->where('sottosezione_id', $user->sottosezione_id),
+                fn ($query) => $query->where('sezione_id', $user->sezione_id),
+            )
+            ->latest('data_inizio_prenotazione')
+            ->first();
+    }
 
     public function form(Form $form): Form
     {

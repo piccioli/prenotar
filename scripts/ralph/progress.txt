@@ -1,0 +1,21 @@
+# Ralph Progress Log
+Started: Mer  8 Lug 2026 16:40:51 CEST
+---
+
+## Codebase Patterns
+- Per bloccare l'accesso a una pagina Filament CreateRecord/EditRecord prima che il form venga renderizzato (early guard), overridare `protected static string $view` con una blade custom in `resources/views/filament/<panel>/resources/<resource>/pages/<page>.blade.php`, poi overridare `mount()`: chiamare `$this->authorizeAccess()`, valorizzare una proprietà pubblica (es. `?Model $xxx`), e chiamare `$this->fillForm()`/`$this->previousUrl = url()->previous()` SOLO se la condizione di blocco non scatta. La blade custom copia il markup originale del vendor (`vendor/filament/filament/resources/views/resources/pages/create-record.blade.php`) e aggiunge un `@if` per mostrare un banner `<x-filament::section>` + `<x-filament::link>` al posto del form.
+- Nessun dev-browser/browser-tool MCP disponibile in questo ambiente Ralph: la "Verify in browser" delle acceptance criteria va soddisfatta con Feature test HTTP (`->get(...)->assertSuccessful()->assertSee(...)`), che renderizzano il markup Blade/Livewire reale end-to-end. Documentare esplicitamente nel progress log quando questo sostituto viene usato.
+- Il modello `Prenotazione` ha già uno scope `scopeAttive()` (esclude solo Concluso/Annullata) usato per liste/archivio; è diverso dalla regola di validazione `UnicaPrenotazioneAttivaPerUser` (usata al submit finale) che esclude anche Bozza e InviatoAssicurazione oltre a Concluso/Annullata. Non confondere le due definizioni di "attiva" quando si leggono le acceptance criteria.
+
+## [2026-07-08] - US-001
+- Implementato il blocco anticipato del wizard di creazione prenotazione: se l'utente loggato (sezione o sottosezione) ha già una prenotazione con stato diverso da Annullata/Concluso, la pagina di creazione mostra un banner Filament con nome evento, date e link al dettaglio, senza renderizzare alcun campo del form.
+- File modificati:
+  - app/Filament/Sezione/Resources/PrenotazioneResource/Pages/CreatePrenotazione.php (override `mount()` + `$view`, nuovo metodo privato `trovaPrenotazioneAttivaEsistente()` basato su `Prenotazione::query()->attive()` filtrato per sezione_id/sottosezione_id dell'utente)
+  - resources/views/filament/sezione/resources/prenotazione-resource/pages/create-prenotazione.blade.php (nuova vista, copia del vendor con banner condizionale)
+  - tests/Feature/Sezione/PrenotazioneBloccoWizardAttivaTest.php (nuovo, 3 test: blocco per sezione, blocco per sottosezione, nessun blocco se solo Annullata)
+- Verifiche eseguite: `sail composer test` (228 passed), `sail composer phpstan` (0 errori), `sail composer pint` (passed).
+- **Learnings for future iterations:**
+  - Vedi sezione "Codebase Patterns" sopra per il pattern di override `$view`/`mount()` su pagine Filament CreateRecord, riusabile per altre story del wizard (US-005, US-007 toccano lo stesso file/step).
+  - Il controllo esistente lato submit (`UnicaPrenotazioneAttivaPerUser`, in `app/Filament/Sezione/Resources/PrenotazioneResource.php` e `PrenotazioneStateMachine`) NON è stato toccato, come richiesto dalle acceptance criteria — resta una rete di sicurezza aggiuntiva keyed su `user_id`, distinta dal nuovo controllo keyed su `sezione_id`/`sottosezione_id`.
+  - Nessun browser tool disponibile in questo ambiente: la verifica UI è stata fatta tramite Feature test HTTP reali (non solo unit/mock).
+---
