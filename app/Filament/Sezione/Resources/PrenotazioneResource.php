@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Filament\Sezione\Resources;
 
+use App\Enums\CategoriaPatente;
 use App\Enums\PrenotazioneStatus;
 use App\Enums\ResponsabileTipo;
+use App\Enums\TipoMezzo;
 use App\Filament\Sezione\Resources\PrenotazioneResource\Pages;
 use App\Filament\Sezione\Widgets\CalendarioPrenotazioniWidget;
 use App\Models\Prenotazione;
@@ -23,6 +25,7 @@ use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\HtmlString;
 
 class PrenotazioneResource extends Resource
 {
@@ -92,6 +95,11 @@ class PrenotazioneResource extends Resource
                             ->options(Torre::where('is_active', true)->pluck('nome', 'id'))
                             ->placeholder('Nessuna preferenza — il GR assegnerà la torre disponibile')
                             ->live()
+                            ->afterStateUpdated(function (Forms\Set $set): void {
+                                $set('manuale_letto_confirm', false);
+                                $set('manuale_letto_confermato_at', null);
+                                $set('manuale_letto_torre_id', null);
+                            })
                             ->rules(fn (Forms\Get $get): array => [
                                 new NoOverlapTorre(
                                     torreId: $get('torre_id') ? (int) $get('torre_id') : null,
@@ -101,6 +109,40 @@ class PrenotazioneResource extends Resource
                             ])
                             ->helperText('Puoi lasciare vuoto. Il GR assegnerà la torre in fase di approvazione.'),
                     ]),
+
+                    Forms\Components\Placeholder::make('manuale_link')
+                        ->hiddenLabel()
+                        ->visible(fn (Forms\Get $get): bool => filled($get('torre_id')))
+                        ->content(function (Forms\Get $get): HtmlString {
+                            $torre = Torre::find($get('torre_id'));
+
+                            if (! $torre || blank($torre->manuale_pdf_path)) {
+                                return new HtmlString('<span class="text-sm text-gray-500 dark:text-gray-400">Manuale non ancora disponibile.</span>');
+                            }
+
+                            return new HtmlString(sprintf(
+                                '<a href="%s" target="_blank" rel="noopener" class="text-sm font-medium text-primary-600 underline hover:text-primary-500">Visualizza/scarica il manuale d\'istruzioni della torre selezionata</a>',
+                                e(asset('storage/'.$torre->manuale_pdf_path))
+                            ));
+                        }),
+
+                    Forms\Components\Checkbox::make('manuale_letto_confirm')
+                        ->label('Ho letto e compreso il manuale d\'istruzioni')
+                        ->live()
+                        ->dehydrated(false)
+                        ->default(false)
+                        ->visible(fn (Forms\Get $get): bool => filled($get('torre_id')))
+                        ->rules(fn (Forms\Get $get): array => filled($get('torre_id')) ? ['accepted'] : [])
+                        ->validationMessages([
+                            'accepted' => 'Devi confermare di aver letto il manuale d\'istruzioni prima di proseguire.',
+                        ])
+                        ->afterStateUpdated(function (?bool $state, Forms\Set $set, Forms\Get $get): void {
+                            $set('manuale_letto_confermato_at', $state ? now() : null);
+                            $set('manuale_letto_torre_id', $state ? $get('torre_id') : null);
+                        }),
+
+                    Forms\Components\Hidden::make('manuale_letto_confermato_at'),
+                    Forms\Components\Hidden::make('manuale_letto_torre_id'),
 
                     Forms\Components\Livewire::make(CalendarioPrenotazioniWidget::class)
                         ->columnSpanFull(),
@@ -186,6 +228,24 @@ class PrenotazioneResource extends Resource
                             ->label('Targa autoveicolo')
                             ->maxLength(20),
                     ]),
+
+                    Forms\Components\Radio::make('tipo_mezzo')
+                        ->label('Tipo mezzo')
+                        ->options(collect(TipoMezzo::cases())->mapWithKeys(
+                            fn (TipoMezzo $t) => [$t->value => $t->label()]
+                        ))
+                        ->default(TipoMezzo::Aziendale->value)
+                        ->required()
+                        ->live()
+                        ->inline(),
+
+                    Forms\Components\Select::make('categoria_patente_privato')
+                        ->label('Categoria patente')
+                        ->options(collect(CategoriaPatente::cases())->mapWithKeys(
+                            fn (CategoriaPatente $c) => [$c->value => $c->label()]
+                        ))
+                        ->visible(fn (Forms\Get $get): bool => $get('tipo_mezzo') === TipoMezzo::Privato->value)
+                        ->required(fn (Forms\Get $get): bool => $get('tipo_mezzo') === TipoMezzo::Privato->value),
                 ]),
 
             Forms\Components\Wizard\Step::make('Responsabile in loco')
@@ -205,15 +265,9 @@ class PrenotazioneResource extends Resource
                             )),
                     ]),
 
-                    Forms\Components\Grid::make(2)->schema([
-                        Forms\Components\TextInput::make('responsabile_titolo_cai')
-                            ->label('Titolo CAI')
-                            ->maxLength(255),
-
-                        Forms\Components\TextInput::make('responsabile_codice_cai')
-                            ->label('Codice CAI')
-                            ->maxLength(50),
-                    ]),
+                    Forms\Components\TextInput::make('responsabile_titolo_cai')
+                        ->label('Titolo CAI')
+                        ->maxLength(255),
 
                     Forms\Components\Grid::make(2)->schema([
                         Forms\Components\TextInput::make('responsabile_telefono')
@@ -247,6 +301,19 @@ class PrenotazioneResource extends Resource
                             $get('data_inizio_prenotazione'),
                             $get('data_fine_prenotazione'),
                         ]))),
+
+                    Forms\Components\Placeholder::make('riepilogo_trasporto')
+                        ->label('Trasporto')
+                        ->content(function (Forms\Get $get): string {
+                            $tipoMezzo = TipoMezzo::tryFrom((string) $get('tipo_mezzo'));
+
+                            return implode(' — ', array_filter([
+                                $tipoMezzo?->label(),
+                                $tipoMezzo === TipoMezzo::Privato
+                                    ? 'Patente '.(CategoriaPatente::tryFrom((string) $get('categoria_patente_privato'))?->label() ?? '—')
+                                    : null,
+                            ]));
+                        }),
 
                     Forms\Components\Placeholder::make('riepilogo_responsabile')
                         ->label('Responsabile in loco')
@@ -363,6 +430,24 @@ class PrenotazioneResource extends Resource
                             ->label('Targa autoveicolo')
                             ->maxLength(20),
                     ]),
+
+                    Forms\Components\Radio::make('tipo_mezzo')
+                        ->label('Tipo mezzo')
+                        ->options(collect(TipoMezzo::cases())->mapWithKeys(
+                            fn (TipoMezzo $t) => [$t->value => $t->label()]
+                        ))
+                        ->default(TipoMezzo::Aziendale->value)
+                        ->required()
+                        ->live()
+                        ->inline(),
+
+                    Forms\Components\Select::make('categoria_patente_privato')
+                        ->label('Categoria patente')
+                        ->options(collect(CategoriaPatente::cases())->mapWithKeys(
+                            fn (CategoriaPatente $c) => [$c->value => $c->label()]
+                        ))
+                        ->visible(fn (Forms\Get $get): bool => $get('tipo_mezzo') === TipoMezzo::Privato->value)
+                        ->required(fn (Forms\Get $get): bool => $get('tipo_mezzo') === TipoMezzo::Privato->value),
                 ]),
 
             Forms\Components\Section::make('Responsabile in loco')
@@ -381,15 +466,9 @@ class PrenotazioneResource extends Resource
                             )),
                     ]),
 
-                    Forms\Components\Grid::make(2)->schema([
-                        Forms\Components\TextInput::make('responsabile_titolo_cai')
-                            ->label('Titolo CAI')
-                            ->maxLength(255),
-
-                        Forms\Components\TextInput::make('responsabile_codice_cai')
-                            ->label('Codice CAI')
-                            ->maxLength(50),
-                    ]),
+                    Forms\Components\TextInput::make('responsabile_titolo_cai')
+                        ->label('Titolo CAI')
+                        ->maxLength(255),
 
                     Forms\Components\Grid::make(2)->schema([
                         Forms\Components\TextInput::make('responsabile_telefono')

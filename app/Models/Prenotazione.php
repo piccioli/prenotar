@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\CategoriaPatente;
 use App\Enums\PrenotazioneStatus;
 use App\Enums\ResponsabileTipo;
+use App\Enums\TipoMezzo;
 use Database\Factories\PrenotazioneFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -25,6 +27,10 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property int|null $torre_id
  * @property PrenotazioneStatus $status
  * @property ResponsabileTipo $responsabile_tipo
+ * @property TipoMezzo $tipo_mezzo
+ * @property CategoriaPatente|null $categoria_patente_privato
+ * @property Carbon|null $manuale_letto_confermato_at
+ * @property int|null $manuale_letto_torre_id
  * @property Carbon $data_inizio_prenotazione
  * @property Carbon $data_fine_prenotazione
  * @property Carbon $data_inizio_evento
@@ -66,9 +72,12 @@ class Prenotazione extends Model implements HasMedia
         'luogo_riconsegna',
         'azienda_trasporto',
         'targa_autoveicolo',
+        'tipo_mezzo',
+        'categoria_patente_privato',
+        'manuale_letto_confermato_at',
+        'manuale_letto_torre_id',
         'responsabile_nome',
         'responsabile_titolo_cai',
-        'responsabile_codice_cai',
         'responsabile_telefono',
         'responsabile_email',
         'responsabile_tipo',
@@ -89,6 +98,9 @@ class Prenotazione extends Model implements HasMedia
         return [
             'status' => PrenotazioneStatus::class,
             'responsabile_tipo' => ResponsabileTipo::class,
+            'tipo_mezzo' => TipoMezzo::class,
+            'categoria_patente_privato' => CategoriaPatente::class,
+            'manuale_letto_confermato_at' => 'datetime',
             'data_inizio_evento' => 'date',
             'data_fine_evento' => 'date',
             'data_inizio_prenotazione' => 'date',

@@ -1,0 +1,131 @@
+{
+  "project": "Prenotar",
+  "branchName": "ralph/wizard-prenotazione-miglioramenti",
+  "description": "Miglioramenti al wizard di creazione prenotazione (pannello /sezione): blocco anticipato se esiste gia una prenotazione attiva, dichiarazione mezzo privato con categoria patente, rimozione del campo non verificabile codice CAI del responsabile, flag obbligatorio di lettura del manuale d'istruzioni per-torre.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Blocco anticipato wizard se prenotazione gia attiva",
+      "description": "Come presidente di sezione/sottosezione, quando clicco \"Nuova prenotazione\" e ho gia una prenotazione attiva (stato diverso da Annullata o Conclusa) per la mia sezione/sottosezione, voglio essere avvisato subito e non poter accedere al wizard, cosi da non perdere tempo a compilare un form che verra comunque rifiutato.",
+      "acceptanceCriteria": [
+        "In app/Filament/Sezione/Resources/PrenotazioneResource/Pages/CreatePrenotazione.php, il controllo di esistenza di una prenotazione attiva (stato non in Annullata, non in Conclusa) per la sezione/sottosezione dell'utente loggato viene eseguito nel mount() della pagina, PRIMA di renderizzare il primo step del wizard",
+        "Se il controllo trova una prenotazione attiva, la pagina mostra una notifica/banner Filament con messaggio esplicativo (nome evento, data inizio, data fine della prenotazione attiva) e un link diretto alla sua pagina di dettaglio, e nessun campo del form e visibile",
+        "Se non esiste una prenotazione attiva, il wizard si comporta come oggi, nessuna regressione",
+        "Il controllo esistente lato salvataggio finale (submit) resta invariato come rete di sicurezza aggiuntiva",
+        "Test Feature in tests/Feature/: utente con prenotazione attiva che visita la pagina di creazione riceve il blocco con messaggio; utente senza prenotazioni attive accede normalmente al wizard",
+        "Typecheck/Larastan passa",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Schema: campi tipo_mezzo e categoria_patente_privato",
+      "description": "Come sviluppatore, ho bisogno di persistere nel database se il trasporto avviene con mezzo aziendale o privato e, in caso di mezzo privato, la categoria di patente richiesta, cosi da poter costruire la UI del form nella story successiva.",
+      "acceptanceCriteria": [
+        "Nuovo enum app/Enums/TipoMezzo.php con case Aziendale = 'aziendale' e Privato = 'privato', seguendo lo stesso pattern di app/Enums/ResponsabileTipo.php (enum PHP backed string)",
+        "Nuovo enum app/Enums/CategoriaPatente.php con case B = 'B' e BE = 'BE'",
+        "Nuova migrazione (non modificare la migrazione originale create_prenotazioni_table) che aggiunge alla tabella prenotazioni: colonna tipo_mezzo string default 'aziendale' e colonna categoria_patente_privato string nullable",
+        "app/Models/Prenotazione.php: aggiungere tipo_mezzo e categoria_patente_privato a $fillable e al metodo casts() con i rispettivi enum",
+        "Migrazione eseguita con successo su database di test (RefreshDatabase) senza rompere le migrazioni esistenti",
+        "Typecheck/Larastan passa",
+        "Tests pass"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Rimozione campo responsabile_codice_cai",
+      "description": "Come sviluppatore, voglio rimuovere completamente il campo responsabile_codice_cai da database, modello, form e PDF, perche durante il test utente e stato segnalato esplicitamente come non verificabile e privo di valore informativo.",
+      "acceptanceCriteria": [
+        "Nuova migrazione che rimuove la colonna responsabile_codice_cai dalla tabella prenotazioni (non modificare la migrazione originale create_prenotazioni_table)",
+        "app/Models/Prenotazione.php: rimosso responsabile_codice_cai da $fillable e da qualsiasi altro riferimento (docblock @property incluso)",
+        "Cercare con grep -r 'responsabile_codice_cai' su app/, resources/, database/factories/, tests/ e rimuovere ogni riferimento residuo, inclusi eventuali template PDF in resources/views/pdf/",
+        "app/Filament/Sezione/Resources/PrenotazioneResource (e Gr/Admin se presenti) non referenziano piu il campo in nessun form, tabella o infolist",
+        "Il campo responsabile_titolo_cai (diverso, rappresenta il titolo/ruolo del responsabile) NON viene toccato",
+        "Test Feature esistenti aggiornati per non referenziare piu il campo rimosso, nessun test rotto",
+        "Typecheck/Larastan passa",
+        "Tests pass"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Schema: conferma lettura manuale d'istruzioni per-torre",
+      "description": "Come sviluppatore, ho bisogno di persistere la conferma che l'utente ha dichiarato di aver letto il manuale d'istruzioni della torre scelta per una prenotazione, con audit di quando e per quale torre, cosi da poter costruire la UI nella story successiva.",
+      "acceptanceCriteria": [
+        "Nuova migrazione (non modificare la migrazione originale create_prenotazioni_table) che aggiunge alla tabella prenotazioni le colonne: manuale_letto_confermato_at (timestamp nullable) e manuale_letto_torre_id (unsignedBigInteger nullable, foreign key verso torri.id, nullOnDelete)",
+        "app/Models/Prenotazione.php: aggiungere manuale_letto_confermato_at (cast datetime) e manuale_letto_torre_id a $fillable",
+        "Migrazione eseguita con successo su database di test (RefreshDatabase) senza rompere le migrazioni esistenti",
+        "Typecheck/Larastan passa",
+        "Tests pass"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "UI wizard: toggle mezzo privato con categoria patente obbligatoria",
+      "description": "Come responsabile logistico di una prenotazione, voglio poter dichiarare che il trasporto avverra con un mezzo privato indicando la categoria di patente richiesta (B o B+E), cosi da riflettere la situazione reale del trasporto invece del solo mezzo aziendale precompilato.",
+      "acceptanceCriteria": [
+        "Nello step logistica/trasporto del wizard in app/Filament/Sezione/Resources/PrenotazioneResource/Pages/CreatePrenotazione.php, aggiunto un radio/select 'Tipo mezzo' con opzioni Aziendale (Montagna Servizi) e Privato, basato sull'enum TipoMezzo introdotto in US-002",
+        "Se Aziendale e selezionato (default), il comportamento resta quello attuale: campo azienda_trasporto precompilato, targa_autoveicolo opzionale, nessun campo patente visibile",
+        "Se Privato e selezionato, diventa visibile un select 'Categoria patente' con opzioni B e B+E basato sull'enum CategoriaPatente, e il campo e obbligatorio",
+        "Il salvataggio dello step e bloccato da validazione Filament se tipo_mezzo e privato e categoria_patente_privato non e stata scelta",
+        "Il dato tipo_mezzo e categoria_patente_privato e visibile nel riepilogo finale del wizard e nella vista di dettaglio prenotazione lato GR (app/Filament/Gr/Resources/PrenotazioneResource) e Admin",
+        "Test Feature: creazione prenotazione con mezzo privato senza categoria patente fallisce la validazione; con categoria patente selezionata il salvataggio riesce",
+        "Typecheck/Larastan passa",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "UI: rimozione campo codice CAI dal form responsabile",
+      "description": "Come presidente di sezione, non voglio piu vedere il campo 'Codice CAI' nello step del responsabile del wizard di prenotazione, perche non verificabile e senza valore.",
+      "acceptanceCriteria": [
+        "Rimosso ogni campo form (TextInput o simile) relativo a responsabile_codice_cai dallo step responsabile in app/Filament/Sezione/Resources/PrenotazioneResource/Pages/CreatePrenotazione.php",
+        "Rimosso il campo da eventuali colonne di tabella o infolist di dettaglio in Gr e Admin PrenotazioneResource che lo mostravano",
+        "Se un template PDF (Richiesta parete o Modulo 3, in resources/views/pdf/) referenziava il campo, il riferimento e rimosso senza rompere il rendering del PDF",
+        "Nessun errore a runtime ne in build causato dal campo rimosso in US-003",
+        "Test Feature: generazione PDF e submit del wizard funzionano senza il campo, nessun test referenzia piu responsabile_codice_cai",
+        "Typecheck/Larastan passa",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": "Gia soddisfatta interamente dall'implementazione di US-003 (rimozione completa del campo da DB/modello/form/infolist/PDF). Verificato in questa iterazione con grep -r su app/, resources/, database/, tests/ (nessun residuo) e sail composer qa (pint passed, phpstan 0 errori, 231 test passati). Nessun codice aggiuntivo necessario."
+    },
+    {
+      "id": "US-007",
+      "title": "UI wizard: flag obbligatorio lettura manuale d'istruzioni per-torre",
+      "description": "Come presidente di sezione/sottosezione, prima di poter proseguire nel wizard dopo aver scelto la torre, voglio dover confermare di aver letto il manuale d'istruzioni di quella specifica torre, cosi da ridurre le richieste di supporto per problemi gia documentati.",
+      "acceptanceCriteria": [
+        "Nello step di selezione torre del wizard, mostrato un link/pulsante per visualizzare/scaricare il manuale della torre selezionata, basato sul campo esistente manuale_pdf_path del modello Torre",
+        "Se la torre selezionata non ha manuale_pdf_path valorizzato, mostrato il messaggio 'manuale non ancora disponibile' al posto del link, senza bloccare lo sviluppo della story",
+        "Accanto al link, una checkbox 'Ho letto e compreso il manuale d'istruzioni', non selezionata di default",
+        "Il pulsante 'Avanti' dello step e disabilitato finche la checkbox non e spuntata",
+        "Se l'utente cambia la torre selezionata dopo aver spuntato la checkbox, la checkbox si resetta a non selezionata e va confermata di nuovo per la nuova torre",
+        "Alla conferma, valorizzati manuale_letto_confermato_at (timestamp corrente) e manuale_letto_torre_id (id della torre selezionata) introdotti in US-004",
+        "Test Feature: step torre non avanzabile senza checkbox spuntata; avanzabile con checkbox spuntata; cambio torre dopo conferma resetta la checkbox e richiede nuova conferma",
+        "Typecheck/Larastan passa",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": ""
+    }
+  ]
+}

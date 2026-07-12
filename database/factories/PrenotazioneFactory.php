@@ -48,7 +48,6 @@ class PrenotazioneFactory extends Factory
             'targa_autoveicolo' => null,
             'responsabile_nome' => $this->faker->name(),
             'responsabile_titolo_cai' => null,
-            'responsabile_codice_cai' => null,
             'responsabile_telefono' => $this->faker->phoneNumber(),
             'responsabile_email' => $this->faker->safeEmail(),
             'responsabile_tipo' => ResponsabileTipo::Istruttore,

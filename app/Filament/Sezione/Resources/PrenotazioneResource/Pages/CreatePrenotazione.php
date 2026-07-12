@@ -6,8 +6,11 @@ namespace App\Filament\Sezione\Resources\PrenotazioneResource\Pages;
 
 use App\Enums\PrenotazioneStatus;
 use App\Filament\Sezione\Resources\PrenotazioneResource;
+use App\Models\Prenotazione;
+use Filament\Forms\Components\Actions\Action as WizardAction;
 use Filament\Forms\Components\Wizard;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Resources\Pages\CreateRecord\Concerns\HasWizard;
@@ -19,11 +22,47 @@ class CreatePrenotazione extends CreateRecord
 
     protected static string $resource = PrenotazioneResource::class;
 
+    protected static string $view = 'filament.sezione.resources.prenotazione-resource.pages.create-prenotazione';
+
+    public ?Prenotazione $prenotazioneAttiva = null;
+
+    public function mount(): void
+    {
+        $this->authorizeAccess();
+
+        $this->prenotazioneAttiva = $this->trovaPrenotazioneAttivaEsistente();
+
+        if ($this->prenotazioneAttiva === null) {
+            $this->fillForm();
+        }
+
+        $this->previousUrl = url()->previous();
+    }
+
+    /** Blocco anticipato (§BUG risolto): impedisce l'accesso al wizard se sezione/sottosezione ha già una prenotazione non conclusa/annullata. */
+    private function trovaPrenotazioneAttivaEsistente(): ?Prenotazione
+    {
+        $user = auth()->user();
+
+        return Prenotazione::query()
+            ->attive()
+            ->when(
+                $user->sottosezione_id !== null,
+                fn ($query) => $query->where('sottosezione_id', $user->sottosezione_id),
+                fn ($query) => $query->where('sezione_id', $user->sezione_id),
+            )
+            ->latest('data_inizio_prenotazione')
+            ->first();
+    }
+
     public function form(Form $form): Form
     {
         return $form->schema([
             Wizard::make(PrenotazioneResource::wizardSteps())
                 ->skippable(false)
+                ->nextAction(fn (WizardAction $action) => $action->disabled(
+                    fn (Get $get): bool => filled($get('torre_id')) && ! $get('manuale_letto_confirm')
+                ))
                 ->submitAction(new HtmlString(
                     '<button type="submit" class="fi-btn fi-btn-size-md fi-btn-color-primary fi-color-custom fi-ac-btn-action px-3 py-2">Salva come bozza</button>'
                 )),
