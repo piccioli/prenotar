@@ -7,6 +7,7 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\FirstAccessPage;
 use App\Filament\Sezione\Pages\CalendarioPage;
 use App\Filament\Sezione\Resources\PrenotazioneResource;
+use App\Filament\Sezione\Resources\PrenotazioneResource\Pages\ListPrenotazioni;
 use App\Filament\Sezione\Widgets\PrenotazioniDashboardWidget;
 use App\Http\Middleware\EnsureContactEmail;
 use Filament\Http\Middleware\Authenticate;
@@ -67,6 +68,14 @@ class SezionePanelProvider extends PanelProvider
                 fn (): string => view('filament.components.mobile-bottom-nav', [
                     'items' => self::mobileNavItems(),
                 ])->render(),
+            )
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): string => view('filament.components.mobile-fab', [
+                    'href' => PrenotazioneResource::getUrl('create'),
+                    'label' => 'Nuova prenotazione',
+                ])->render(),
+                scopes: [ListPrenotazioni::class],
             )
             ->middleware([
                 EncryptCookies::class,

@@ -3,6 +3,43 @@ Started: 2026-07-12
 ---
 
 ## Codebase Patterns
+- Per trasformare una pagina `ListRecords` Filament da tabella (desktop) a
+  card (mobile) senza duplicare query/tab/paginazione: override `protected
+  static string $view` sulla sottoclasse `ListRecords` con un template Blade
+  copiato da `vendor/filament/filament/resources/views/resources/pages/list-records.blade.php`,
+  avvolgere `{{ $this->table }}` in un `<div class="hidden md:block">`, e sotto
+  aggiungere un `<div class="... md:hidden">` che itera
+  `$this->getTableRecords()` (metodo pubblico di
+  `Filament\Tables\Concerns\HasRecords`, disponibile su ogni pagina/Livewire
+  component che usa `InteractsWithTable`): ritorna la STESSA collection
+  Eloquent paginata/filtrata/ordinata già usata dalla tabella (cache interna
+  per-request, nessuna query duplicata), quindi tab attive (`getTabs()`),
+  ricerca, sort e paginazione restano automaticamente in sync tra le due
+  presentazioni senza riscrivere nulla di quella logica. Per l'empty state e
+  la paginazione lato mobile, riusare gli stessi metodi pubblici già esposti
+  dall'oggetto `Table` (`$this->getTable()->getEmptyStateHeading()/
+  ->getEmptyStateDescription()/->getEmptyStateIcon()`,
+  `->getPaginationPageOptions()`, `->hasExtremePaginationLinks()`) invece di
+  duplicare le stringhe/opzioni già configurate in `table()`, e il componente
+  Blade `<x-filament::pagination :paginator="$records" ... />` funziona identico
+  fuori dal contesto `filament-tables::index` (nessuna dipendenza nascosta dal
+  partial originale). Nota: il `<table>` HTML resta comunque nel DOM sotto il
+  breakpoint mobile (solo nascosto via CSS `hidden`/`display:none`), coerente
+  con la tecnica di "doppio rendering, toggle via classi responsive" già
+  documentata sopra per il footer del Wizard — non è un `<table>` rimosso dal
+  markup, se un AC richiede letteralmente zero nodi `<table>` nel DOM va
+  verificato che questa interpretazione sia accettabile.
+- Filament valorizza `->color()` di un `Tab` di default su `primary`: per
+  restylare le tab standard (`<x-filament::tabs>`/`fi-tabs`/`fi-tabs-item`/
+  `fi-active`) come un selettore a pillole segmentate (mockup mobile "Attive/
+  Archivio"), le classi CSS sono stabili e restano targettabili via selettore
+  scoped (`.fi-resource-<slug>.fi-resource-list-records-page .fi-tabs...`)
+  senza toccare `getTabs()`/Blade — ma il badge del conteggio (`->badge(N)`)
+  resta un `<x-filament::badge>` separato dentro il tab item, non testo inline
+  tipo "Attive (4)": per un match pixel-perfect di quel formato va sostituita
+  la label del tab con una stringa già comprensiva del conteggio invece di
+  usare `->badge()`, altrimenti resta un chip adiacente (approccio scelto qui
+  per non duplicare la logica di conteggio già in `getTabs()`).
 - `Filament\Support\Colors\Color::hex('#rrggbb')` generates a full 50–950 shade
   palette from a single brand hex via `Color::generateShades()`: shade 500 is
   exactly the input color, every other shade (including 600, the default Filament
@@ -429,4 +466,19 @@ Started: 2026-07-12
   - Filament nasconde **anche gli header di colonna**, non solo le righe, quando la tabella non ha risultati (empty state sostituisce l'intero corpo tabella) — per verificare via tinker/HTML-grep che colonne/label esistano davvero, servono sempre record reali nel dataset filtrato, non basta controllare lo status HTTP 200.
   - Una `TextColumn` con `->getStateUsing()` (valore calcolato, non un campo DB diretto) non eredita l'ordinabilità sul campo sorgente: serve passare esplicitamente `->sortable(query: fn (Builder $query, string $direction) => $query->orderBy('campo_reale', $direction))` per riottenere il click-to-sort sull'header, altrimenti la colonna risulta silenziosamente non ordinabile.
   - Prima di rimuovere una colonna/azione presentazionale ritenuta "fuori mockup", grep `tests/` per il nome del campo/azione (qui `has_delibera`, `invia_richiesta`) per confermare che nessun test la asserisca — evita regressioni silenziose quando si segue il mockup più letteralmente del necessario.
+---
+
+## 2026-07-12 21:22 - US-013
+- Restyle mobile di `ListPrenotazioni` (Sezione) secondo il mockup `mobile-3-ruoli.dc.html` "1c — Le mie prenotazioni — card al posto della tabella": sotto il breakpoint `md` la tabella Filament di US-012 lascia spazio a una lista di card (titolo evento, chevron, periodo, badge stato + badge torre/"Da assegnare"), con FAB "Nuova prenotazione" in basso a destra. Le tab pill "Attive (N)/Archivio (N)" (già implementate in `getTabs()`) restano invariate nella logica, restylate solo via CSS in forma di pillole segmentate.
+- `ListPrenotazioni::$view` override → nuovo template `resources/views/filament/sezione/resources/prenotazione-resource/pages/list-prenotazioni.blade.php`, copiato dal vendor `list-records.blade.php` con due aggiunte: `{{ $this->table }}` avvolto in `<div class="hidden md:block">` (tabella desktop invariata, solo nascosta sotto `md`) e un nuovo blocco `<div class="... md:hidden">` che itera `$this->getTableRecords()` per renderizzare le card — stessa collection Eloquent già filtrata/ordinata/paginata dalla tabella (US-012), nessuna query duplicata (vedi nuovo bullet in Codebase Patterns sopra).
+- Ogni card è un `<a>` verso `PrenotazioneResource::getUrl('view', ['record' => $record])` (stesso target della `ViewAction` di riga tabella); periodo formattato con `translatedFormat('d M')`/`'d M Y'` e compattato a una sola data se `data_inizio_prenotazione`/`data_fine_prenotazione` coincidono (es. "3 ott 2026" invece di "3 ott – 3 ott 2026"); badge torre riusa `Torre::coloreHexPer()` (US-003) + `Color::hex()` (stessa tecnica badge dinamico di US-003/006/008/009/012), fallback testo "Da assegnare" via `$record->torre?->nome ?? 'Da assegnare'` diretto in Blade (nessun helper serve: Larastan non analizza i `.blade.php`, il gotcha `nullsafe.neverNull` documentato sopra riguarda solo PHP puro come i closure di `table()`).
+- Empty state mobile: riusa `$this->getTable()->getEmptyStateHeading()/->getEmptyStateDescription()/->getEmptyStateIcon()` invece di duplicare le stringhe già impostate in `PrenotazioneResource::table()`. Paginazione mobile: `<x-filament::pagination :paginator="$mobileRecords" :page-options="$this->getTable()->getPaginationPageOptions()" :extreme-links="$this->getTable()->hasExtremePaginationLinks()" />`, stesso componente Blade usato dal template vendor della tabella.
+- Nuovo componente generico `resources/views/filament/components/mobile-fab.blade.php` (`fixed`, sopra la bottom tab bar condivisa US-002, `md:hidden`) — pensato riutilizzabile per le prossime story mobile con FAB/azioni fisse in basso (US-015, US-018, US-020, US-021, US-026, US-028 per il pattern già annotato in `mobile-bottom-nav.blade.php`). Agganciato in `SezionePanelProvider` con un secondo `->renderHook(PanelsRenderHook::BODY_END, ..., scopes: [ListPrenotazioni::class])` (import diretto della classe, nessun alias: il provider usa già `Pages` come alias di `Filament\Pages`, quindi la classe della resource va importata col suo nome completo per evitare conflitto).
+- Tab pill: nuove regole scoped in `resources/css/filament/mobile-shell.css` sotto `@media (max-width: 767px)`, selettore `.fi-resource-prenotaziones.fi-resource-list-records-page .fi-tabs...` (stesso pattern di scoping via classi pagina già usato in US-007 per nascondere la bottom-nav sulla wizard create page) — solo restyle CSS delle classi stabili Filament (`fi-tabs`/`fi-tabs-item`/`fi-active`/`fi-badge`/`fi-tabs-item-label`), `getTabs()` invariato. Limite noto (vedi Codebase Patterns): il conteggio resta un badge-chip separato, non testo inline "Attive (4)" come nel mockup.
+- Files changed: `app/Filament/Sezione/Resources/PrenotazioneResource/Pages/ListPrenotazioni.php` (override `$view`), `app/Providers/Filament/SezionePanelProvider.php` (import + renderHook FAB), `resources/css/filament/mobile-shell.css` (pillole tab), nuovi `resources/views/filament/sezione/resources/prenotazione-resource/pages/list-prenotazioni.blade.php` e `resources/views/filament/components/mobile-fab.blade.php`.
+- Verifica: `sail composer qa` verde (Pint OK, Larastan 0 errori/157 file, Pest 243 test/535 assertion — stesso numero di US-012, nessuna regressione, nessun nuovo test Pest aggiunto per coerenza con la convenzione già scelta in US-012 per questo epic di restyle: verifica via HTML/tinker, non nuove asserzioni Livewire). `sail npm run build` OK. Verifica end-to-end via `sail artisan tinker` (nessun tool MCP browser disponibile, confermato ancora): creati 2 record Pest-factory ad-hoc per l'utente sezione reale (uno con torre assegnata + stato Approvata su più giorni, uno senza torre + stato Inviata in singolo giorno; **necessario passare esplicitamente `sezione_id: $user->sezione_id` alla factory**, altrimenti `Sezione::factory()` di default genera una nuova sezione random che può collidere sul vincolo `sezioni.codice_unique` con dati random ripetuti in run consecutivi), poi GET autenticata su `/sezione/prenotaziones` con `Filament::setCurrentPanel()` esplicito (come da nota US-006): risposta 200, HTML contiene entrambi i titoli evento due volte ciascuno (tabella desktop `hidden md:block` + card mobile `md:hidden`, dual-render atteso), "Da assegnare" ×2, badge stato "Approvata"/"Inviata" presenti, date formattate correttamente ("19 set – 21 set 2026" per il multi-giorno, "3 ott 2026" per il mono-giorno), classe `fi-mobile-fab` presente nel body. Record di test ripuliti a fine verifica. Confronto pixel reale col mockup (incluso l'esatto testo "Attive (4)" delle tab pill) resta da fare manualmente, nessun tool screenshot/browser disponibile in questa sessione.
+- **Learnings for future iterations:**
+  - Vedi i 2 nuovi bullet in Codebase Patterns sopra (override `$view` di `ListRecords` + `getTableRecords()` per una card-list mobile che riusa query/tab/paginazione della tabella desktop; limite del badge-chip su `Tab::make()->badge()` per un match testuale "Label (N)" pixel-perfect).
+  - Larastan non analizza i file `.blade.php`: il gotcha `nullsafe.neverNull` su `$record->torre?->prop ?? fallback` si applica solo dentro closure PHP vere (es. `->color(fn (...) => ...)` in `table()`), non quando la stessa espressione è scritta direttamente in un template Blade — lì il nullsafe diretto è già lo stile stabilito (vedi anche `prenotazioni-dashboard.blade.php` di US-005).
+  - Factory `Prenotazione::factory()->create([...])` senza `sezione_id` esplicito genera una `Sezione::factory()` nuova ogni volta: se lo scopo del record ad-hoc è "un utente sezione realmente seedato ha N prenotazioni", passare sempre `'sezione_id' => $user->sezione_id` per evitare collisioni sul vincolo unique `sezioni.codice` in verifiche ripetute nella stessa sessione tinker.
 ---

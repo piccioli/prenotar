@@ -17,4 +17,38 @@
   .fi-resource-prenotaziones.fi-resource-create-record-page .fi-main {
     padding-bottom: 7.5rem;
   }
+
+  /* 'Le mie prenotazioni' mobile (US-013): le tab Attive/Archivio diventano un
+     selettore a pillole segmentate come nel mockup 'Mobile Sezione Lista'.
+     Restyle CSS-only sulle classi stabili di Filament (fi-tabs/fi-tabs-item/
+     fi-active/fi-badge): getTabs() e la sua logica di conteggio (US-012)
+     restano invariati, qui si cambia solo l'aspetto. */
+  .fi-resource-prenotaziones.fi-resource-list-records-page .fi-tabs {
+    gap: 4px;
+    border-radius: 999px;
+    border: 1px solid var(--stone-200);
+    background: var(--stone-100);
+    padding: 4px;
+    box-shadow: none;
+  }
+
+  .fi-resource-prenotaziones.fi-resource-list-records-page .fi-tabs-item {
+    flex: 1;
+    min-height: 44px;
+    border-radius: 999px;
+  }
+
+  .fi-resource-prenotaziones.fi-resource-list-records-page .fi-tabs-item.fi-active {
+    background: var(--surface-brand);
+  }
+
+  .fi-resource-prenotaziones.fi-resource-list-records-page .fi-tabs-item.fi-active .fi-tabs-item-label {
+    color: #FFFFFF;
+  }
+
+  .fi-resource-prenotaziones.fi-resource-list-records-page .fi-tabs-item.fi-active .fi-badge {
+    background: transparent;
+    box-shadow: none;
+    color: #FFFFFF;
+  }
 }

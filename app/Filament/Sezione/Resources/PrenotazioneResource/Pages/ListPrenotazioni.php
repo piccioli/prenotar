@@ -17,6 +17,13 @@ class ListPrenotazioni extends ListRecords
 {
     protected static string $resource = PrenotazioneResource::class;
 
+    /**
+     * Override del template stock (US-013): sotto il breakpoint mobile, la
+     * tabella lascia spazio a una lista di card (mockup 'Mobile Sezione Lista'),
+     * riusando le stesse tab/ordinamento/paginazione via `$this->getTableRecords()`.
+     */
+    protected static string $view = 'filament.sezione.resources.prenotazione-resource.pages.list-prenotazioni';
+
     protected function getHeaderActions(): array
     {
         return [
