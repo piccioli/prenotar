@@ -88,6 +88,14 @@ git config core.hooksPath .githooks
 
 ---
 
+## Branching e workflow
+
+- Tutto lo sviluppo parte dal branch `develop`, non da `main`: i branch di feature si creano da `develop` e le PR vanno aperte verso `develop`.
+- `main` riceve PR **solo** da `develop` (release) o da branch `hotfix/*` (fix urgenti in produzione — vedi "Flusso di hotfix").
+- `.github/workflows/ci.yml` lancia Pint + Larastan + Pest su ogni `pull_request:` (nessun filtro `branches`), quindi copre automaticamente sia le PR verso `develop` sia quelle verso `main`.
+
+---
+
 ## Convenzioni codice
 
 - `declare(strict_types=1)` in testa a ogni file PHP.

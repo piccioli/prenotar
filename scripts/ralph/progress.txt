@@ -26,3 +26,14 @@ Started: Dom 12 Lug 2026 14:47:50 CEST
   - Quando si rinomina un ambiente/stack, cercare "staging" non solo in docker-compose/.env ma anche in doc di collaudo/UAT (`UAT_CHECKLIST.md`, `docs/COLLAUDO_*.md`) e nella whitelist ambienti dei seeder (`app()->environment([...])`) — sono facili da dimenticare e non vengono presi da un grep mirato ai soli file di config.
   - Nel CHANGELOG.md le voci storiche (release già taggate) NON vanno riscritte quando si rinomina qualcosa: si aggiunge solo una nuova voce in "## [Non rilasciato]" che documenta il rename. Stesso principio già applicato ai PRD in `tasks/` (riferimento storico, esplicitamente esentato dal grep di verifica).
 ---
+
+## [2026-07-12] - US-003
+- Creato branch locale `develop` a partire da `main` (`git branch develop main`, non pushato — non richiesto esplicitamente dall'utente).
+- Verificato `.github/workflows/ci.yml`: il trigger `pull_request:` non ha filtro `branches`, quindi copre già automaticamente le PR verso `develop` e verso `main` senza alcuna modifica al file.
+- Aggiunta nuova sezione "Branching e workflow" in `CLAUDE.md` (tra "Hook di pre-commit" e "Convenzioni codice"): documenta che tutto lo sviluppo parte da `develop`, che `main` riceve PR solo da `develop` o da `hotfix/*`, e richiama il comportamento del trigger CI.
+- Files changed: `CLAUDE.md` (nuova sezione), branch git `develop` (creato, nessun file modificato da questo).
+- `sail composer qa` verde: Pint OK, Larastan 0 errori su 156 file, Pest 235 test passati (495 assertion) — nessun test nuovo necessario, story è solo branching/documentazione.
+- **Learnings for future iterations:**
+  - Il workflow CI esistente (`ci.yml`) già copre PR verso qualsiasi branch target grazie all'assenza di `branches:` sotto `pull_request:` — le prossime story su develop/CD (US-004..US-010) non devono toccare questo trigger, solo aggiungere nuovi workflow CD dedicati.
+  - Quando una story chiede di documentare workflow/branching in CLAUDE.md, la sezione va posizionata vicino alle altre sezioni operative (pre-commit hook, convenzioni codice) per restare coerente con la struttura esistente del file.
+---
