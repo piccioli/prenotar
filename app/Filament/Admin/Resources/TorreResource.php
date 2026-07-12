@@ -46,6 +46,8 @@ class TorreResource extends Resource
                 ->rows(3),
             TextInput::make('indirizzo_deposito')
                 ->label('Indirizzo deposito')
+                ->prefixIcon('heroicon-o-map-pin')
+                ->helperText('Visibile ovunque nell\'app: dashboard, calendario, dettaglio prenotazione (fix BUG-08).')
                 ->required()
                 ->maxLength(255),
             ColorPicker::make('colore_hex')
