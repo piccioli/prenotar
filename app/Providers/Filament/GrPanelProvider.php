@@ -7,6 +7,7 @@ namespace App\Providers\Filament;
 use App\Filament\Gr\Pages\CalendarioPage;
 use App\Filament\Gr\Pages\ImpostazioniPage;
 use App\Filament\Gr\Resources\PrenotazioneResource;
+use App\Filament\Gr\Resources\PrenotazioneResource\Pages\ViewPrenotazione;
 use App\Filament\Gr\Widgets\PrenotazioniDaApprovareWidget;
 use App\Filament\Pages\FirstAccessPage;
 use App\Http\Middleware\EnsureContactEmail;
@@ -68,6 +69,13 @@ class GrPanelProvider extends PanelProvider
                 fn (): string => view('filament.components.mobile-bottom-nav', [
                     'items' => self::mobileNavItems(),
                 ])->render(),
+            )
+            ->renderHook(
+                PanelsRenderHook::PAGE_START,
+                fn (): string => view('filament.gr.resources.prenotazione-resource.pages.dettaglio-mobile-topbar', [
+                    'backUrl' => PrenotazioneResource::getUrl('index'),
+                ])->render(),
+                scopes: [ViewPrenotazione::class],
             )
             ->middleware([
                 EncryptCookies::class,

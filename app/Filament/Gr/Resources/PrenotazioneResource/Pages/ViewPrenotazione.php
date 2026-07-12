@@ -81,6 +81,60 @@ class ViewPrenotazione extends ViewRecord
         return [];
     }
 
+    /**
+     * Azione "Approva" (Decisione): estratta in un metodo per essere riusata identica sia
+     * nella card desktop "Decisione" sia nella barra azioni fissa mobile (US-021) — stessa
+     * form/logica, solo un `$name` diverso per evitare collisioni fra le due istanze
+     * renderizzate contemporaneamente nel DOM (schema desktop + schema mobile).
+     */
+    private function approvaAction(Prenotazione $pren, callable $puoDecidere, string $name = 'approva'): InfolistAction
+    {
+        return InfolistAction::make($name)
+            ->label('Approva richiesta')
+            ->icon('heroicon-o-check-circle')
+            ->color('success')
+            ->visible(fn (): bool => $puoDecidere() && auth()->user()->can('approve', $pren))
+            ->form([
+                Forms\Components\Select::make('torre_id_override')
+                    ->label('Torre da assegnare')
+                    ->helperText('Lascia vuoto per mantenere la torre scelta dalla sezione.')
+                    ->options(Torre::where('is_active', true)->pluck('nome', 'id'))
+                    ->nullable()
+                    ->searchable(),
+            ])
+            ->action(function (array $data) use ($pren): void {
+                $torreId = filled($data['torre_id_override'] ?? null)
+                    ? (int) $data['torre_id_override']
+                    : null;
+                app(PrenotazioneStateMachine::class)->approva($pren, auth()->user(), $torreId);
+                Notification::make()->title('Prenotazione approvata')->success()->send();
+                $this->redirect(PrenotazioneResource::getUrl('index'));
+            });
+    }
+
+    /** Azione "Rifiuta" (Decisione): vedi nota su {@see self::approvaAction()}. */
+    private function rifiutaAction(Prenotazione $pren, callable $puoDecidere, string $name = 'rifiuta'): InfolistAction
+    {
+        return InfolistAction::make($name)
+            ->label('Rifiuta — motivo obbligatorio')
+            ->icon('heroicon-o-x-circle')
+            ->color('danger')
+            ->outlined()
+            ->visible(fn (): bool => $puoDecidere() && auth()->user()->can('reject', $pren))
+            ->form([
+                Forms\Components\Textarea::make('motivo')
+                    ->label('Motivo del rifiuto')
+                    ->required()
+                    ->maxLength(1000)
+                    ->rows(4),
+            ])
+            ->action(function (array $data) use ($pren): void {
+                app(PrenotazioneStateMachine::class)->rifiuta($pren, auth()->user(), $data['motivo']);
+                Notification::make()->title('Prenotazione rifiutata')->warning()->send();
+                $this->redirect(PrenotazioneResource::getUrl('index'));
+            });
+    }
+
     public function infolist(Infolist $infolist): Infolist
     {
         $pren = $this->prenotazione();
@@ -181,48 +235,11 @@ class ViewPrenotazione extends ViewRecord
                                             ->visible($puoDecidere)
                                             ->schema([
                                                 InfolistActions::make([
-                                                    InfolistAction::make('approva')
-                                                        ->label('Approva richiesta')
-                                                        ->icon('heroicon-o-check-circle')
-                                                        ->color('success')
-                                                        ->visible(fn (): bool => $puoDecidere() && auth()->user()->can('approve', $pren))
-                                                        ->form([
-                                                            Forms\Components\Select::make('torre_id_override')
-                                                                ->label('Torre da assegnare')
-                                                                ->helperText('Lascia vuoto per mantenere la torre scelta dalla sezione.')
-                                                                ->options(Torre::where('is_active', true)->pluck('nome', 'id'))
-                                                                ->nullable()
-                                                                ->searchable(),
-                                                        ])
-                                                        ->action(function (array $data) use ($pren): void {
-                                                            $torreId = filled($data['torre_id_override'] ?? null)
-                                                                ? (int) $data['torre_id_override']
-                                                                : null;
-                                                            app(PrenotazioneStateMachine::class)->approva($pren, auth()->user(), $torreId);
-                                                            Notification::make()->title('Prenotazione approvata')->success()->send();
-                                                            $this->redirect(PrenotazioneResource::getUrl('index'));
-                                                        }),
+                                                    $this->approvaAction($pren, $puoDecidere),
                                                 ])->fullWidth(),
 
                                                 InfolistActions::make([
-                                                    InfolistAction::make('rifiuta')
-                                                        ->label('Rifiuta — motivo obbligatorio')
-                                                        ->icon('heroicon-o-x-circle')
-                                                        ->color('danger')
-                                                        ->outlined()
-                                                        ->visible(fn (): bool => $puoDecidere() && auth()->user()->can('reject', $pren))
-                                                        ->form([
-                                                            Forms\Components\Textarea::make('motivo')
-                                                                ->label('Motivo del rifiuto')
-                                                                ->required()
-                                                                ->maxLength(1000)
-                                                                ->rows(4),
-                                                        ])
-                                                        ->action(function (array $data) use ($pren): void {
-                                                            app(PrenotazioneStateMachine::class)->rifiuta($pren, auth()->user(), $data['motivo']);
-                                                            Notification::make()->title('Prenotazione rifiutata')->warning()->send();
-                                                            $this->redirect(PrenotazioneResource::getUrl('index'));
-                                                        }),
+                                                    $this->rifiutaAction($pren, $puoDecidere),
                                                 ])->fullWidth(),
                                             ]),
 
@@ -456,6 +473,29 @@ class ViewPrenotazione extends ViewRecord
                         ]),
                 ])
                 ->columnSpanFull(),
+
+            // Barra azioni fissa mobile (US-021, mockup "Mobile GR Dettaglio"): fuori dai
+            // Tabs (rimane visibile su qualunque tab attiva), stesse azioni "Decisione" sopra
+            // (self::approvaAction()/rifiutaAction()), solo un $name diverso per non collidere
+            // con le istanze già montate nella card desktop. Stesse classi "fixed inset-x-0
+            // bottom-0 md:hidden" già consolidate per il footer del Wizard (US-007): essendo
+            // più alta della bottom-nav (US-002, stesso z-index) la sovrasta/nasconde
+            // visivamente quando è visibile, coerente col mockup che non mostra la tab bar
+            // in questa schermata.
+            Group::make([
+                InfolistActions::make([
+                    $this->approvaAction($pren, $puoDecidere, 'approva_mobile'),
+                ])->fullWidth(),
+
+                InfolistActions::make([
+                    $this->rifiutaAction($pren, $puoDecidere, 'rifiuta_mobile'),
+                ])->fullWidth(),
+            ])
+                ->visible($puoDecidere)
+                ->extraAttributes([
+                    'class' => 'fixed inset-x-0 bottom-0 z-40 flex flex-col gap-2 border-t px-4 pb-[max(0.875rem,env(safe-area-inset-bottom))] pt-3.5 md:hidden',
+                    'style' => 'background:var(--surface-page);border-color:var(--border-subtle)',
+                ]),
         ]);
     }
 }
