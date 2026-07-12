@@ -6,6 +6,10 @@ Il formato segue le idee di [Keep a Changelog](https://keepachangelog.com/it/1.1
 
 ## [Non rilasciato]
 
+### Modificato
+
+- **Rinominato lo stack "staging" in "develop"**: `docker-compose.staging.yml` → `docker-compose.develop.yml`, `.env.staging.example` → `.env.develop.example` (`APP_ENV`, `DB_DATABASE`, `DB_USERNAME`, `CACHE_PREFIX`, `APP_URL`, `MAIL_FROM_ADDRESS` aggiornati coerentemente), documentazione (`DEPLOY.md`, `UAT_CHECKLIST.md`, doc di collaudo, `CLAUDE.md`) e `LocalDevSeeder` allineati al nuovo nome ambiente.
+
 ## [0.9.0] - 2026-05-12
 
 ### Aggiunto

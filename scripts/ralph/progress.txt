@@ -14,3 +14,15 @@ Started: Dom 12 Lug 2026 14:47:50 CEST
   - Lo script pre-commit controlla lo stato Sail con `sail ps --status running --services`: se l'output è vuoto (nessun servizio attivo) stampa un messaggio chiaro invece di lasciare fallire `sail composer qa` con un errore Docker criptico.
   - Larastan (`sail composer phpstan`) resta a 0 errori su 156 file dopo la modifica: nessun nuovo codice PHP applicativo introdotto da questa story, solo uno script bash e doc.
 ---
+
+## [2026-07-12] - US-002
+- Rinominato l'intero stack "staging" in "develop": `git mv docker-compose.staging.yml docker-compose.develop.yml`, `git mv .env.staging.example .env.develop.example`, con sostituzione di tutte le occorrenze `staging`→`develop` nei due file (nomi volumi, `env_file`, commenti, `APP_ENV`, `DB_DATABASE`/`DB_USERNAME`=`prenotar_develop`, `CACHE_PREFIX=prenotar_develop_`, `APP_URL`/`MAIL_FROM_ADDRESS`=`develop.prenotar.montagnaservizi.it`).
+- Aggiornati tutti i riferimenti attivi al vecchio nome: `DEPLOY.md` (sezione "Ambiente staging (UAT)" → "Ambiente develop", tutti i comandi e l'esempio Nginx), `CLAUDE.md` (roadmap Fase 8), `database/seeders/LocalDevSeeder.php` (whitelist ambienti `['local','testing','staging']` → `['local','testing','develop']`), `UAT_CHECKLIST.md`, `docs/COLLAUDO_wizard-prenotazione-miglioramenti.md`, `docs/ACCOUNT_TEST_LOCALE.md` (dominio da non usare in locale + link a DEPLOY.md).
+- Aggiunta voce in `CHANGELOG.md` sotto `## [Non rilasciato]` che documenta il rename.
+- Files changed: `docker-compose.develop.yml` (rinominato da `docker-compose.staging.yml`), `.env.develop.example` (rinominato da `.env.staging.example`), `DEPLOY.md`, `CLAUDE.md`, `CHANGELOG.md`, `UAT_CHECKLIST.md`, `docs/COLLAUDO_wizard-prenotazione-miglioramenti.md`, `docs/ACCOUNT_TEST_LOCALE.md`, `database/seeders/LocalDevSeeder.php`.
+- Verifica: `grep -rln 'staging'` su tutto il repo (esclusi `.git/`, `node_modules/`, `vendor/`) produce solo hit in `CHANGELOG.md` (voci storiche di release passate + la nuova voce che documenta il rename, entrambe intenzionalmente non riscritte), `tasks/*.md` (PRD storici, esplicitamente esentati dal criterio di accettazione) e `scripts/ralph/prd.json`/`scripts/ralph/archive/.../prd.json` (la spec stessa di questa story, materiale di pianificazione non stack). Nessun residuo su file di codice/config attivi.
+- `sail composer qa` verde: Pint OK, Larastan 0 errori su 156 file, Pest 235 test passati (495 assertion).
+- **Learnings for future iterations:**
+  - Quando si rinomina un ambiente/stack, cercare "staging" non solo in docker-compose/.env ma anche in doc di collaudo/UAT (`UAT_CHECKLIST.md`, `docs/COLLAUDO_*.md`) e nella whitelist ambienti dei seeder (`app()->environment([...])`) — sono facili da dimenticare e non vengono presi da un grep mirato ai soli file di config.
+  - Nel CHANGELOG.md le voci storiche (release già taggate) NON vanno riscritte quando si rinomina qualcosa: si aggiunge solo una nuova voce in "## [Non rilasciato]" che documenta il rename. Stesso principio già applicato ai PRD in `tasks/` (riferimento storico, esplicitamente esentato dal grep di verifica).
+---

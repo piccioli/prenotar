@@ -11,7 +11,7 @@ Usare una copia di questo file per ogni sezione pilota (es. `UAT_sezione-lecco.m
 | **Sezione pilota** | |
 | **Data** | |
 | **Tester** | |
-| **Ambiente** | https://staging.prenotar.montagnaservizi.it |
+| **Ambiente** | https://develop.prenotar.montagnaservizi.it |
 | **Versione** | Prenotar v0.8.0 |
 
 ---

@@ -161,21 +161,21 @@ docker build --target nginx -t prenotar-nginx:0.4.0 .
 
 ---
 
-## Ambiente staging (UAT)
+## Ambiente develop (UAT)
 
 Stack Docker separato sullo stesso host del server produzione. Volumi, porte e database distinti — no interferenza con prod.
 
 ### Prerequisiti
 
-- Subdominio `staging.prenotar.montagnaservizi.it` puntato all'IP server.
-- File `.env.staging` valorizzato (copia da `.env.staging.example`).
+- Subdominio `develop.prenotar.montagnaservizi.it` puntato all'IP server.
+- File `.env.develop` valorizzato (copia da `.env.develop.example`).
 
-### Configurazione reverse-proxy Nginx (staging)
+### Configurazione reverse-proxy Nginx (develop)
 
 ```nginx
 server {
     listen 443 ssl http2;
-    server_name staging.prenotar.montagnaservizi.it;
+    server_name develop.prenotar.montagnaservizi.it;
     # ssl_certificate /path/fullchain.pem;
     # ssl_certificate_key /path/privkey.pem;
 
@@ -193,15 +193,15 @@ server {
 ### Build e avvio
 
 ```bash
-docker compose -f docker-compose.staging.yml --env-file .env.staging build
-docker compose -f docker-compose.staging.yml --env-file .env.staging up -d
+docker compose -f docker-compose.develop.yml --env-file .env.develop build
+docker compose -f docker-compose.develop.yml --env-file .env.develop up -d
 ```
 
 ### Prima inizializzazione (UAT)
 
 ```bash
-docker compose -f docker-compose.staging.yml --env-file .env.staging exec app php artisan migrate --force
-docker compose -f docker-compose.staging.yml --env-file .env.staging exec app php artisan db:seed --class=LocalDevSeeder
+docker compose -f docker-compose.develop.yml --env-file .env.develop exec app php artisan migrate --force
+docker compose -f docker-compose.develop.yml --env-file .env.develop exec app php artisan db:seed --class=LocalDevSeeder
 ```
 
 Il `LocalDevSeeder` importa le 152 sezioni + 77 sottosezioni da Excel reale, imposta password `password` su tutti gli account, crea admin + GR dev e popola le impostazioni del presidente GR con firma e documento d'identità.
@@ -213,22 +213,22 @@ Il `LocalDevSeeder` importa le 152 sezioni + 77 sottosezioni da Excel reale, imp
 
 Mail interceptata da Mailpit — UI su `http://127.0.0.1:8027` sul server.
 
-### Aggiornamento staging
+### Aggiornamento develop
 
 ```bash
 git pull
-docker compose -f docker-compose.staging.yml --env-file .env.staging build
-docker compose -f docker-compose.staging.yml --env-file .env.staging up -d
-docker compose -f docker-compose.staging.yml --env-file .env.staging exec app php artisan migrate --force
+docker compose -f docker-compose.develop.yml --env-file .env.develop build
+docker compose -f docker-compose.develop.yml --env-file .env.develop up -d
+docker compose -f docker-compose.develop.yml --env-file .env.develop exec app php artisan migrate --force
 ```
 
-### Reset completo staging
+### Reset completo develop
 
 ```bash
-docker compose -f docker-compose.staging.yml --env-file .env.staging down -v
-docker compose -f docker-compose.staging.yml --env-file .env.staging up -d
-docker compose -f docker-compose.staging.yml --env-file .env.staging exec app php artisan migrate --force
-docker compose -f docker-compose.staging.yml --env-file .env.staging exec app php artisan db:seed --class=LocalDevSeeder
+docker compose -f docker-compose.develop.yml --env-file .env.develop down -v
+docker compose -f docker-compose.develop.yml --env-file .env.develop up -d
+docker compose -f docker-compose.develop.yml --env-file .env.develop exec app php artisan migrate --force
+docker compose -f docker-compose.develop.yml --env-file .env.develop exec app php artisan db:seed --class=LocalDevSeeder
 ```
 
 **Mai** usare `down -v` sulla produzione — cancella tutti i dati.

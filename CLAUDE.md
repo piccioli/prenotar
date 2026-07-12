@@ -173,7 +173,7 @@ Ogni transizione registra un record in `prenotazione_history` (autore + timestam
 | 5 | Template PDF (Richiesta parete + Modulo 3) | ✅ |
 | 6 | Pannello /admin + impersonate UI + audit log | ✅ |
 | 7 | Job archiviazione + reminder + Horizon | ✅ |
-| 8 | UAT + polish + deploy staging | ⏳ |
+| 8 | UAT + polish + deploy develop | ⏳ |
 
 ---
 

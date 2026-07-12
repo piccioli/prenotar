@@ -30,7 +30,7 @@
    | Admin | http://localhost/admin/login |
    | MailPit (mail intercettate) | http://localhost:8026 |
 
-> `APP_URL` in `.env` locale è `http://localhost` — non usare domini `staging.*`/`prenotar.montagnaservizi.it` in sviluppo: puntano (quando risolvono) all'ambiente remoto, non a questa istanza.
+> `APP_URL` in `.env` locale è `http://localhost` — non usare domini `develop.*`/`prenotar.montagnaservizi.it` in sviluppo: puntano (quando risolvono) all'ambiente remoto, non a questa istanza.
 
 ---
 
@@ -97,4 +97,4 @@ Il seeder crea automaticamente alcune prenotazioni demo (prefisso nome `[DEV] `)
 ## Riferimenti
 
 - Roadmap fasi e stack tecnico: [`CLAUDE.md`](../CLAUDE.md)
-- Deploy produzione/staging: [`DEPLOY.md`](../DEPLOY.md)
+- Deploy produzione/develop: [`DEPLOY.md`](../DEPLOY.md)
