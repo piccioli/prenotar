@@ -278,10 +278,10 @@ docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env
 
 ```bash
 docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop exec app php artisan migrate --force
-docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop exec app php artisan db:seed --class=LocalDevSeeder
+docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop exec app php artisan db:seed --force
 ```
 
-Il `LocalDevSeeder` importa le 152 sezioni + 77 sottosezioni da Excel reale, imposta password `password` su tutti gli account, crea admin + GR dev e popola le impostazioni del presidente GR con firma e documento d'identità.
+`db:seed` (senza `--class`) esegue `DatabaseSeeder`, che lancia in ordine `RolesAndPermissionsSeeder` → `TorriSeeder` → `AdminDevSeeder` → `LocalDevSeeder`. Quest'ultimo importa le 152 sezioni + 77 sottosezioni da Excel reale, imposta password `password` su tutti gli account, crea admin + GR dev e popola le impostazioni del presidente GR con firma e documento d'identità. **Non** lanciare `db:seed --class=LocalDevSeeder` da solo: dipende dai ruoli creati da `RolesAndPermissionsSeeder` e fallisce (o importa utenti senza ruolo) se questi non esistono già.
 
 **Credenziali UAT**:
 - Admin: `admin@local.test` / `password`
@@ -311,7 +311,7 @@ Per verificare l'esito: tab **Actions** del repository su GitHub, workflow "CD D
 docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop down -v
 docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop up -d
 docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop exec app php artisan migrate --force
-docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop exec app php artisan db:seed --class=LocalDevSeeder
+docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop exec app php artisan db:seed --force
 ```
 
 **Mai** usare `down -v` sulla produzione — cancella tutti i dati.
