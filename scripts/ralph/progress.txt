@@ -480,6 +480,42 @@ Started: 2026-07-12
   active check" pattern already documented above for nav items, just applied
   to visibility instead of styling. Always verify a "it doesn't show up" bug
   with a scoped render hook against this before assuming the Blade/view is wrong.
+- `Table::make()->recordUrl(fn ($record) => Pages\EditRecord::getUrl(['record' => $record]))`
+  makes an entire table row clickable to open the edit page — Filament's own
+  row-click JS already stops that navigation when the click lands on a real
+  row `Action` (button/link), so this coexists safely with other row actions.
+  Useful when a mockup's "Azioni" column has no room for a dedicated
+  edit/pencil icon: drop `EditAction::make()` from `->actions([...])` entirely
+  and rely on `->recordUrl()` instead, rather than cramming in an extra icon
+  not shown in the design.
+- `->toggleable(isToggledHiddenByDefault: true)` on a `TextColumn`/`IconColumn`
+  hides it from the default table view (Filament auto-adds a "toggle columns"
+  trigger to the header once any column has this) while keeping it fully
+  functional — still `->searchable()`, still filterable, still exportable —
+  just collapsed by default. Use this instead of deleting a column outright
+  when a mockup's grid is narrower than the existing table: no functionality
+  lost, table matches the mockup's default column count, and power users can
+  still reveal the extra columns via the toggle button.
+- Reading the last recorded reason/motivo for a domain action that is only
+  ever written to Spatie Activitylog (via `AuditLogger::logAdminAction()`,
+  never persisted on the subject model/table itself):
+  `Activity::where('subject_type', Model::class)->where('subject_id', $id)->where('event', $event)->latest()->first()?->properties->get('key')`
+  — `properties` is cast to a plain `Illuminate\Support\Collection`, so
+  `->get()` returns `mixed`; narrow it explicitly (`is_string($x) ? $x : null`)
+  before returning from a method typed `?string`, otherwise Larastan (level 6)
+  flags the mismatched return type. This is the only way to surface that data
+  in the UI since it was never designed to be queried back off the subject.
+- A Filament row `Action` that already has both `->icon()` and `->label()` set
+  renders as a labeled button by default (icon + text), not an icon-only
+  circle — call `->iconButton()` explicitly (and add `->tooltip($label)` to
+  keep the label accessible) to get the compact bordered icon-only circle a
+  mockup often shows for secondary row actions. Conversely,
+  `STS\FilamentImpersonate\Tables\Actions\Impersonate` calls `->iconButton()`
+  itself inside its own `setUp()` — to turn it back into a full labeled
+  button (e.g. to make it a colored/outlined "pill" distinct from the other
+  plain icon actions, per a mockup that visually singles out "Impersona" as
+  a dangerous action), call `->button()` after `Impersonate::make()`, then
+  `->outlined()`/`->color()` on top.
 
 ## [2026-07-12] - US-001
 - Nuovo tema Filament compilato via Vite per i 3 pannelli, con i design token del progetto (`tasks/design-reference/prenotar-ui-ruoli/tokens/*.css`) copiati 1:1 in `resources/css/filament/tokens/{colors,typography,spacing,effects,base}.css` + `fonts.css` (Manrope self-hosted via `@fontsource/manrope`, subset `latin` per weight 200-800) + `index.css` che li aggrega.
@@ -844,4 +880,20 @@ Started: 2026-07-12
 - **Learnings for future iterations:**
   - Vedi la nuova voce in Codebase Patterns sopra sul gotcha `renderHook(..., scopes: [...])` che non funziona per `TOPBAR_START`/`TOPBAR_END`/`GLOBAL_SEARCH_*` (nessuno scope forwarded dal Blade core) — rilevante per qualunque story futura (nessuna in coda al momento) che debba aggiungere chrome topbar-only condizionata a una singola pagina in uno qualunque dei 3 pannelli.
   - Tutte le story "Dashboard *** - mobile" rimanenti sono già completate (US-005, US-018, US-026); il pattern "widget con vista responsive, solo Blade toccato" è ormai stabile su tutti e 3 i pannelli.
+---
+
+## [2026-07-13] - US-027
+- Restyle di `UserResource` (Admin) secondo il mockup `pannello-admin.dc.html` "Admin Utenti": azione "Impersona" resa una pillola bordata/colorata (`Impersonate::make()->button()->outlined()->color('primary')`, il primario del pannello admin essendo già ambra/larice per US-001) nettamente distinta dalle altre 2 azioni riga (`reset_password`/`toggle_active`), ora ristilate come icone circolari semplici via `->iconButton()->tooltip(...)` invece del precedente stile link con testo — nessuna modifica alla logica di dominio di nessuna delle 3 azioni (stessi `->visible()`, stessa `->action()`, stesso `->form([Textarea::make('motivo')...])` per `toggle_active`).
+- Aggiunta colonna "Appartenenza" (assente prima), che riusa **lo stesso componente condiviso** `resources/views/filament/components/etichetta-sezione.blade.php` di US-016 (passandogli `$record->sezione`/`$record->sottosezione`) per gli utenti Sezione/Sottosezione, "GR Lombardia" per il GR Manager, "—" per l'admin — zero duplicazione del formato "S.SEZ. {nome} (sez. rif. {sezione madre})".
+- Colonna "Ruolo": da `TextColumn::make('roles.name')->badge()` (nessun colore, nessuna label italiana) a un nuovo `ruoloLabel()` calcolato sul record (non sulla stringa del ruolo Spatie) + colori per categoria (`warning` admin, `success` GR Manager, `info` sezione/sottosezione). Necessario perché **sia gli utenti Sezione sia Sottosezione condividono lo stesso ruolo Spatie `'sezione'`** (confermato in `database/factories/UserFactory.php:56-75`, sia `sezione()` che `sottosezione()` chiamano `assignRole('sezione')`) — la vecchia colonna `roles.name` avrebbe mostrato "sezione" per entrambi, non distinguendo mai una sottosezione (bug latente pre-esistente, mai notato perché non testato); il nuovo `ruoloLabel()` disambigua leggendo `$record->sottosezione_id` invece del nome ruolo.
+- Colonna "Stato": da `IconColumn::make('is_active')->boolean()` (semplice segno di spunta) a un nuovo `statoLabel()` (pallino colorato + testo "Attivo"/"Disattivato", vista `resources/views/filament/admin/components/stato-utente.blade.php`) che per gli utenti disattivati mostra anche, in corsivo, l'ultimo "motivo" di disattivazione — dato **mai stato persistito sul model `User`** (né una colonna né un accessor), esiste solo dentro `activity_log.properties` scritto da `AuditLogger::logAdminAction('user.toggle_active', ...)`. Nuovo helper privato `ultimoMotivoDisattivazione()` interroga `Spatie\Activitylog\Models\Activity` direttamente (nessuna nuova migrazione, nessun cambiamento allo schema).
+- `codice_cai`, `email_is_fallback`, `last_login_at`: non presenti nella griglia colonne del mockup, ma non richiesti come "rimossi" da nessun AC — invece di eliminarli (perdendo ricerca/filtro), resi `->toggleable(isToggledHiddenByDefault: true)` (nascosti di default, riattivabili dal menu colonne di Filament, ricerca/filtro invariati).
+- `EditAction::make()` rimossa dalla colonna Azioni (il mockup non mostra un'icona "modifica" a parte, solo Impersona/Reset/Attiva-Disattiva) e sostituita da `Table::make()->recordUrl(...)` verso la pagina di modifica: l'intera riga resta cliccabile per aprire il record, senza perdere la funzionalità né aggiungere una quarta icona assente dal mockup.
+- Aggiunto `ListUsers::getSubheading()` con il conteggio realtime "N account: X Sezioni, Y Sottosezioni, Z GR, W admin." (stesso pattern di sottotitolo già usato in `ListPrenotazioni::getSubheading()` da US-012), verificato contro il DB dev seedato reale (242 account: 152/77/3/1).
+- Files changed: `app/Filament/Admin/Resources/UserResource.php`, `app/Filament/Admin/Resources/UserResource/Pages/ListUsers.php`, `resources/views/filament/admin/components/stato-utente.blade.php` (nuovo).
+- Verifica: `sail composer qa` verde (Pint OK, Larastan 0 errori/158 file, Pest 262 test passati/592 assertion — stesso numero di prima, nessuna regressione; nessun test esistente in `tests/Feature/Admin/UserAdminTest.php` asserisce sul markup/struttura della tabella, solo su eventi/audit log/scope, quindi zero modifiche necessarie). `sail npm run build` verde, nessun asset CSS nuovo (solo stili inline `var(--...)` nella nuova vista, stesso pattern delle altre viste widget). Verifica end-to-end via `sail artisan tinker` (nessun tool MCP browser disponibile, confermato ancora una volta): richiesta GET autenticata reale su `/admin/users` come admin seedato → 200 OK, HTML contiene "Impersona" ×N, badge "Sezione"/"GR Manager", il sottotitolo "242 account: 152 Sezioni, 77 Sottosezioni, 3 GR, 1 admin." con i conteggi reali; chiamata diretta a `UserResource::appartenenzaLabel()`/`ruoloLabel()` su un utente sottosezione reale conferma "S.SEZ. BERBENNO"/"(sez. rif. SEZ. VALTELLINESE-SONDRIO)"/"Sottosezione"; disattivato un utente reale ad-hoc con motivo "test disattivazione via tinker" tramite `AuditLogger` reale → `statoLabel()` restituisce "Disattivato" + il motivo tra virgolette, poi riattivato e il record di audit log di test ripulito. Confronto pixel reale col mockup resta da fare manualmente (nessun tool screenshot/browser disponibile in questa sessione, confermato ancora una volta).
+- **Learnings for future iterations:**
+  - Vedi le 4 nuove voci in Codebase Patterns sopra (`->recordUrl()` per rendere l'intera riga cliccabile invece di un'`EditAction` dedicata, `->toggleable(isToggledHiddenByDefault: true)` per allineare le colonne di default al mockup senza perdere funzionalità, lettura di un "motivo" mai persistito sul model ma solo in Activitylog, `->iconButton()`/`->button()` per passare da azione-link a icona-circolare o viceversa per una pillola colorata) — rilevanti per US-028 (stessa risorsa, versione mobile a card) e per qualunque altra risorsa Admin (Torri US-029, Prenotazioni US-030) con azioni "pericolose" da distinguere visivamente.
+  - **Bug latente scoperto e silenziosamente corretto in questa story** (non era in nessun AC esplicito, ma rientra in "restyle secondo il mockup"): la colonna Ruolo basata su `roles.name` non ha mai potuto distinguere un utente Sottosezione da uno Sezione, perché entrambi condividono il ruolo Spatie `'sezione'` — qualunque story futura che debba mostrare/filtrare per "ruolo" deve leggere `sottosezione_id`/`sezione_id` sul record, non fidarsi del nome del ruolo Spatie da solo.
+  - US-028 (stessa risorsa, mobile) può riusare `ruoloLabel()`/`appartenenzaLabel()`/`statoLabel()` (tutti metodi `public static` su `UserResource`) da una vista Blade a card mobile, stesso pattern "card list riusa gli stessi helper statici della tabella desktop" già consolidato in US-013/US-019.
 ---
