@@ -634,42 +634,155 @@ class PrenotazioneResource extends Resource
                     ]),
                 ]),
 
-            Forms\Components\Section::make('Allegati')
+            Forms\Components\Grid::make(['default' => 1, 'lg' => 3])
                 ->schema([
-                    SpatieMediaLibraryFileUpload::make('delibera_consiglio')
-                        ->label('Delibera del Consiglio Direttivo')
-                        ->helperText('Obbligatoria per inviare la richiesta al GR.')
-                        ->collection('delibera_consiglio')
-                        ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
-                        ->maxSize(10240),
+                    Forms\Components\Group::make([
+                        Forms\Components\Section::make('Allegati')
+                            ->description('La delibera del consiglio è obbligatoria per inviare la richiesta.')
+                            ->schema([
+                                self::allegatoField(
+                                    name: 'delibera_consiglio',
+                                    collection: 'delibera_consiglio',
+                                    titolo: 'Delibera del Consiglio Direttivo',
+                                    obbligatorio: true,
+                                    sottotitoloMancante: 'Non ancora caricata — obbligatoria per l\'invio al GR',
+                                    iconaMancante: 'heroicon-o-exclamation-triangle',
+                                ),
+                                self::allegatoField(
+                                    name: 'autorizzazione_suolo_pubblico',
+                                    collection: 'autorizzazione_suolo_pubblico',
+                                    titolo: 'Autorizzazione suolo pubblico',
+                                    obbligatorio: false,
+                                    sottotitoloMancante: 'Facoltativa — richiesta se l\'evento occupa suolo pubblico',
+                                    iconaMancante: 'heroicon-o-document-plus',
+                                ),
+                                self::allegatoField(
+                                    name: 'autorizzazione_ztl',
+                                    collection: 'autorizzazione_ztl',
+                                    titolo: 'Autorizzazione ZTL',
+                                    obbligatorio: false,
+                                    sottotitoloMancante: 'Facoltativa — solo se l\'evento è in zona a traffico limitato',
+                                    iconaMancante: 'heroicon-o-document-plus',
+                                ),
+                                self::allegatoField(
+                                    name: 'patente_responsabile',
+                                    collection: 'patente_responsabile',
+                                    titolo: 'Patente del responsabile',
+                                    obbligatorio: false,
+                                    sottotitoloMancante: 'Richiesta se il trasporto avviene con mezzo privato',
+                                    iconaMancante: 'heroicon-o-identification',
+                                ),
+                                self::allegatoField(
+                                    name: 'altri',
+                                    collection: 'altri',
+                                    titolo: 'Altri allegati',
+                                    obbligatorio: false,
+                                    sottotitoloMancante: 'Documenti aggiuntivi utili alla valutazione',
+                                    iconaMancante: 'heroicon-o-paper-clip',
+                                    multiple: true,
+                                ),
+                            ])
+                            ->collapsible(),
+                    ])->columnSpan(['lg' => 2]),
 
-                    SpatieMediaLibraryFileUpload::make('autorizzazione_suolo_pubblico')
-                        ->label('Autorizzazione suolo pubblico')
-                        ->collection('autorizzazione_suolo_pubblico')
-                        ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
-                        ->maxSize(10240),
-
-                    SpatieMediaLibraryFileUpload::make('autorizzazione_ztl')
-                        ->label('Autorizzazione ZTL')
-                        ->collection('autorizzazione_ztl')
-                        ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
-                        ->maxSize(10240),
-
-                    SpatieMediaLibraryFileUpload::make('patente_responsabile')
-                        ->label('Patente del responsabile')
-                        ->collection('patente_responsabile')
-                        ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
-                        ->maxSize(10240),
-
-                    SpatieMediaLibraryFileUpload::make('altri')
-                        ->label('Altri documenti')
-                        ->collection('altri')
-                        ->multiple()
-                        ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
-                        ->maxSize(10240),
-                ])
-                ->collapsible(),
+                    Forms\Components\Group::make([
+                        self::azioneInvioSection(),
+                        self::azioneEliminaSection(),
+                    ])->columnSpan(['lg' => 1]),
+                ]),
         ]);
+    }
+
+    private static function allegatoField(
+        string $name,
+        string $collection,
+        string $titolo,
+        bool $obbligatorio,
+        string $sottotitoloMancante,
+        string $iconaMancante,
+        bool $multiple = false,
+    ): SpatieMediaLibraryFileUpload {
+        return SpatieMediaLibraryFileUpload::make($name)
+            ->hiddenLabel()
+            ->collection($collection)
+            ->multiple($multiple)
+            ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
+            ->maxSize(10240)
+            ->view('filament.sezione.forms.components.allegato-file-upload')
+            ->viewData([
+                'titolo' => $titolo,
+                'obbligatorio' => $obbligatorio,
+                'sottotitoloMancante' => $sottotitoloMancante,
+                'iconaMancante' => $iconaMancante,
+            ]);
+    }
+
+    private static function azioneInvioSection(): Forms\Components\Section
+    {
+        return Forms\Components\Section::make('Invio al Gruppo Regionale')
+            ->schema([
+                Forms\Components\Placeholder::make('invio_hint')
+                    ->hiddenLabel()
+                    ->content(fn (?Prenotazione $record): HtmlString => new HtmlString(
+                        view('filament.sezione.forms.components.azione-invio-hint', [
+                            'bloccato' => ! ($record?->hasMedia('delibera_consiglio') ?? false),
+                        ])->render()
+                    )),
+
+                Forms\Components\Actions::make([
+                    Forms\Components\Actions\Action::make('invia_richiesta')
+                        ->label('Invia richiesta al GR')
+                        ->icon('heroicon-o-paper-airplane')
+                        ->color('success')
+                        ->disabled(fn (?Prenotazione $record): bool => ! ($record?->hasMedia('delibera_consiglio') ?? false))
+                        ->requiresConfirmation()
+                        ->modalHeading('Invia richiesta al GR')
+                        ->modalDescription('Confermi l\'invio della richiesta? Dopo l\'invio non potrai più modificare la prenotazione.')
+                        ->action(function (?Prenotazione $record, Forms\Components\Actions\Action $action): void {
+                            if ($record === null) {
+                                return;
+                            }
+
+                            app(PrenotazioneStateMachine::class)->inviaRichiesta($record, auth()->user());
+
+                            Notification::make()
+                                ->title('Richiesta inviata')
+                                ->body('La richiesta è stata inviata al GR Lombardia.')
+                                ->success()
+                                ->send();
+
+                            $action->redirect(PrenotazioneResource::getUrl('view', ['record' => $record]));
+                        }),
+                ])->fullWidth(),
+            ]);
+    }
+
+    private static function azioneEliminaSection(): Forms\Components\Section
+    {
+        return Forms\Components\Section::make('Zona pericolosa')
+            ->description('Puoi eliminare questa richiesta solo finché è in Bozza. L\'operazione non è reversibile.')
+            ->visible(fn (?Prenotazione $record): bool => $record?->status === PrenotazioneStatus::Bozza)
+            ->extraAttributes(['style' => 'border-color:#E7B7B0'])
+            ->schema([
+                Forms\Components\Actions::make([
+                    Forms\Components\Actions\Action::make('elimina_bozza')
+                        ->label('Elimina bozza')
+                        ->icon('heroicon-o-trash')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->action(function (?Prenotazione $record, Forms\Components\Actions\Action $action): void {
+                            if ($record === null) {
+                                return;
+                            }
+
+                            $record->delete();
+
+                            Notification::make()->title('Bozza eliminata')->success()->send();
+
+                            $action->redirect(PrenotazioneResource::getUrl('index'));
+                        }),
+                ])->fullWidth(),
+            ]);
     }
 
     public static function table(Table $table): Table
