@@ -15,6 +15,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # .env non e' in git (segreti): clean:false lo preserva tra un run e l'altro.
+          # Va seminato una tantum dall'admin nella working directory del runner (vedi DEPLOY.md).
+          clean: false
 
       - name: Backup database pre-deploy
         run: |

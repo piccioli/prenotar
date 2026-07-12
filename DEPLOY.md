@@ -35,6 +35,14 @@ Accesso: SSH come `root@116.203.88.140`, chiave pubblica già autorizzata (nessu
    ./svc.sh install && ./svc.sh start
    ```
 
+   **Prima di avviare i servizi** (`svc.sh start`): `.env`/`.env.develop` non sono in git (contengono segreti). I workflow CD usano `clean: false` nel checkout per preservarli tra un run e l'altro, ma alla primissima esecuzione la working directory del runner (`<runner>/_work/prenotar/prenotar/`) non esiste ancora — va creata a mano con un clone e il rispettivo `.env`/`.env.develop` copiato dentro, altrimenti il primo deploy automatico fallisce per file mancante:
+   ```bash
+   # Esempio per il runner develop (stesso pattern per produzione con .env)
+   mkdir -p /opt/actions-runner-develop/_work/prenotar/prenotar
+   git clone -b develop git@github.com:<org>/prenotar.git /opt/actions-runner-develop/_work/prenotar/prenotar
+   cp /root/prenotar/.env.develop /opt/actions-runner-develop/_work/prenotar/prenotar/.env.develop
+   ```
+
 **Operazioni manuali richieste all'utente** (non eseguibili da un agente automatico):
 - Puntamento DNS per `prenotar.montagnaservizi.com` e `prenotar.develop.montagnaservizi.com` verso l'IP del server.
 - Emissione/rinnovo dei certificati TLS per entrambi i domini (`scripts/certbot-certonly.sh` / `scripts/certbot-renew.sh`, vedi §3).

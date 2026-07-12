@@ -12,6 +12,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # .env.develop non e' in git (segreti): clean:false lo preserva tra un run e l'altro.
+          # Va seminato una tantum dall'admin nella working directory del runner (vedi DEPLOY.md).
+          clean: false
 
       - name: Build immagine develop
         run: docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop build
