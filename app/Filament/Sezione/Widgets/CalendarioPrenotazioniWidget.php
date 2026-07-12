@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Filament\Sezione\Widgets;
 
+use App\Filament\Gr\Resources\PrenotazioneResource as GrPrenotazioneResource;
 use App\Filament\Sezione\Resources\PrenotazioneResource;
 use App\Models\Prenotazione;
 use App\Models\Torre;
+use Filament\Facades\Filament;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\On;
 use Saade\FilamentFullCalendar\Data\EventData;
@@ -34,16 +36,17 @@ class CalendarioPrenotazioniWidget extends FullCalendarWidget
         $end = Carbon::parse($info['end']);
 
         $torriColori = $this->torriColori();
+        $isGr = Filament::getCurrentPanel()?->getId() === 'gr';
 
         $eventi = Prenotazione::eventiCalendarioPubblico($start, $end, $this->filtroTorreId)
-            ->map(function (Prenotazione $pren) use ($torriColori): array {
+            ->map(function (Prenotazione $pren) use ($torriColori, $isGr): array {
                 $torreId = $pren->torre_id;
                 $colore = ($torreId !== null && isset($torriColori[$torreId]))
                     ? $torriColori[$torreId]
                     : Torre::COLORE_DEFAULT;
 
                 $torreNome = $pren->torre !== null ? $pren->torre->nome : 'Senza torre';
-                $diPropria = $pren->user_id === auth()->id();
+                $diPropria = $isGr || $pren->user_id === auth()->id();
 
                 $evento = EventData::make()
                     ->id($pren->id)
@@ -54,7 +57,9 @@ class CalendarioPrenotazioniWidget extends FullCalendarWidget
                     ->borderColor($colore)
                     ->allDay(true);
 
-                if ($diPropria) {
+                if ($isGr) {
+                    $evento->url(GrPrenotazioneResource::getUrl('view', ['record' => $pren], panel: 'gr'));
+                } elseif ($diPropria) {
                     $evento->url(PrenotazioneResource::getUrl('view', ['record' => $pren], panel: 'sezione'));
                 }
 
