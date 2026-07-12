@@ -6,7 +6,7 @@ Durante la sessione di test guidato del **11/05/2026** con CAI GR Lombardia (Val
 
 | Campo | Valore |
 |-------|--------|
-| **Ambiente di collaudo** | https://staging.prenotar.montagnaservizi.it |
+| **Ambiente di collaudo** | https://prenotar.develop.montagnaservizi.com:8443 |
 | **Data implementazione** | 08/07/2026 |
 | **Tester** | |
 | **Data collaudo** | |

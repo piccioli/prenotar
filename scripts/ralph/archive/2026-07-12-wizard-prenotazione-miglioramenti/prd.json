@@ -15,7 +15,7 @@
         "Typecheck/Larastan passa"
       ],
       "priority": 1,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
@@ -32,7 +32,7 @@
         "Typecheck/Larastan passa"
       ],
       "priority": 2,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
@@ -46,7 +46,7 @@
         "Typecheck/Larastan passa"
       ],
       "priority": 3,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
@@ -61,7 +61,7 @@
         "Typecheck/Larastan passa"
       ],
       "priority": 4,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
@@ -76,7 +76,7 @@
         "Typecheck/Larastan passa"
       ],
       "priority": 5,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
@@ -92,7 +92,7 @@
         "Typecheck/Larastan passa"
       ],
       "priority": 6,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
@@ -109,7 +109,7 @@
         "Typecheck/Larastan passa"
       ],
       "priority": 7,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
@@ -123,7 +123,7 @@
         "Typecheck/Larastan passa"
       ],
       "priority": 8,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
@@ -137,7 +137,7 @@
         "Typecheck/Larastan passa"
       ],
       "priority": 9,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
@@ -151,7 +151,7 @@
         "Typecheck/Larastan passa"
       ],
       "priority": 10,
-      "passes": true,
+      "passes": false,
       "notes": ""
     }
   ]

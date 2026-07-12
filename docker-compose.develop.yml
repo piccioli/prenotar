@@ -1,12 +1,15 @@
-# Stack staging Prenotar — UAT + test con dati reali.
+# Stack develop Prenotar — UAT + test con dati reali.
 # Stack separato da produzione: volumi, porte e DB distinti.
-# Uso:
-#   cp .env.staging.example .env.staging  # poi valorizza APP_KEY, DB_PASSWORD, DB_ROOT_PASSWORD
-#   docker compose -f docker-compose.staging.yml --env-file .env.staging build
-#   docker compose -f docker-compose.staging.yml --env-file .env.staging up -d
+# Uso (progetto -p distinto: evita collisioni con lo stack produzione sullo stesso host):
+#   cp .env.develop.example .env.develop  # poi valorizza APP_KEY, DB_PASSWORD, DB_ROOT_PASSWORD
+#   docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop build
+#   docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop up -d
 # Prima inizializzazione:
-#   docker compose -f docker-compose.staging.yml --env-file .env.staging exec app php artisan migrate --force
-#   docker compose -f docker-compose.staging.yml --env-file .env.staging exec app php artisan db:seed --class=LocalDevSeeder
+#   docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop exec app php artisan migrate --force
+#   docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop exec app php artisan db:seed --force
+# HTTPS: solo la produzione pubblica le porte 80/443 dell'host, quindi il certificato per il dominio
+# develop viene emesso passando dallo stack produzione (webroot condiviso) — vedi scripts/certbot-certonly.sh
+# e DEPLOY.md, sezione "HTTPS con Certbot". Qui viene solo montato in sola lettura il volume con i certificati.
 
 services:
   nginx:
@@ -18,6 +21,14 @@ services:
         COMPOSER_INSTALL_DEV: ${COMPOSER_INSTALL_DEV:-1}
     ports:
       - "${HTTP_PUBLISH:-8081}:80"
+      - "${HTTPS_PUBLISH:-8443}:443"
+    environment:
+      CERTBOT_DOMAIN: "${CERTBOT_DOMAIN:-}"
+      # Porta pubblica HTTPS (mappata da HTTPS_PUBLISH): il redirect HTTP->HTTPS generato
+      # dall'entrypoint Nginx la usa per non puntare alla 443 dello stack produzione.
+      CERTBOT_PUBLIC_HTTPS_PORT: "${HTTPS_PUBLISH:-8443}"
+    volumes:
+      - certbot_conf:/etc/letsencrypt:ro
     depends_on:
       - app
     restart: unless-stopped
@@ -30,12 +41,12 @@ services:
       args:
         COMPOSER_INSTALL_DEV: ${COMPOSER_INSTALL_DEV:-1}
     env_file:
-      - .env.staging
+      - .env.develop
     environment:
       AUTORUN_OPTIMIZE: "${AUTORUN_OPTIMIZE:-1}"
       AUTORUN_MIGRATIONS: "${AUTORUN_MIGRATIONS:-0}"
     volumes:
-      - app_staging_storage:/var/www/html/storage/app
+      - app_develop_storage:/var/www/html/storage/app
     depends_on:
       mariadb:
         condition: service_healthy
@@ -55,11 +66,11 @@ services:
     entrypoint: ["/usr/local/bin/docker-entrypoint-worker.sh"]
     command: [php, artisan, horizon]
     env_file:
-      - .env.staging
+      - .env.develop
     environment:
       AUTORUN_OPTIMIZE: "0"
     volumes:
-      - app_staging_storage:/var/www/html/storage/app
+      - app_develop_storage:/var/www/html/storage/app
     depends_on:
       mariadb:
         condition: service_healthy
@@ -81,11 +92,11 @@ services:
     entrypoint: ["/usr/local/bin/docker-entrypoint-worker.sh"]
     command: [php, artisan, schedule:work]
     env_file:
-      - .env.staging
+      - .env.develop
     environment:
       AUTORUN_OPTIMIZE: "0"
     volumes:
-      - app_staging_storage:/var/www/html/storage/app
+      - app_develop_storage:/var/www/html/storage/app
     depends_on:
       mariadb:
         condition: service_healthy
@@ -112,7 +123,7 @@ services:
       MARIADB_USER: "${DB_USERNAME}"
       MARIADB_PASSWORD: "${DB_PASSWORD}"
     volumes:
-      - mariadb_staging_data:/var/lib/mysql
+      - mariadb_develop_data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s
@@ -125,10 +136,15 @@ services:
     image: redis:7-alpine
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
-      - redis_staging_data:/data
+      - redis_develop_data:/data
     restart: unless-stopped
 
 volumes:
-  mariadb_staging_data:
-  redis_staging_data:
-  app_staging_storage:
+  mariadb_develop_data:
+  redis_develop_data:
+  app_develop_storage:
+  # Stesso volume esterno di docker-compose.production.yml (sola lettura qui): i certificati per
+  # ENTRAMBI i domini vengono emessi/rinnovati passando dallo stack produzione, vedi commento sopra.
+  certbot_conf:
+    external: true
+    name: prenotar_shared_certbot_conf

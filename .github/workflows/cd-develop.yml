@@ -1,0 +1,31 @@
+name: CD Develop
+
+on:
+  push:
+    branches: [develop]
+
+jobs:
+  deploy:
+    name: Deploy su ambiente develop
+    runs-on: [self-hosted, develop]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # .env.develop non e' in git (segreti): clean:false lo preserva tra un run e l'altro.
+          # Va seminato una tantum dall'admin nella working directory del runner (vedi DEPLOY.md).
+          clean: false
+
+      - name: Build immagine develop
+        run: docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop build
+
+      - name: Avvio stack develop
+        run: docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop up -d
+
+      - name: Migrazioni database
+        run: docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop exec -T app php artisan migrate --force
+
+      # Il seeder (db:seed) resta un'operazione manuale, eseguita dall'admin tecnico
+      # quando serve reinizializzare i dati di test (vedi DEPLOY.md, sezione "Ambiente develop").
+      # Non viene lanciato automaticamente da questo workflow.

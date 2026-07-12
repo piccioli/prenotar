@@ -46,7 +46,7 @@ class LocalDevSeeder extends Seeder
 
     public function run(): void
     {
-        if (! app()->environment(['local', 'testing', 'staging'])) {
+        if (! app()->environment(['local', 'testing', 'develop'])) {
             return;
         }
 

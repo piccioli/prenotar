@@ -1,0 +1,14 @@
+# Generato dall'entrypoint Nginx quando esiste il certificato Let's Encrypt.
+server {
+    listen 80;
+    listen [::]:80;
+    server_name __DOMAIN__;
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host__HTTPS_PORT_SUFFIX__$request_uri;
+    }
+}

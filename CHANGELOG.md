@@ -4,7 +4,23 @@ Tutte le modifiche rilevanti al progetto sono elencate in questo file.
 
 Il formato segue le idee di [Keep a Changelog](https://keepachangelog.com/it/1.1.0/); le versioni rispettano il [Semantic Versioning](https://semver.org/lang/it/).
 
-## [Non rilasciato]
+## [0.10.0] - 2026-07-12
+
+### Aggiunto
+
+- **Hook di pre-commit locale** (`.githooks/pre-commit`): lancia `composer qa` (Pint + Larastan + Pest) e blocca il commit se la QA fallisce o Sail non è attivo.
+- **Branch `develop`** come branch di integrazione: tutto lo sviluppo parte da lì, `main` riceve solo PR da `develop` o da branch `hotfix/*` (documentato in `CLAUDE.md`).
+- **CD automatico verso develop** (`.github/workflows/cd-develop.yml`): push su `develop` → build, `up -d`, migrate su runner self-hosted dedicato.
+- **CD automatico verso produzione con backup DB** (`.github/workflows/cd-production.yml`): push su `main` → dump MariaDB con retention 5 backup, poi build/migrate/deploy su runner self-hosted dedicato.
+- **Flusso di hotfix** e **convenzione di versionamento** (bump + tag su `develop` prima della PR verso `main`, patch release direttamente su `main` per gli hotfix) documentati in `CLAUDE.md`.
+- **Checklist di setup macchina** (solo documentazione) in `DEPLOY.md` per reinstallare da zero develop + produzione su una macchina pulita.
+
+### Modificato
+
+- **Rinominato lo stack "staging" in "develop"**: `docker-compose.staging.yml` → `docker-compose.develop.yml`, `.env.staging.example` → `.env.develop.example` (`APP_ENV`, `DB_DATABASE`, `DB_USERNAME`, `CACHE_PREFIX`, `APP_URL`, `MAIL_FROM_ADDRESS` aggiornati coerentemente), documentazione (`DEPLOY.md`, `UAT_CHECKLIST.md`, doc di collaudo, `CLAUDE.md`) e `LocalDevSeeder` allineati al nuovo nome ambiente.
+- **Migrazione dominio da `.it` a `.com`**: produzione `prenotar.montagnaservizi.it` → `prenotar.montagnaservizi.com`; develop `develop.prenotar.montagnaservizi.it` → `prenotar.develop.montagnaservizi.com` (porta HTTPS `8443`, dedicata perché solo la produzione pubblica le porte 80/443 dell'host).
+- **HTTPS via Certbot in-container** (backport da configurazione già in uso in produzione, mai committata): `docker-compose.production.yml`/`docker-compose.develop.yml` includono un servizio `certbot` (profilo `tools`) e volumi condivisi `prenotar_shared_certbot_conf`/`prenotar_shared_certbot_www`; script `scripts/certbot-certonly.sh` e `scripts/certbot-renew.sh`; `Dockerfile` con entrypoint Nginx custom che attiva il virtual host TLS quando il certificato è presente.
+- **Project name Docker Compose esplicito** (`-p prenotar` / `-p prenotar-develop`) in tutti i comandi di `DEPLOY.md` e nei workflow CD: senza, Compose deriva il nome progetto dalla directory (uguale per entrambi gli stack sullo stesso host), rischiando collisioni tra i container di produzione e develop.
 
 ## [0.9.0] - 2026-05-12
 
