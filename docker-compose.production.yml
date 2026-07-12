@@ -20,6 +20,7 @@ services:
       - "${HTTPS_PUBLISH:-443}:443"
     environment:
       CERTBOT_DOMAIN: "${CERTBOT_DOMAIN:-}"
+      CERTBOT_PUBLIC_HTTPS_PORT: "${HTTPS_PUBLISH:-443}"
     volumes:
       - certbot_www:/var/www/certbot
       - certbot_conf:/etc/letsencrypt:ro

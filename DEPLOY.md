@@ -101,7 +101,7 @@ Prerequisiti: record **DNS** (A/AAAA) del dominio verso il server; porte host **
    CERTBOT_DOMAIN=prenotar.montagnaservizi.com docker compose -p prenotar -f docker-compose.production.yml up -d --force-recreate nginx
    ```
 
-   Dopo il primo certificato, l'entrypoint di Nginx abilita il **redirect HTTP→HTTPS** per `CERTBOT_DOMAIN` e il **virtual host TLS** (certificati in sola lettura da `certbot_conf`).
+   Dopo il primo certificato, l'entrypoint di Nginx abilita il **redirect HTTP→HTTPS** per `CERTBOT_DOMAIN` e il **virtual host TLS** (certificati in sola lettura da `certbot_conf`). Il redirect usa `CERTBOT_PUBLIC_HTTPS_PORT` (= `HTTPS_PUBLISH`, es. `8443` per develop) per puntare alla porta pubblica corretta — senza, lo stack develop redirigerebbe alla porta 443 (occupata dalla produzione, dominio/certificato sbagliati).
 
 4. **Rinnovo** (Let's Encrypt, ~90 giorni): cron sul server, ad esempio due volte al giorno:
 

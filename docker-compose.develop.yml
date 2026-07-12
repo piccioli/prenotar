@@ -6,7 +6,7 @@
 #   docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop up -d
 # Prima inizializzazione:
 #   docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop exec app php artisan migrate --force
-#   docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop exec app php artisan db:seed --class=LocalDevSeeder
+#   docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop exec app php artisan db:seed --force
 # HTTPS: solo la produzione pubblica le porte 80/443 dell'host, quindi il certificato per il dominio
 # develop viene emesso passando dallo stack produzione (webroot condiviso) — vedi scripts/certbot-certonly.sh
 # e DEPLOY.md, sezione "HTTPS con Certbot". Qui viene solo montato in sola lettura il volume con i certificati.
@@ -24,6 +24,9 @@ services:
       - "${HTTPS_PUBLISH:-8443}:443"
     environment:
       CERTBOT_DOMAIN: "${CERTBOT_DOMAIN:-}"
+      # Porta pubblica HTTPS (mappata da HTTPS_PUBLISH): il redirect HTTP->HTTPS generato
+      # dall'entrypoint Nginx la usa per non puntare alla 443 dello stack produzione.
+      CERTBOT_PUBLIC_HTTPS_PORT: "${HTTPS_PUBLISH:-8443}"
     volumes:
       - certbot_conf:/etc/letsencrypt:ro
     depends_on:
