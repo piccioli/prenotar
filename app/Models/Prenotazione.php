@@ -160,15 +160,21 @@ class Prenotazione extends Model implements HasMedia
             ->useLogName('prenotazione');
     }
 
-    /** Etichetta del proprietario (risolve BUG-05: label distintiva sezione/sottosezione). */
+    /**
+     * Etichetta del proprietario (risolve BUG-05: label distintiva sezione/
+     * sottosezione). Riusa `Sottosezione::label` come unica fonte di verita
+     * del formato, invece di duplicarne la logica qui.
+     */
     public function getProprietarioLabelAttribute(): string
     {
         $sottosezione = $this->sottosezione;
         if ($sottosezione !== null) {
-            return 'S.SEZ. '.$sottosezione->nominativo.' (sez. rif. '.$sottosezione->sezione?->nominativo.')';
+            return $sottosezione->label;
         }
 
-        return 'SEZ. '.$this->sezione?->nominativo;
+        $sezione = $this->sezione;
+
+        return $sezione !== null ? $sezione->nominativo : '';
     }
 
     /** @return BelongsTo<User, $this> */

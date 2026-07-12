@@ -8,6 +8,8 @@ use App\Enums\PrenotazioneStatus;
 use App\Filament\Sezione\Pages\CalendarioPage;
 use App\Filament\Sezione\Resources\PrenotazioneResource;
 use App\Models\Prenotazione;
+use App\Models\Sezione;
+use App\Models\Sottosezione;
 use App\Settings\GrSettings;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Carbon;
@@ -33,6 +35,18 @@ class PrenotazioniDashboardWidget extends Widget
             ])
             ->latest('data_inizio_prenotazione')
             ->first();
+    }
+
+    /** Sezione dell'utente autenticato, per l'etichetta S.SEZ./SEZ. (BUG-05). */
+    public function getUserSezione(): ?Sezione
+    {
+        return Auth::user()?->sezione;
+    }
+
+    /** Sottosezione dell'utente autenticato, per l'etichetta S.SEZ./SEZ. (BUG-05). */
+    public function getUserSottosezione(): ?Sottosezione
+    {
+        return Auth::user()?->sottosezione;
     }
 
     public function getUrlNuovaPrenotazione(): string

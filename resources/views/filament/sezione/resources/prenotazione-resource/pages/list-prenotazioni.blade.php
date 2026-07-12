@@ -5,6 +5,11 @@
     ])
 >
     <div class="flex flex-col gap-y-6">
+        <p class="flex items-center gap-1.5 text-sm" style="color:var(--stone-600)">
+            <x-filament::icon icon="heroicon-o-building-library" class="h-4 w-4 flex-shrink-0" style="color:var(--text-brand)" />
+            @include('filament.components.etichetta-sezione', ['sezione' => auth()->user()->sezione, 'sottosezione' => auth()->user()->sottosezione])
+        </p>
+
         <x-filament-panels::resources.tabs />
 
         {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::RESOURCE_PAGES_LIST_RECORDS_TABLE_BEFORE, scopes: $this->getRenderHookScopes()) }}

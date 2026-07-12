@@ -1,6 +1,11 @@
 <x-filament-widgets::widget>
     @php $attiva = $this->getPrenotazioneAttiva() @endphp
 
+    <p class="mb-4 flex items-center gap-1.5 text-sm" style="color:var(--stone-600)">
+        <x-filament::icon icon="heroicon-o-building-library" class="h-4 w-4 flex-shrink-0" style="color:var(--text-brand)" />
+        @include('filament.components.etichetta-sezione', ['sezione' => $this->getUserSezione(), 'sottosezione' => $this->getUserSottosezione()])
+    </p>
+
     @if($attiva)
         @php $scadenzaPdf = $this->getScadenzaPdfFirmato($attiva) @endphp
         <div class="flex flex-col gap-4">

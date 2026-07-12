@@ -22,7 +22,9 @@ use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Support\Colors\Color;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\HtmlString;
 
 class ViewPrenotazione extends ViewRecord
 {
@@ -36,6 +38,15 @@ class ViewPrenotazione extends ViewRecord
         }
 
         return $record;
+    }
+
+    /** Etichetta S.SEZ./SEZ. del titolare della prenotazione (BUG-05), stesso componente condiviso di dashboard e lista. */
+    public function getSubheading(): string|Htmlable|null
+    {
+        return new HtmlString(view('filament.components.etichetta-sezione', [
+            'sezione' => $this->prenotazione()->sezione,
+            'sottosezione' => $this->prenotazione()->sottosezione,
+        ])->render());
     }
 
     protected function getHeaderActions(): array
