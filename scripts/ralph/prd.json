@@ -151,7 +151,7 @@
         "Typecheck/Larastan passa"
       ],
       "priority": 10,
-      "passes": false,
+      "passes": true,
       "notes": ""
     }
   ]

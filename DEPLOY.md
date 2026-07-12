@@ -6,6 +6,37 @@ Health check HTTP: `GET /up` (Laravel 11).
 
 ---
 
+## 0. Setup iniziale macchina (root@116.203.88.140)
+
+> **Solo documentazione**: quanto segue è una checklist **manuale** per l'admin tecnico. Nessuno script del repository né alcun comando eseguito da un agente automatico si connette a `root@116.203.88.140` — resta sempre un'azione umana deliberata sul server reale.
+
+Accesso: SSH come `root@116.203.88.140`, chiave pubblica già autorizzata (nessuno step di distribuzione chiave necessario).
+
+1. **Pulizia della vecchia installazione** — ⚠️ **distruttivo, da confermare esplicitamente prima di procedere** (rimuove container e volumi, quindi tutti i dati esistenti sulla macchina):
+   ```bash
+   docker compose -f docker-compose.production.yml down -v
+   docker system prune -a --volumes   # solo dopo aver verificato che non ci siano dati da conservare
+   ```
+2. **Installazione stack develop** (prima di produzione): segue la checklist della sezione "Ambiente develop (UAT)" più sotto in questo file (`docker-compose.develop.yml` + `.env.develop`).
+3. **Installazione stack produzione**: segue le sezioni 1-6 di questo file (`docker-compose.production.yml` + `.env`).
+4. **Registrazione dei due self-hosted runner GitHub Actions**, con le label usate dai workflow esistenti (`develop` per `.github/workflows/cd-develop.yml`, `production` per `.github/workflows/cd-production.yml` — vedi §6 "CD automatico verso produzione" e "CD automatico verso develop"):
+   ```bash
+   # Runner develop (directory dedicata, es. /opt/actions-runner-develop)
+   ./config.sh --url https://github.com/<org>/prenotar --token <TOKEN> --labels develop --name prenotar-develop
+   ./svc.sh install && ./svc.sh start
+
+   # Runner produzione (directory separata, es. /opt/actions-runner-production)
+   ./config.sh --url https://github.com/<org>/prenotar --token <TOKEN> --labels production --name prenotar-production
+   ./svc.sh install && ./svc.sh start
+   ```
+
+**Operazioni manuali richieste all'utente** (non eseguibili da un agente automatico):
+- Puntamento DNS per `develop.prenotar.montagnaservizi.it` (produzione punta già a `prenotar.montagnaservizi.it`).
+- Emissione/rinnovo dei certificati TLS per entrambi i domini.
+- Verifica che la chiave SSH sia già autorizzata su `root@116.203.88.140` (nessuno step di distribuzione chiave necessario).
+
+---
+
 ## 1. Prerequisiti sul server
 
 - Docker Engine e Docker Compose plugin (v2).

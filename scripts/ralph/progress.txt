@@ -99,3 +99,14 @@ Started: Dom 12 Lug 2026 14:47:50 CEST
 - **Learnings for future iterations:**
   - US-010 (checklist setup macchina produzione) è l'ultima story del PRD: va in `DEPLOY.md`, sola documentazione, nessuna esecuzione reale su `root@116.203.88.140` — coerente con il pattern già seguito da US-004/US-005/US-006/US-007 (workflow/config descritti in doc, mai eseguiti realmente dall'agente).
 ---
+
+## [2026-07-12] - US-010
+- Aggiunta in `DEPLOY.md` una nuova sezione "0. Setup iniziale macchina (root@116.203.88.140)", posizionata prima della sezione "1. Prerequisiti sul server" (checklist propedeutica a tutto il resto del deploy). Contiene: nota esplicita in testa che è una checklist manuale, nessuno script/agente automatico si connette a `root@116.203.88.140`; accesso via SSH a chiave già autorizzata; checklist ordinata 1) pulizia container/volumi vecchia installazione (con avviso ⚠️ distruttivo da confermare esplicitamente), 2) installazione stack develop (rimanda alla sezione "Ambiente develop (UAT)" più sotto nel file), 3) installazione stack produzione (rimanda alle sezioni 1-6 esistenti), 4) registrazione dei due self-hosted runner GitHub Actions con le label già usate dai workflow reali (`develop` e `production`, coerenti con `cd-develop.yml`/`cd-production.yml` di US-006/US-007, non le label placeholder `self-hosted-develop`/`self-hosted-production` del PRD originale in `tasks/`).
+- Elencate esplicitamente le operazioni manuali richieste all'utente: puntamento DNS per `develop.prenotar.montagnaservizi.it`, emissione/rinnovo certificati TLS, verifica che la chiave SSH sia già autorizzata (nessuno step di distribuzione chiave).
+- Nessuna azione reale eseguita su `root@116.203.88.140`: solo documentazione in `DEPLOY.md`.
+- Files changed: `DEPLOY.md` (nuova sezione "0. Setup iniziale macchina"), `scripts/ralph/prd.json` (US-010 → `passes: true`).
+- `sail composer qa` verde: Pint OK, Larastan 0 errori, Pest 235 test passati (495 assertion) — nessun test nuovo necessario, story è solo documentazione.
+- **Learnings for future iterations:**
+  - Quando un PRD in `tasks/` propone label/nomi placeholder per risorse esterne (qui i runner self-hosted), verificare prima cosa è stato effettivamente implementato nelle story precedenti (qui: label reali `develop`/`production` già usate in `cd-develop.yml`/`cd-production.yml` da US-006/US-007) e usare quelle nella documentazione, non il placeholder del PRD originale.
+  - Tutte le 10 user story del PRD `ralph/cicd-email-infra` sono ora `passes: true` — nessuna story rimanente in questo PRD.
+---
