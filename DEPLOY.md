@@ -110,6 +110,28 @@ docker compose -f docker-compose.production.yml restart app
 
 (`restart app` riesegue l’entrypoint con `AUTORUN_OPTIMIZE=1` di default.)
 
+### CD automatico verso produzione
+
+Ogni `push` sul branch `main` innesca il workflow `.github/workflows/cd-production.yml`, eseguito da un runner self-hosted con label `production` posizionato direttamente sulla macchina di produzione (nessuna connessione SSH nel workflow). Prima di qualunque build/migrate, il workflow esegue un **dump del database** (`mariadb-dump`) in `/var/backups/prenotar/`, con nome file `prenotar-<data>-<ora>.sql`, e applica una retention che mantiene solo gli ultimi 5 backup (i più vecchi vengono rimossi automaticamente). Solo dopo il backup il workflow esegue `build`, `up -d` e `migrate --force` sullo stack `docker-compose.production.yml`.
+
+Per verificare l'esito: tab **Actions** del repository su GitHub, workflow "CD Production" → ultima esecuzione sul branch `main`.
+
+### Rollback manuale da un backup
+
+In caso di problemi dopo un deploy, ripristinare l'ultimo dump salvato prima del deploy:
+
+```bash
+docker compose -f docker-compose.production.yml exec -T mariadb sh -c \
+  'mariadb -u root -p"$MARIADB_ROOT_PASSWORD" "$MARIADB_DATABASE"' \
+  < /var/backups/prenotar/prenotar-<data>-<ora>.sql
+```
+
+Sostituire `<data>-<ora>` con il timestamp del backup da cui ripristinare (`ls -t /var/backups/prenotar/` per individuare il più recente). Dopo il ripristino, riavviare lo stack applicativo per assicurarsi che cache e code ripartano allineate ai dati ripristinati:
+
+```bash
+docker compose -f docker-compose.production.yml restart app horizon scheduler
+```
+
 ---
 
 ## 7. Log e diagnostica
