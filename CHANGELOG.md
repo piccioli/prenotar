@@ -4,6 +4,12 @@ Tutte le modifiche rilevanti al progetto sono elencate in questo file.
 
 Il formato segue le idee di [Keep a Changelog](https://keepachangelog.com/it/1.1.0/); le versioni rispettano il [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.10.1] - 2026-07-12
+
+### Fix
+
+- **Documentazione seeding runner CD** (`DEPLOY.md`): il preseeding di `.env`/`.env.develop` *prima* del primo avvio dei servizi non funziona — `actions/checkout` cancella comunque la working directory alla primissima esecuzione, anche con `clean: false` (che preserva i file solo a partire dal secondo run). Corretta la procedura: copiare il file *dopo* il primo fallimento atteso, poi rilanciare il workflow.
+
 ## [0.10.0] - 2026-07-12
 
 ### Aggiunto
