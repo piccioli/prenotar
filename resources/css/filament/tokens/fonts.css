@@ -1,0 +1,5 @@
+/* Manrope, self-hosted via the @fontsource/manrope npm package (compiled and
+   served by Vite from our own build output — no runtime call to Google Fonts
+   or any other external CDN). Latin subset only: covers Italian, including
+   accented characters (à, è, é, ì, ò, ù). */
+@import '@fontsource/manrope/latin.css';

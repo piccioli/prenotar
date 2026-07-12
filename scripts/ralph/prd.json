@@ -1,18 +1,20 @@
 {
   "project": "Prenotar",
-  "branchName": "ralph/cicd-email-infra",
-  "description": "Strategia di branching/CI/CD (pre-commit, branch develop, CD automatico develop/produzione con backup DB, hotfix, versionamento) e architettura email per i tre ambienti (locale/develop/produzione, MailPit su develop via sotto-URL con basic auth, SMTP Gmail reale in produzione). Fonti: tasks/prd-cicd-branching-strategy.md e tasks/prd-architettura-email-ambienti.md. Nessuna esecuzione reale su infrastruttura esterna (SSH sulla macchina di produzione, invio email reali): solo codice, configurazione e documentazione nel repository.",
+  "branchName": "ralph/restyle-ux-pannelli-filament",
+  "description": "Restyle UX/UI dei 3 pannelli Filament (admin/gr/sezione) e introduzione di una shell mobile custom, basati sui 4 mockup del progetto claude.ai/design 'Design UI ruoli' (tasks/design-reference/prenotar-ui-ruoli/). Copre tema/design token condivisi, colore torri unificato, e restyle desktop+mobile di tutte le schermate coperte dai mockup nei 3 pannelli, senza toccare state machine, policy o job.",
   "userStories": [
     {
       "id": "US-001",
-      "title": "Hook di pre-commit locale (QA obbligatoria)",
-      "description": "Come developer, voglio che al commit vengano lanciati automaticamente Pint, Larastan e Pest, cosi da non poter commettere codice che rompe la QA.",
+      "title": "Tema Filament condiviso con i design token Montagna Servizi",
+      "description": "Come sviluppatore, voglio un tema CSS compilato (Vite) che esponga i design token del progetto (colori, tipografia, spaziatura, effetti) come variabili usabili nei 3 pannelli Filament, cosi da poter implementare gli altri user stories senza duplicare colori hardcoded.",
       "acceptanceCriteria": [
-        "Nuovo script eseguibile .githooks/pre-commit (bash) che lancia './vendor/bin/sail composer qa' e blocca il commit (exit non-zero) se il comando fallisce",
-        "Se i container Sail non sono in esecuzione, lo script stampa un messaggio d'errore chiaro invece di un fallimento criptico",
-        "README.md o CLAUDE.md aggiornato con la procedura di attivazione: 'git config core.hooksPath .githooks' da eseguire una tantum su ogni macchina di sviluppo",
-        "Verificato manualmente: 'git config core.hooksPath .githooks' seguito da un commit di prova con codice che fallisce Pint viene bloccato",
-        "Typecheck/Larastan passa"
+        "Entry point Vite dedicato per tema Filament (uno per pannello o uno condiviso con override colore primario) che legge i valori da tasks/design-reference/prenotar-ui-ruoli/tokens/*.css (fonte di verita, non re-inventare palette)",
+        "Ogni *PanelProvider.php (AdminPanelProvider, GrPanelProvider, SezionePanelProvider) registra il proprio tema via ->viteTheme(...) al posto di ->colors(['primary' => Color::Amber/Green/Blue])",
+        "Colore primario distinto per pannello: Sezione = blu/ardesia scuro, GR = verde pino, Admin = ambra/larice scuro, coerenti con i mockup",
+        "Font Manrope self-hosted (incluso nel build Vite, nessuna chiamata a Google Fonts o altro CDN esterno a runtime)",
+        "Nessuna regressione visiva grossolana sulle pagine non ancora ridisegnate dalle altre user story (restano leggibili, cambia solo il colore primario)",
+        "Verifica visiva in browser (screenshot) confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
       ],
       "priority": 1,
       "passes": true,
@@ -20,138 +22,447 @@
     },
     {
       "id": "US-002",
-      "title": "Rinominare lo stack 'staging' in 'develop'",
-      "description": "Come developer, voglio che tutti i riferimenti a 'staging' nel repo vengano rinominati in 'develop' (file, variabili, dominio), perche l'ambiente develop e lo stack staging esistente sono lo stesso ambiente.",
+      "title": "Shell mobile condivisa (topbar, hamburger, bottom tab bar, FAB)",
+      "description": "Come utente su smartphone (qualunque ruolo), voglio una navigazione ottimizzata per mobile - topbar compatta con menu, bottom tab bar con le sezioni principali del mio pannello, pulsante di azione primaria (FAB) quando pertinente - cosi da poter usare Prenotar comodamente da telefono.",
       "acceptanceCriteria": [
-        "docker-compose.staging.yml rinominato in docker-compose.develop.yml (git mv, per preservare la history)",
-        ".env.staging.example rinominato in .env.develop.example con APP_ENV=develop, APP_URL=https://develop.prenotar.montagnaservizi.it, MAIL_FROM_ADDRESS aggiornato allo stesso dominio",
-        "Variabili/prefissi rinominati coerentemente nel nuovo .env.develop.example: DB_DATABASE=prenotar_staging -> prenotar_develop, DB_USERNAME=prenotar_staging -> prenotar_develop, CACHE_PREFIX=prenotar_staging_ -> prenotar_develop_, commenti che citano 'staging' aggiornati",
-        "DEPLOY.md: sezione 'Ambiente staging (UAT)' rinominata in 'Ambiente develop', tutti i comandi 'docker compose -f docker-compose.staging.yml --env-file .env.staging' sostituiti con la versione develop, esempio Nginx server_name aggiornato a develop.prenotar.montagnaservizi.it",
-        "CHANGELOG.md: nuova voce in '## [Non rilasciato]' che documenta il rename staging -> develop",
-        "grep -rn 'staging' su tutto il repo (esclusi .git/ e node_modules/) non produce nessun risultato residuo relativo a questo stack (ok se 'staging' compare solo nei PRD in tasks/ come riferimento storico)",
-        "Typecheck/Larastan passa"
+        "Layout Blade di Filament esteso (render hook o vendor-publish mirato, NON fork completo del pacchetto) con: topbar mobile (logo/nome pannello + hamburger + icona notifiche), bottom tab bar fissa a 4 voci con icone Heroicons, voce attiva evidenziata col colore del pannello, FAB in basso a destra dove il mockup lo prevede",
+        "Attivo solo sotto i 768px (breakpoint Tailwind md), il layout desktop esistente resta strutturalmente invariato",
+        "Tap target minimo 44x44px su tutti gli elementi interattivi della shell mobile (bottom nav, FAB, hamburger)",
+        "La bottom tab bar naviga tra le pagine Filament reali del pannello corrente (Dashboard, Nuova/Prenotazioni, Calendario, + 4a voce specifica per ruolo) senza rompere il routing Filament esistente",
+        "Verifica visiva in browser a viewport 390x844 confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/mobile-3-ruoli.dc.html",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
       ],
       "priority": 2,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-003",
-      "title": "Branch develop e verifica CI su PR verso develop e main",
-      "description": "Come developer, voglio che ogni PR verso develop o verso main esegua automaticamente Pint + Larastan + Pest via GitHub Actions, per non introdurre regressioni ne nel branch di integrazione ne in produzione.",
+      "title": "Unificazione colore torri in tutta l'app",
+      "description": "Come utente di qualsiasi pannello, voglio che la stessa torre abbia sempre lo stesso colore - nel calendario, nei badge di tabella, nel dettaglio prenotazione - cosi da riconoscerla a colpo d'occhio ovunque compaia (fix BUG-07).",
       "acceptanceCriteria": [
-        "Branch 'develop' creato a partire da 'main' (git branch, non serve pusharlo in questa story se il push non e richiesto esplicitamente dall'utente)",
-        ".github/workflows/ci.yml verificato: il trigger 'pull_request:' attuale (senza filtro 'branches') copre gia le PR verso develop e verso main, nessuna modifica al file necessaria",
-        "CLAUDE.md aggiornato nella sezione branching/workflow (o nuova sezione se non esiste) per documentare che tutto lo sviluppo parte da 'develop', non da 'main', e che main riceve solo PR da develop o da branch hotfix/*",
-        "Typecheck/Larastan passa"
+        "Nuova migrazione che aggiunge il campo `colore_hex` (stringa, validato come colore esadecimale) al modello Torre",
+        "Seeding retroattivo delle 2 torri esistenti sui colori gia scelti nei mockup (verde per Torre 1, larice/arancio per Torre 2), coerente con LocalDevSeeder",
+        "Il campo e editabile in TorreResource (Admin) tramite un color picker Filament (es. ColorPicker::make('colore_hex'))",
+        "Il calendario (CalendarioPage/CalendarioPrenotazioniWidget nei pannelli GR e Sezione), i badge torre nelle tabelle Prenotazione (Admin/GR/Sezione) e la vista di dettaglio leggono tutti il colore dalla stessa fonte (campo colore_hex sul modello Torre, nessun calcolo per id duplicato in piu punti)",
+        "Test Feature Pest che verifica: stesso colore restituito per la stessa torre da calendario e da badge tabella",
+        "Pest verde: nuovo test Feature che copre la coerenza del colore torre tra i punti di utilizzo",
+        "Verifica visiva in browser (screenshot) confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
       ],
       "priority": 3,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-004",
-      "title": "MailPit su develop raggiungibile via sotto-URL con basic auth",
-      "description": "Come developer/tester, voglio consultare le email inviate dall'ambiente develop tramite un sotto-URL dell'app (es. https://develop.prenotar.montagnaservizi.it/mailpit), protetto da credenziali dedicate, senza dover aprire un tunnel SSH.",
+      "title": "Dashboard Sezione - desktop",
+      "description": "Come presidente di sezione/sottosezione, voglio una dashboard che mostri subito la mia prossima prenotazione attiva (o un invito chiaro a crearne una se non ne ho), cosi da capire in un colpo d'occhio il mio stato.",
       "acceptanceCriteria": [
-        "Nell'esempio di configurazione Nginx per l'ambiente develop in DEPLOY.md (sezione rinominata in US-002), aggiunta una location /mailpit/ che fa proxy_pass verso http://127.0.0.1:${MAILPIT_UI_PORT:-8027}/ (la UI MailPit e gia pubblicata su quella porta host dal compose develop, nessuna modifica al docker-compose.develop.yml necessaria per la raggiungibilita)",
-        "La location /mailpit/ include la direttiva auth_basic con riferimento a un file .htpasswd (path configurabile, es. /etc/nginx/.htpasswd-mailpit-develop), credenziali NON committate nel repo",
-        "DEPLOY.md documenta il comando per generare il file .htpasswd (es. 'htpasswd -c /etc/nginx/.htpasswd-mailpit-develop <utente>') e chi ne e responsabile: l'admin tecnico gestisce generazione ed eventuale rotazione manuale, nessun processo di rotazione periodica automatica",
-        "Nessuna azione reale su server esterni in questa story: solo l'esempio di configurazione Nginx e la documentazione in DEPLOY.md",
-        "Typecheck/Larastan passa"
+        "Stato 'prenotazione attiva': card con evento, date, badge stato, torre assegnata (colore da US-003), indirizzo deposito in evidenza (BUG-08), eventuale avviso scadenza documento, CTA 'Vedi dettaglio' - secondo mockup pannello-sezione.dc.html schermata 'Dashboard prenotazione attiva'",
+        "Stato vuoto: messaggio di invito chiaro a creare una nuova prenotazione, secondo mockup schermata 'Dashboard stato vuoto'",
+        "Riutilizza PrenotazioniDashboardWidget esistente estendendone markup/vista, non lo sostituisce con un componente parallelo",
+        "Verifica visiva in browser (screenshot) confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
       ],
       "priority": 4,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-005",
-      "title": "Configurazione produzione per SMTP Gmail reale (solo config, nessun invio reale)",
-      "description": "Come GR manager, voglio che la configurazione di produzione sia pronta per inviare email reali tramite SMTP Gmail invece di catturarle con MailPit, cosi che appena le credenziali saranno disponibili basti valorizzare il .env.",
+      "title": "Dashboard Sezione - mobile",
+      "description": "Come presidente di sezione, voglio la stessa dashboard su smartphone con card e bottom nav, cosi da controllare lo stato della mia prenotazione anche fuori ufficio.",
       "acceptanceCriteria": [
-        ".env.production.example aggiornato: MAIL_MAILER=smtp, MAIL_HOST=smtp.gmail.com, MAIL_PORT=587, MAIL_ENCRYPTION=tls, MAIL_USERNAME e MAIL_PASSWORD lasciati vuoti con commento che spiega che sono un'app password Gmail (o relay Workspace) da fornire, commento sul vecchio MAIL_HOST=mailpit rimosso",
-        "docker-compose.production.yml: servizio 'mailpit' e ogni sua 'condition: service_started' come dependency rimossi (produzione non cattura piu le email)",
-        "DEPLOY.md, sezione posta in produzione: aggiornata per riflettere SMTP Gmail invece di MailPit, con una nota esplicita 'BLOCCATO: credenziali SMTP Gmail non ancora disponibili, responsabile e data non assegnati - il mailer va lasciato configurato ma non attivabile fino alla loro consegna'",
-        "Nessun invio di email reale eseguito in questa story: la verifica end-to-end resta un passo manuale futuro, esplicitamente documentato come tale in DEPLOY.md",
-        "Typecheck/Larastan passa"
+        "Corrisponde alla schermata mockup 'Mobile Sezione Dashboard' (mobile-3-ruoli.dc.html): card prenotazione attiva, 2 quick action (Nuova prenotazione, Calendario torri), bottom nav Home/Nuova/Prenotazioni/Calendario",
+        "Usa la shell mobile introdotta in US-002, non un layout parallelo",
+        "Verifica visiva in browser a viewport 390x844 confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/mobile-3-ruoli.dc.html",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
       ],
       "priority": 5,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-006",
-      "title": "Workflow GitHub Actions: CD automatico verso l'ambiente develop",
-      "description": "Come developer/tester, voglio che ogni push su develop aggiorni automaticamente l'ambiente develop (build, migration, eventuali seeder), per avere sempre una versione pubblica aggiornata da testare.",
+      "title": "Wizard prenotazione - restyle Step 1 'Quando e dove' (desktop)",
+      "description": "Come presidente di sezione, nello step 1 del wizard voglio scegliere le date e (opzionalmente) la torre, con il vincolo bloccante di confermare la lettura del manuale d'istruzioni se scelgo una torre, reso visivamente inequivocabile.",
       "acceptanceCriteria": [
-        "Nuovo file .github/workflows/cd-develop.yml, trigger 'on: push: branches: [develop]'",
-        "Il job dichiara 'runs-on: [self-hosted, develop]' (label dedicata, distinta da quella di produzione)",
-        "Step del workflow: checkout, poi comandi remoti equivalenti a 'docker compose -f docker-compose.develop.yml --env-file .env.develop build' seguito da 'up -d' e 'exec app php artisan migrate --force' (eseguiti dal runner self-hosted gia posizionato sulla macchina, nessuna connessione SSH aggiuntiva nel workflow)",
-        "Commento nel workflow che chiarisce che il seeder (db:seed) resta un'operazione manuale, non automatica, salvo diversa configurazione futura",
-        "DEPLOY.md aggiornato con una breve sezione che descrive questo workflow e come verificarne l'esito dalla tab Actions di GitHub",
-        "Typecheck/Larastan passa"
+        "Restyle dello step esistente in PrenotazioneResource::wizardSteps() (la checkbox bloccante 'ho letto il manuale' e il reset al cambio torre sono gia implementati - qui si restyla solo la presentazione secondo il mockup pannello-sezione.dc.html 'Wizard step 1 Quando e dove')",
+        "Le card torre mostrano indirizzo deposito (BUG-08) e pallino colore coerente con US-003",
+        "Il pulsante 'Continua' resta disabilitato finche la checkbox non e confermata, con messaggio esplicativo sotto il pulsante come nel mockup",
+        "Nessuna regressione ai test Pest esistenti: PrenotazioneWizardCreateTest, PrenotazioneBloccoWizardAttivaTest restano verdi senza modifiche alla logica",
+        "Verifica visiva in browser (screenshot) confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
       ],
       "priority": 6,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-007",
-      "title": "Workflow GitHub Actions: CD verso produzione con backup DB pre-deploy",
-      "description": "Come admin tecnico, voglio che ogni push su main esegua un backup del database di produzione prima di qualunque migration/deploy, per poter fare rollback in caso di problemi.",
+      "title": "Wizard prenotazione - Step 1 mobile",
+      "description": "Come presidente di sezione su smartphone, voglio compilare lo step 1 del wizard a schermo intero con indicatore di progresso e pulsante 'Continua' sempre visibile in basso.",
       "acceptanceCriteria": [
-        "Nuovo file .github/workflows/cd-production.yml, trigger 'on: push: branches: [main]'",
-        "Il job dichiara 'runs-on: [self-hosted, production]' (label dedicata, distinta da quella di develop)",
-        "Primo step del workflow: dump del DB MariaDB di produzione (mysqldump o mariadb-dump) salvato con timestamp in una directory dedicata (es. /var/backups/prenotar/) con nome file che include data e ora",
-        "Step di retention: dopo il dump, vengono mantenuti solo gli ultimi 5 file di backup nella directory, i piu vecchi rimossi automaticamente (es. con 'ls -t | tail -n +6 | xargs rm --')",
-        "Step successivi: build immagine, 'migrate --force', restart stack tramite docker-compose.production.yml",
-        "DEPLOY.md aggiornato con il comando di rollback manuale da un dump salvato (es. 'docker compose ... exec -T mariadb mysql ... < backup.sql')",
-        "Typecheck/Larastan passa"
+        "Corrisponde al mockup 'Mobile Sezione Wizard step 1' (mobile-3-ruoli.dc.html): topbar con freccia indietro + 'Passo 1 di 5', barra di progresso sottile, contenuto scrollabile, CTA fissa in basso con messaggio di blocco",
+        "Stesso comportamento di validazione della versione desktop (US-006), nessuna duplicazione di logica, solo markup",
+        "Verifica visiva in browser a viewport 390x844 confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/mobile-3-ruoli.dc.html",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
       ],
       "priority": 7,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-008",
-      "title": "Documentare il flusso di hotfix su produzione",
-      "description": "Come developer, voglio una procedura documentata per aprire un branch di hotfix direttamente da main e risolvere un bug urgente in produzione, senza aspettare il ciclo normale di release da develop.",
+      "title": "Wizard prenotazione - restyle Step 3 'Logistica trasporto' (desktop)",
+      "description": "Come presidente di sezione, nello step logistica voglio vedere chiaramente la scelta mezzo aziendale/privato con targa e categoria patente, in coerenza visiva con lo step 1 ridisegnato.",
       "acceptanceCriteria": [
-        "Nuova sezione in CLAUDE.md (o CONTRIBUTING.md se piu adatto, verificare se esiste) intitolata 'Flusso di hotfix' che descrive: branch hotfix/<nome> creato da main -> fix -> PR verso main (CI verde, .github/workflows/ci.yml gia la copre) -> merge -> CD produzione (US-007) parte automaticamente",
-        "La sezione specifica esplicitamente che alla chiusura dell'hotfix va aperta anche una PR verso develop per non perdere la fix nel flusso normale",
-        "La sezione specifica che il merge di un hotfix su main corrisponde sempre a un bump di patch version (terzo numero) in CHANGELOG.md e a un nuovo tag git creato sul commit di merge su main",
-        "Typecheck/Larastan passa"
+        "Restyle dello step esistente (campi tipo_mezzo, categoria_patente_privato, date/luoghi ritiro-riconsegna, azienda trasporto, targa) secondo il mockup pannello-sezione.dc.html 'Wizard step 3 Logistica'",
+        "Nessuna modifica ai campi o alla validazione esistenti, solo a componenti/gerarchia visiva",
+        "Verifica visiva in browser (screenshot) confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
       ],
       "priority": 8,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-009",
-      "title": "Documentare il versionamento su develop con tag + CHANGELOG",
-      "description": "Come developer, voglio che la procedura di versionamento (major/minor deciso su develop, patch da hotfix su main) sia documentata in modo che chiunque nel team la segua allo stesso modo.",
+      "title": "Wizard prenotazione - restyle Step 5 'Riepilogo' (desktop)",
+      "description": "Come presidente di sezione, nello step finale voglio un riepilogo leggibile di tutti i dati inseriti prima di salvare come bozza, con avviso esplicito sul prossimo passo (caricare la delibera).",
       "acceptanceCriteria": [
-        "Nuova sezione in CLAUDE.md (vicino a quella sul branching di US-003/US-008) che descrive: bump versione in CHANGELOG.md + creazione tag git eseguiti sul branch develop PRIMA di aprire la PR develop -> main",
-        "La sezione specifica esplicitamente che la PR develop -> main non deve modificare il numero di versione (gia deciso su develop)",
-        "La sezione rimanda alla sezione hotfix (US-008) per l'unica eccezione (patch release taggate direttamente su main)",
-        "Typecheck/Larastan passa"
+        "Restyle dello step riepilogo secondo il mockup pannello-sezione.dc.html 'Wizard step 5 Riepilogo': sezioni raggruppate per step precedente, badge di stato coerenti",
+        "Avviso esplicito 'dopo il salvataggio serve caricare la delibera' presente e visibile",
+        "Verifica visiva in browser (screenshot) confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
       ],
       "priority": 9,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-010",
-      "title": "Checklist di setup macchina produzione (solo documentazione, nessuna esecuzione reale)",
-      "description": "Come admin tecnico, voglio una checklist scritta in DEPLOY.md per ripartire da una macchina pulita e installare develop e produzione, cosi da poter eseguire io stesso le operazioni quando saro pronto, senza che l'agente esegua nulla sulla macchina reale.",
+      "title": "Wizard prenotazione - coerenza visiva Step 2 'Evento' e Step 4 'Responsabile' (desktop)",
+      "description": "Come sviluppatore, voglio allineare gli step 2 e 4 del wizard (non illustrati esplicitamente nei mockup) alla stessa gerarchia visiva/spaziatura/componenti degli step 1/3/5 ridisegnati, per evitare un'esperienza incoerente all'interno dello stesso wizard.",
       "acceptanceCriteria": [
-        "Nuova sezione in DEPLOY.md 'Setup iniziale macchina (root@116.203.88.140)' con una checklist ordinata: 1) pulizia container/volumi Docker della vecchia installazione (con avviso esplicito che e distruttivo e va confermato manualmente prima di procedere), 2) installazione dello stack develop (docker-compose.develop.yml), 3) installazione dello stack produzione (docker-compose.production.yml), 4) registrazione dei due self-hosted runner GitHub Actions con le rispettive label 'develop' e 'production' (US-006/US-007)",
-        "La sezione elenca esplicitamente le operazioni manuali richieste all'utente: puntamento DNS per develop.prenotar.montagnaservizi.it, emissione/rinnovo certificati TLS, verifica che la chiave SSH sia gia autorizzata su root@116.203.88.140 (nessuno step di distribuzione chiave necessario)",
-        "La sezione specifica chiaramente in testa che si tratta di una checklist manuale: nessuno script del repo o comando eseguito da un agente automatico si connette a root@116.203.88.140",
-        "Typecheck/Larastan passa"
+        "Stessi componenti di input, spaziatura, tipografia degli altri step ridisegnati (coerenza con lo stile system-wide di US-001, nessun mockup dedicato da seguire pixel-per-pixel)",
+        "Nessuna modifica ai campi esistenti negli step 2 e 4",
+        "Verifica visiva in browser (screenshot) confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
       ],
       "priority": 10,
-      "passes": true,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "Modifica prenotazione / Allegati (desktop)",
+      "description": "Come presidente di sezione, nella pagina di modifica/allegati di una prenotazione esistente voglio un form chiaro con lo stato di ogni allegato richiesto (delibera, autorizzazioni, patente) e l'azione 'Invia richiesta al GR' abilitata solo a delibera caricata.",
+      "acceptanceCriteria": [
+        "Restyle secondo il mockup pannello-sezione.dc.html 'Modifica prenotazione Allegati': stato per-allegato (mancante/caricato) reso visivamente chiaro",
+        "Azione invio disabilitata finche la delibera non e presente (logica esistente, solo presentazione)",
+        "Azione 'elimina bozza' visibile solo in stato Bozza (logica esistente, solo presentazione)",
+        "Verifica visiva in browser (screenshot) confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "'Le mie prenotazioni' - lista desktop",
+      "description": "Come presidente di sezione, voglio la lista delle mie prenotazioni ordinata dalla piu vicina (BUG-01) con una tab separata per l'archivio (BUG-02).",
+      "acceptanceCriteria": [
+        "Colonna/indicatore di ordinamento data_inizio_prenotazione DESC reso esplicito in UI (ordinamento gia presente lato query, qui si verifica e rende visibile)",
+        "Tab 'Attive' / 'Archivio (concluse/annullate)' nella PrenotazioneResource (Sezione), non tabella unica con tutto mescolato",
+        "Badge torre coerenti con il colore unificato di US-003",
+        "Verifica visiva in browser (screenshot) confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "'Le mie prenotazioni' - lista mobile a card",
+      "description": "Come presidente di sezione su smartphone, voglio vedere le mie prenotazioni come card scorrevoli invece che come tabella, con le stesse tab Attive/Archivio e un FAB per crearne una nuova.",
+      "acceptanceCriteria": [
+        "Corrisponde al mockup 'Mobile Sezione Lista' (mobile-3-ruoli.dc.html): tab pill Attive/Archivio con contatori, card per prenotazione (titolo, date, badge stato, badge torre o 'da assegnare'), FAB in basso a destra",
+        "Nessuna tabella HTML renderizzata sotto il breakpoint mobile per questa pagina, solo card",
+        "Verifica visiva in browser a viewport 390x844 confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/mobile-3-ruoli.dc.html",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "Calendario torri - desktop",
+      "description": "Come presidente di sezione, voglio un calendario unico (non a tab separate) con le 2 torri distinte a colori coerenti col resto dell'app (fix BUG-07).",
+      "acceptanceCriteria": [
+        "CalendarioPrenotazioniWidget/CalendarioPage (Sezione) usa i colori da US-003 per gli eventi FullCalendar",
+        "Nessuna tab per torre: un solo calendario, click su evento apre il dettaglio prenotazione",
+        "Verifica visiva in browser (screenshot) confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Calendario torri - vista mobile",
+      "description": "Come presidente di sezione su smartphone, voglio consultare il calendario delle torri anche da mobile, in una vista adattata (agenda/lista invece di griglia mensile compressa e illeggibile).",
+      "acceptanceCriteria": [
+        "FullCalendar in modalita listWeek/listMonth (o equivalente) sotto il breakpoint mobile, non la griglia mensile desktop compressa",
+        "Usa la stessa shell mobile (topbar, bottom nav) di US-002",
+        "Verifica visiva in browser a viewport 390x844 confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/mobile-3-ruoli.dc.html",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-016",
+      "title": "Etichetta 'S.SEZ.' per sottosezioni - applicazione in tutto il pannello Sezione",
+      "description": "Come presidente di una sottosezione, ovunque compaia il nome della mia sottosezione (dashboard, liste, dettaglio) voglio vedere sempre l'etichetta 'S.SEZ. {nome} (sez. rif. {sezione madre})', mai confusa con una sezione (fix BUG-05).",
+      "acceptanceCriteria": [
+        "Componente/helper Blade condiviso per il rendering dell'etichetta sezione/sottosezione, usato in dashboard (US-004/005), lista (US-012/013) e dettaglio",
+        "Verificato con un nome sottosezione lungo che l'etichetta resta leggibile su mobile (nessun troncamento illeggibile)",
+        "Test Feature Pest che verifica il formato dell'etichetta per un utente sottosezione vs un utente sezione",
+        "Pest verde: nuovo test Feature sul formato etichetta S.SEZ.",
+        "Verifica visiva in browser (screenshot) confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-017",
+      "title": "Dashboard GR - desktop",
+      "description": "Come Presidente GR (o delegato), voglio una dashboard che mi mostri immediatamente 'cosa devo fare oggi': richieste in attesa di approvazione, ordinate per urgenza, con contatori.",
+      "acceptanceCriteria": [
+        "Restyle di PrenotazioniDaApprovareWidget secondo il mockup pannello-gr.dc.html 'GR Dashboard': contatori 'da approvare' e 'approvate nei prossimi 30 giorni', lista richieste in attesa con badge 'tra N giorni', CTA 'Esamina' per ciascuna",
+        "Etichetta S.SEZ. (US-016) applicata anche qui per richieste provenienti da sottosezioni",
+        "Verifica visiva in browser (screenshot) confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-018",
+      "title": "Dashboard GR - mobile",
+      "description": "Come Presidente GR su smartphone, voglio la stessa vista 'da approvare' in formato card con bottom nav.",
+      "acceptanceCriteria": [
+        "Corrisponde al mockup 'Mobile GR Dashboard' (mobile-3-ruoli.dc.html): contatori a griglia 2 colonne, card richiesta con CTA 'Esamina', bottom nav Home/Prenotazioni/Calendario/Impostazioni",
+        "Verifica visiva in browser a viewport 390x844 confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/mobile-3-ruoli.dc.html",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 18,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-019",
+      "title": "Lista prenotazioni GR - desktop",
+      "description": "Come Presidente GR, voglio una tabella di tutte le prenotazioni con sezione/sottosezione richiedente, evento, periodo, torre assegnata, stato, filtrabile per stato/torre/sezione.",
+      "acceptanceCriteria": [
+        "Restyle di PrenotazioneResource (GR) secondo il mockup pannello-gr.dc.html 'GR Lista prenotazioni': colonne e filtri come da brief",
+        "Badge torre coerenti con US-003, etichetta S.SEZ. (US-016) applicata alle richieste da sottosezioni",
+        "Verifica visiva in browser (screenshot) confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 19,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-020",
+      "title": "Dettaglio prenotazione GR - desktop (tab Dettagli/Allegati + azioni)",
+      "description": "Come Presidente GR, nel dettaglio di una richiesta voglio vedere i dati in tab (Dettagli/Allegati/Storico) e avere a disposizione le azioni pertinenti allo stato corrente (Approva, Rifiuta, Riassegna torre, Invia assicurazione, Concludi).",
+      "acceptanceCriteria": [
+        "Restyle secondo il mockup pannello-gr.dc.html 'GR Dettaglio prenotazione': header con titolo evento, etichetta richiedente, badge stato+torre; tab Dettagli/Allegati(N)/Storico",
+        "Azioni condizionate allo stato corrente della prenotazione (non tutte visibili sempre), stessa logica esistente, solo presentazione",
+        "Download PDF 'Richiesta parete' e 'Modulo 3' presenti e funzionanti come oggi (nessuna modifica alla generazione PDF)",
+        "Nessuna modifica alla state machine: le azioni chiamano gli stessi metodi/eventi gia esistenti, solo la UI cambia",
+        "Verifica visiva in browser (screenshot) confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 20,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-021",
+      "title": "Dettaglio prenotazione GR - mobile (azioni fisse in basso)",
+      "description": "Come Presidente GR su smartphone, nel dettaglio di una richiesta voglio le azioni principali (Approva/Rifiuta) sempre visibili in fondo allo schermo, senza dover scrollare per trovarle.",
+      "acceptanceCriteria": [
+        "Corrisponde al mockup 'Mobile GR Dettaglio' (mobile-3-ruoli.dc.html): header con freccia indietro, tab Dettagli/Allegati/Storico, sezione documenti scaricabili, barra azioni fissa in basso (Approva primario, Rifiuta secondario con outline rosso)",
+        "Verifica visiva in browser a viewport 390x844 confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/mobile-3-ruoli.dc.html",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 21,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-022",
+      "title": "Tab 'Storico' - timeline transizioni di stato",
+      "description": "Come Presidente GR, nella tab Storico del dettaglio voglio vedere la timeline delle transizioni di stato (autore, data, nota) della prenotazione.",
+      "acceptanceCriteria": [
+        "Restyle secondo il mockup pannello-gr.dc.html 'GR Dettaglio Storico': timeline verticale con icona/colore per tipo di transizione, autore e timestamp leggibili",
+        "Dati letti da prenotazione_history esistente, nessuna nuova migrazione",
+        "Verifica visiva in browser (screenshot) confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 22,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-023",
+      "title": "Calendario GR - desktop",
+      "description": "Come Presidente GR, voglio lo stesso calendario unico a colori coerenti visto dalla Sezione, con vista mensile e click su evento per aprire il dettaglio.",
+      "acceptanceCriteria": [
+        "CalendarioPage (GR) allineata a US-003/US-014 (stessa sorgente colore torri)",
+        "Nessuna tab per torre, un solo calendario mensile",
+        "Verifica visiva in browser (screenshot) confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 23,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-024",
+      "title": "Impostazioni GR - pagina a tab",
+      "description": "Come Presidente GR, nella pagina Impostazioni voglio gestire in tab separate: email notifiche GR, liste email assicurazione, dati anagrafici/firma del Presidente, parametri operativi (giorni minimi documenti, ore minime richiesta assicurazione).",
+      "acceptanceCriteria": [
+        "Restyle di ImpostazioniPage (GR) secondo il mockup pannello-gr.dc.html 'GR Impostazioni': tab separate come da brief",
+        "I campi anagrafica/firma presidente esistono gia (GrSettings::presidente_nome/nato_a/data_nascita, firma_presidente_path, documento_presidente_path via FileUpload) - solo restyle della presentazione, nessun nuovo campo",
+        "Nessuna modifica alla persistenza esistente (spatie/laravel-settings, classe GrSettings)",
+        "Verifica visiva in browser (screenshot) confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 24,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-025",
+      "title": "Dashboard Admin - desktop (stato di sistema)",
+      "description": "Come responsabile tecnico, voglio una dashboard con lo stato di sistema (utenti attivi, ultimo import Excel, errori recenti, coda job) e gli ultimi eventi di audit, per capire subito se c'e qualcosa che richiede attenzione.",
+      "acceptanceCriteria": [
+        "Nuova composizione di widget stat (utenti attivi/totali, errori ultimi 7 giorni, ultimo import con esito, coda job/link Horizon) secondo il mockup pannello-admin.dc.html 'Admin Dashboard'",
+        "Sezione 'ultimi eventi' che legge dall'audit log esistente (Spatie activitylog), non una nuova sorgente dati",
+        "Verifica visiva in browser (screenshot) confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 25,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-026",
+      "title": "Dashboard Admin - mobile",
+      "description": "Come responsabile tecnico su smartphone, voglio la stessa vista di stato sistema in formato card con bottom nav.",
+      "acceptanceCriteria": [
+        "Corrisponde al mockup 'Mobile Admin Dashboard' (mobile-3-ruoli.dc.html): indicatore stato sistema in topbar (pallino 'OK'), stat a griglia 2 colonne, lista eventi recenti, bottom nav Home/Utenti/Prenotazioni/Audit log",
+        "Verifica visiva in browser a viewport 390x844 confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/mobile-3-ruoli.dc.html",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 26,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-027",
+      "title": "Gestione utenti - desktop",
+      "description": "Come responsabile tecnico, nella tabella utenti voglio vedere nome, email, ruoli, sezione/sottosezione di appartenenza, stato attivo/disattivato, con le azioni impersona/reset password/attiva-disattiva chiaramente distinte (impersona resa visivamente 'pericolosa').",
+      "acceptanceCriteria": [
+        "Restyle di UserResource (Admin) secondo il mockup pannello-admin.dc.html 'Admin Utenti': azione 'Impersona' con stile/colore distinto dalle altre azioni riga (non un'icona uguale alle altre)",
+        "Azione 'attiva/disattiva' (gia esistente: Action::make('toggle_active') con Textarea::make('motivo') obbligatoria, loggata via AuditLogger::logAdminAction) resta funzionalmente invariata - solo restyle della presentazione/posizione dell'azione e del suo form di conferma",
+        "Verifica visiva in browser (screenshot) confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 27,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-028",
+      "title": "Gestione utenti - mobile",
+      "description": "Come responsabile tecnico su smartphone, voglio gestire gli utenti anche da mobile con la stessa shell a card.",
+      "acceptanceCriteria": [
+        "Tabella UserResource convertita a card sotto il breakpoint mobile (pattern di US-013/US-002, nessun mockup pixel-perfect dedicato)",
+        "Azione 'Impersona' resta visivamente distinta anche in versione card/mobile",
+        "Verifica visiva in browser a viewport 390x844 confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/mobile-3-ruoli.dc.html",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 28,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-029",
+      "title": "Gestione torri - desktop (indirizzo deposito prominente)",
+      "description": "Come responsabile tecnico, nella gestione torri voglio un CRUD completo (nome, descrizione, indirizzo deposito, foto, PDF specifiche/manuale, toggle attiva) con l'indirizzo di deposito sempre ben visibile (fix BUG-08).",
+      "acceptanceCriteria": [
+        "Restyle di TorreResource (Admin) secondo il mockup pannello-admin.dc.html 'Admin Torri': indirizzo deposito in evidenza (non un campo minore in coda al form/tabella)",
+        "Campo colore torre (colore_hex, US-003) editabile qui tramite color picker",
+        "Verifica visiva in browser (screenshot) confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 29,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-030",
+      "title": "Prenotazioni Admin - sola lettura + azioni straordinarie",
+      "description": "Come responsabile tecnico, voglio vedere tutte le prenotazioni di tutte le sezioni e avere accesso alle azioni eccezionali (force-stato con motivazione, hard delete con conferma forte) rese visivamente distinte dalle azioni ordinarie.",
+      "acceptanceCriteria": [
+        "Restyle di PrenotazioneResource (Admin) secondo il mockup pannello-admin.dc.html 'Admin Prenotazioni': azioni 'force stato' ed 'elimina definitivamente' isolate/distinte (es. sezione separata del menu azioni, colore di allerta), non mescolate alle azioni normali",
+        "Nessuna modifica alla logica di hard-delete esistente (conferma + audit log invariati), solo presentazione",
+        "Verifica visiva in browser (screenshot) confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 30,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-031",
+      "title": "Log import Excel - desktop",
+      "description": "Come responsabile tecnico, voglio una tabella storica degli import Excel (data, righe importate/aggiornate/in errore) con possibilita di vedere il dettaglio errori.",
+      "acceptanceCriteria": [
+        "Restyle di ExcelImportResource secondo il mockup pannello-admin.dc.html 'Admin Import Excel'",
+        "Verifica visiva in browser (screenshot) confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 31,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-032",
+      "title": "Audit log - desktop",
+      "description": "Come responsabile tecnico, voglio una tabella eventi (chi ha fatto cosa, quando) filtrabile per tipo evento e intervallo date.",
+      "acceptanceCriteria": [
+        "Restyle di AuditLogResource secondo il mockup pannello-admin.dc.html 'Admin Audit log': filtri per tipo evento e data",
+        "Verifica visiva in browser (screenshot) confrontata con il mockup di riferimento in tasks/design-reference/prenotar-ui-ruoli/",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 32,
+      "passes": false,
       "notes": ""
     }
   ]

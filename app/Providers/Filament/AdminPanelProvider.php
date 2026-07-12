@@ -34,8 +34,9 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->passwordReset()
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::hex('#C77E2A'),
             ])
+            ->viteTheme('resources/css/filament/admin/theme.css')
             ->brandName('Prenotar — Admin')
             ->brandLogo(asset('images/cai-lombardia-placeholder.svg'))
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\\Filament\\Admin\\Resources')

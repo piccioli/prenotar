@@ -1,0 +1,158 @@
+{
+  "project": "Prenotar",
+  "branchName": "ralph/cicd-email-infra",
+  "description": "Strategia di branching/CI/CD (pre-commit, branch develop, CD automatico develop/produzione con backup DB, hotfix, versionamento) e architettura email per i tre ambienti (locale/develop/produzione, MailPit su develop via sotto-URL con basic auth, SMTP Gmail reale in produzione). Fonti: tasks/prd-cicd-branching-strategy.md e tasks/prd-architettura-email-ambienti.md. Nessuna esecuzione reale su infrastruttura esterna (SSH sulla macchina di produzione, invio email reali): solo codice, configurazione e documentazione nel repository.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Hook di pre-commit locale (QA obbligatoria)",
+      "description": "Come developer, voglio che al commit vengano lanciati automaticamente Pint, Larastan e Pest, cosi da non poter commettere codice che rompe la QA.",
+      "acceptanceCriteria": [
+        "Nuovo script eseguibile .githooks/pre-commit (bash) che lancia './vendor/bin/sail composer qa' e blocca il commit (exit non-zero) se il comando fallisce",
+        "Se i container Sail non sono in esecuzione, lo script stampa un messaggio d'errore chiaro invece di un fallimento criptico",
+        "README.md o CLAUDE.md aggiornato con la procedura di attivazione: 'git config core.hooksPath .githooks' da eseguire una tantum su ogni macchina di sviluppo",
+        "Verificato manualmente: 'git config core.hooksPath .githooks' seguito da un commit di prova con codice che fallisce Pint viene bloccato",
+        "Typecheck/Larastan passa"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Rinominare lo stack 'staging' in 'develop'",
+      "description": "Come developer, voglio che tutti i riferimenti a 'staging' nel repo vengano rinominati in 'develop' (file, variabili, dominio), perche l'ambiente develop e lo stack staging esistente sono lo stesso ambiente.",
+      "acceptanceCriteria": [
+        "docker-compose.staging.yml rinominato in docker-compose.develop.yml (git mv, per preservare la history)",
+        ".env.staging.example rinominato in .env.develop.example con APP_ENV=develop, APP_URL=https://develop.prenotar.montagnaservizi.it, MAIL_FROM_ADDRESS aggiornato allo stesso dominio",
+        "Variabili/prefissi rinominati coerentemente nel nuovo .env.develop.example: DB_DATABASE=prenotar_staging -> prenotar_develop, DB_USERNAME=prenotar_staging -> prenotar_develop, CACHE_PREFIX=prenotar_staging_ -> prenotar_develop_, commenti che citano 'staging' aggiornati",
+        "DEPLOY.md: sezione 'Ambiente staging (UAT)' rinominata in 'Ambiente develop', tutti i comandi 'docker compose -f docker-compose.staging.yml --env-file .env.staging' sostituiti con la versione develop, esempio Nginx server_name aggiornato a develop.prenotar.montagnaservizi.it",
+        "CHANGELOG.md: nuova voce in '## [Non rilasciato]' che documenta il rename staging -> develop",
+        "grep -rn 'staging' su tutto il repo (esclusi .git/ e node_modules/) non produce nessun risultato residuo relativo a questo stack (ok se 'staging' compare solo nei PRD in tasks/ come riferimento storico)",
+        "Typecheck/Larastan passa"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Branch develop e verifica CI su PR verso develop e main",
+      "description": "Come developer, voglio che ogni PR verso develop o verso main esegua automaticamente Pint + Larastan + Pest via GitHub Actions, per non introdurre regressioni ne nel branch di integrazione ne in produzione.",
+      "acceptanceCriteria": [
+        "Branch 'develop' creato a partire da 'main' (git branch, non serve pusharlo in questa story se il push non e richiesto esplicitamente dall'utente)",
+        ".github/workflows/ci.yml verificato: il trigger 'pull_request:' attuale (senza filtro 'branches') copre gia le PR verso develop e verso main, nessuna modifica al file necessaria",
+        "CLAUDE.md aggiornato nella sezione branching/workflow (o nuova sezione se non esiste) per documentare che tutto lo sviluppo parte da 'develop', non da 'main', e che main riceve solo PR da develop o da branch hotfix/*",
+        "Typecheck/Larastan passa"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "MailPit su develop raggiungibile via sotto-URL con basic auth",
+      "description": "Come developer/tester, voglio consultare le email inviate dall'ambiente develop tramite un sotto-URL dell'app (es. https://develop.prenotar.montagnaservizi.it/mailpit), protetto da credenziali dedicate, senza dover aprire un tunnel SSH.",
+      "acceptanceCriteria": [
+        "Nell'esempio di configurazione Nginx per l'ambiente develop in DEPLOY.md (sezione rinominata in US-002), aggiunta una location /mailpit/ che fa proxy_pass verso http://127.0.0.1:${MAILPIT_UI_PORT:-8027}/ (la UI MailPit e gia pubblicata su quella porta host dal compose develop, nessuna modifica al docker-compose.develop.yml necessaria per la raggiungibilita)",
+        "La location /mailpit/ include la direttiva auth_basic con riferimento a un file .htpasswd (path configurabile, es. /etc/nginx/.htpasswd-mailpit-develop), credenziali NON committate nel repo",
+        "DEPLOY.md documenta il comando per generare il file .htpasswd (es. 'htpasswd -c /etc/nginx/.htpasswd-mailpit-develop <utente>') e chi ne e responsabile: l'admin tecnico gestisce generazione ed eventuale rotazione manuale, nessun processo di rotazione periodica automatica",
+        "Nessuna azione reale su server esterni in questa story: solo l'esempio di configurazione Nginx e la documentazione in DEPLOY.md",
+        "Typecheck/Larastan passa"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Configurazione produzione per SMTP Gmail reale (solo config, nessun invio reale)",
+      "description": "Come GR manager, voglio che la configurazione di produzione sia pronta per inviare email reali tramite SMTP Gmail invece di catturarle con MailPit, cosi che appena le credenziali saranno disponibili basti valorizzare il .env.",
+      "acceptanceCriteria": [
+        ".env.production.example aggiornato: MAIL_MAILER=smtp, MAIL_HOST=smtp.gmail.com, MAIL_PORT=587, MAIL_ENCRYPTION=tls, MAIL_USERNAME e MAIL_PASSWORD lasciati vuoti con commento che spiega che sono un'app password Gmail (o relay Workspace) da fornire, commento sul vecchio MAIL_HOST=mailpit rimosso",
+        "docker-compose.production.yml: servizio 'mailpit' e ogni sua 'condition: service_started' come dependency rimossi (produzione non cattura piu le email)",
+        "DEPLOY.md, sezione posta in produzione: aggiornata per riflettere SMTP Gmail invece di MailPit, con una nota esplicita 'BLOCCATO: credenziali SMTP Gmail non ancora disponibili, responsabile e data non assegnati - il mailer va lasciato configurato ma non attivabile fino alla loro consegna'",
+        "Nessun invio di email reale eseguito in questa story: la verifica end-to-end resta un passo manuale futuro, esplicitamente documentato come tale in DEPLOY.md",
+        "Typecheck/Larastan passa"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Workflow GitHub Actions: CD automatico verso l'ambiente develop",
+      "description": "Come developer/tester, voglio che ogni push su develop aggiorni automaticamente l'ambiente develop (build, migration, eventuali seeder), per avere sempre una versione pubblica aggiornata da testare.",
+      "acceptanceCriteria": [
+        "Nuovo file .github/workflows/cd-develop.yml, trigger 'on: push: branches: [develop]'",
+        "Il job dichiara 'runs-on: [self-hosted, develop]' (label dedicata, distinta da quella di produzione)",
+        "Step del workflow: checkout, poi comandi remoti equivalenti a 'docker compose -f docker-compose.develop.yml --env-file .env.develop build' seguito da 'up -d' e 'exec app php artisan migrate --force' (eseguiti dal runner self-hosted gia posizionato sulla macchina, nessuna connessione SSH aggiuntiva nel workflow)",
+        "Commento nel workflow che chiarisce che il seeder (db:seed) resta un'operazione manuale, non automatica, salvo diversa configurazione futura",
+        "DEPLOY.md aggiornato con una breve sezione che descrive questo workflow e come verificarne l'esito dalla tab Actions di GitHub",
+        "Typecheck/Larastan passa"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Workflow GitHub Actions: CD verso produzione con backup DB pre-deploy",
+      "description": "Come admin tecnico, voglio che ogni push su main esegua un backup del database di produzione prima di qualunque migration/deploy, per poter fare rollback in caso di problemi.",
+      "acceptanceCriteria": [
+        "Nuovo file .github/workflows/cd-production.yml, trigger 'on: push: branches: [main]'",
+        "Il job dichiara 'runs-on: [self-hosted, production]' (label dedicata, distinta da quella di develop)",
+        "Primo step del workflow: dump del DB MariaDB di produzione (mysqldump o mariadb-dump) salvato con timestamp in una directory dedicata (es. /var/backups/prenotar/) con nome file che include data e ora",
+        "Step di retention: dopo il dump, vengono mantenuti solo gli ultimi 5 file di backup nella directory, i piu vecchi rimossi automaticamente (es. con 'ls -t | tail -n +6 | xargs rm --')",
+        "Step successivi: build immagine, 'migrate --force', restart stack tramite docker-compose.production.yml",
+        "DEPLOY.md aggiornato con il comando di rollback manuale da un dump salvato (es. 'docker compose ... exec -T mariadb mysql ... < backup.sql')",
+        "Typecheck/Larastan passa"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Documentare il flusso di hotfix su produzione",
+      "description": "Come developer, voglio una procedura documentata per aprire un branch di hotfix direttamente da main e risolvere un bug urgente in produzione, senza aspettare il ciclo normale di release da develop.",
+      "acceptanceCriteria": [
+        "Nuova sezione in CLAUDE.md (o CONTRIBUTING.md se piu adatto, verificare se esiste) intitolata 'Flusso di hotfix' che descrive: branch hotfix/<nome> creato da main -> fix -> PR verso main (CI verde, .github/workflows/ci.yml gia la copre) -> merge -> CD produzione (US-007) parte automaticamente",
+        "La sezione specifica esplicitamente che alla chiusura dell'hotfix va aperta anche una PR verso develop per non perdere la fix nel flusso normale",
+        "La sezione specifica che il merge di un hotfix su main corrisponde sempre a un bump di patch version (terzo numero) in CHANGELOG.md e a un nuovo tag git creato sul commit di merge su main",
+        "Typecheck/Larastan passa"
+      ],
+      "priority": 8,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Documentare il versionamento su develop con tag + CHANGELOG",
+      "description": "Come developer, voglio che la procedura di versionamento (major/minor deciso su develop, patch da hotfix su main) sia documentata in modo che chiunque nel team la segua allo stesso modo.",
+      "acceptanceCriteria": [
+        "Nuova sezione in CLAUDE.md (vicino a quella sul branching di US-003/US-008) che descrive: bump versione in CHANGELOG.md + creazione tag git eseguiti sul branch develop PRIMA di aprire la PR develop -> main",
+        "La sezione specifica esplicitamente che la PR develop -> main non deve modificare il numero di versione (gia deciso su develop)",
+        "La sezione rimanda alla sezione hotfix (US-008) per l'unica eccezione (patch release taggate direttamente su main)",
+        "Typecheck/Larastan passa"
+      ],
+      "priority": 9,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Checklist di setup macchina produzione (solo documentazione, nessuna esecuzione reale)",
+      "description": "Come admin tecnico, voglio una checklist scritta in DEPLOY.md per ripartire da una macchina pulita e installare develop e produzione, cosi da poter eseguire io stesso le operazioni quando saro pronto, senza che l'agente esegua nulla sulla macchina reale.",
+      "acceptanceCriteria": [
+        "Nuova sezione in DEPLOY.md 'Setup iniziale macchina (root@116.203.88.140)' con una checklist ordinata: 1) pulizia container/volumi Docker della vecchia installazione (con avviso esplicito che e distruttivo e va confermato manualmente prima di procedere), 2) installazione dello stack develop (docker-compose.develop.yml), 3) installazione dello stack produzione (docker-compose.production.yml), 4) registrazione dei due self-hosted runner GitHub Actions con le rispettive label 'develop' e 'production' (US-006/US-007)",
+        "La sezione elenca esplicitamente le operazioni manuali richieste all'utente: puntamento DNS per develop.prenotar.montagnaservizi.it, emissione/rinnovo certificati TLS, verifica che la chiave SSH sia gia autorizzata su root@116.203.88.140 (nessuno step di distribuzione chiave necessario)",
+        "La sezione specifica chiaramente in testa che si tratta di una checklist manuale: nessuno script del repo o comando eseguito da un agente automatico si connette a root@116.203.88.140",
+        "Typecheck/Larastan passa"
+      ],
+      "priority": 10,
+      "passes": true,
+      "notes": ""
+    }
+  ]
+}

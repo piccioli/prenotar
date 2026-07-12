@@ -33,8 +33,9 @@ class GrPanelProvider extends PanelProvider
             ->login()
             ->passwordReset()
             ->colors([
-                'primary' => Color::Green,
+                'primary' => Color::hex('#1D574B'),
             ])
+            ->viteTheme('resources/css/filament/gr/theme.css')
             ->brandName('Prenotar — GR Lombardia')
             ->brandLogo(asset('images/cai-lombardia-placeholder.svg'))
             ->discoverResources(in: app_path('Filament/Gr/Resources'), for: 'App\\Filament\\Gr\\Resources')

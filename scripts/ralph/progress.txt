@@ -1,112 +1,56 @@
 # Ralph Progress Log
-Started: Dom 12 Lug 2026 14:47:50 CEST
+Started: 2026-07-12
 ---
 
 ## Codebase Patterns
-- `./vendor/bin/sail ps --status running --services` restituisce l'elenco dei servizi Sail attivi (vuoto se lo stack è down) — utile per script che devono verificare se Sail è in esecuzione prima di lanciare comandi.
-- Pint config in `pint.json` è preset "laravel" + `declare_strict_types` + `no_unused_imports` + `ordered_imports` — qualsiasi file PHP nuovo deve rispettare `declare(strict_types=1)` in testa.
+- `Filament\Support\Colors\Color::hex('#rrggbb')` generates a full 50–950 shade
+  palette from a single brand hex via `Color::generateShades()`: shade 500 is
+  exactly the input color, every other shade (including 600, the default Filament
+  "primary" reference shade) is algorithmically lightened/darkened from it — don't
+  expect the exact input hex to reappear verbatim at 600 in the rendered CSS
+  variables, that is expected Filament behaviour, not a bug.
+- `->viteTheme('resources/css/filament/{panel}/theme.css')` resolves through
+  Laravel's own `Illuminate\Foundation\Vite` invokable against the **default**
+  `public/build/manifest.json` unless a custom `buildDirectory` (2nd arg) is
+  passed — and passing one requires actually configuring `laravel-vite-plugin`
+  to emit a separate manifest under that subdirectory. With a single shared
+  `vite.config.js` input array (all 3 panel `theme.css` entries in one build),
+  omit the 2nd arg entirely; all 3 panels resolve fine against the one manifest
+  Vite already produces.
+- Tailwind's `@config 'path.js';` directive must come **after** all `@import`
+  statements in the same CSS file (postcss-import enforces "@import must precede
+  all other statements"), otherwise `vite build` throws a warning per malformed
+  file. Order per theme entry: `@import` (Filament base + our tokens) first,
+  then `@config`, then any panel-specific `:root {}` overrides.
+- Font self-hosting (no external CDN calls at runtime): use an npm package like
+  `@fontsource/<font>` and `@import '@fontsource/<font>/latin.css';` from a CSS
+  file processed by Vite — Vite's CSS pipeline resolves the node_modules import,
+  rewrites the internal relative `url()`s and copies the woff/woff2 files into
+  `public/build/assets/` with hashed names automatically. No manual asset
+  copying needed. The per-subset files (`latin.css`, not `400.css` which bundles
+  every unicode range including cyrillic/greek/vietnamese) keep the bundle lean
+  when only Italian/Latin content is needed.
+- `./vendor/bin/sail npm install` / `sail npm run build` work fine even though
+  `node_modules` doesn't exist yet on host — Sail's `laravel.test` container has
+  its own Node/npm, no need to install anything on the host machine.
+- Design token source-of-truth files live in `tasks/design-reference/*/tokens/*.css`
+  but per that folder's own README they are "materiale di progettazione ...
+  non renderizzabile standalone ... non va servito dall'app": don't `@import`
+  them directly into a compiled bundle. Copy the values 1:1 into the app's own
+  `resources/css/...` tree (with a comment noting the source of truth), so the
+  design-reference folder is read-only reference material, never shipped.
 
 ## [2026-07-12] - US-001
-- Implementato hook di pre-commit locale che lancia `./vendor/bin/sail composer qa` (Pint + Larastan + Pest) e blocca il commit se fallisce.
-- Files changed: `.githooks/pre-commit` (nuovo, eseguibile), `CLAUDE.md` (nuova sezione "Hook di pre-commit (QA obbligatoria)" con istruzione di attivazione `git config core.hooksPath .githooks`).
-- Verifica manuale eseguita: `git config core.hooksPath .githooks` + commit di prova con un file PHP che violava Pint → commit bloccato (nessun nuovo commit in `git log`, hook ha stampato l'errore Pint e restituito exit non-zero). File di scratch rimosso subito dopo la verifica, non incluso nel commit reale.
+- Nuovo tema Filament compilato via Vite per i 3 pannelli, con i design token del progetto (`tasks/design-reference/prenotar-ui-ruoli/tokens/*.css`) copiati 1:1 in `resources/css/filament/tokens/{colors,typography,spacing,effects,base}.css` + `fonts.css` (Manrope self-hosted via `@fontsource/manrope`, subset `latin` per weight 200-800) + `index.css` che li aggrega.
+- Un `theme.css` per pannello (`resources/css/filament/{admin,gr,sezione}/theme.css`): importano il tema base di Filament + i token condivisi, referenziano un `tailwind.config.js` condiviso (`resources/css/filament/tailwind.config.js`, preset Filament + content sui 3 pannelli), e sovrascrivono solo gli alias semantici brand (`--text-brand`, `--surface-brand`, `--surface-brand-strong`, `--surface-inverse`, `--border-strong`, `--focus-ring`, `--surface-subtle`) col colore del pannello: GR usa il default pino (`--green-*`, già la scala condivisa), Admin sovrascrive con la scala larice esistente (`--larch-*`), Sezione introduce una nuova scala "ardesia" (`#1A3448`…`#F0F6FA`, campionata dal mockup `pannello-sezione.dc.html`, non presente nel file token condiviso perché specifica di questo pannello).
+- I 3 `*PanelProvider.php` (`AdminPanelProvider`, `GrPanelProvider`, `SezionePanelProvider`) sostituiscono `Color::Amber/Green/Blue` (palette stock Filament) con `Color::hex($hexDelPannello)` (Admin `#C77E2A` larice, GR `#1D574B` pino, Sezione `#2E5878` ardesia — hex letti dagli swatch nei rispettivi mockup) e aggiungono `->viteTheme('resources/css/filament/{panel}/theme.css')`.
+- `vite.config.js`: aggiunti i 3 nuovi entry point CSS all'array `input` del plugin laravel-vite-plugin (build unico, un solo manifest condiviso).
+- Nuove devDependency npm: `@fontsource/manrope`, `@tailwindcss/forms`, `@tailwindcss/typography` (richieste dal preset Tailwind di `filament/support`, non ancora installate nel repo). `package-lock.json` generato per la prima volta (`node_modules` non era mai stato installato in questo repo).
+- Files changed: `app/Providers/Filament/{Admin,Gr,Sezione}PanelProvider.php`, `vite.config.js`, `package.json`, `package-lock.json` (nuovo), `resources/css/filament/**` (nuovo: `tokens/{index,fonts,colors,typography,spacing,effects,base}.css`, `tailwind.config.js`, `{admin,gr,sezione}/theme.css`).
+- Verifica: `sail npm run build` produce un manifest con i 3 `theme-*.css` distinti + i file font `manrope-latin-*.woff2/woff` con nomi hashati; `curl` sulle 3 login page (`/admin/login`, `/gr/login`, `/sezione/login`) conferma che ciascuna carica un asset `theme-*.css` diverso e che il CSS runtime di Filament genera una palette `--primary-*` coerente col hex custom di quel pannello. Nessun tool MCP di screenshot/browser disponibile in questa sessione: la verifica visiva a schermo (confronto pixel con i mockup) resta da fare manualmente in un secondo momento.
+- `sail composer qa` verde: Pint OK, Larastan 0 errori su 156 file, Pest 235 test passati (495 assertion) — nessuna regressione, nessun test esistente dipendeva dai colori stock Filament.
 - **Learnings for future iterations:**
-  - Lo script pre-commit controlla lo stato Sail con `sail ps --status running --services`: se l'output è vuoto (nessun servizio attivo) stampa un messaggio chiaro invece di lasciare fallire `sail composer qa` con un errore Docker criptico.
-  - Larastan (`sail composer phpstan`) resta a 0 errori su 156 file dopo la modifica: nessun nuovo codice PHP applicativo introdotto da questa story, solo uno script bash e doc.
----
-
-## [2026-07-12] - US-002
-- Rinominato l'intero stack "staging" in "develop": `git mv docker-compose.staging.yml docker-compose.develop.yml`, `git mv .env.staging.example .env.develop.example`, con sostituzione di tutte le occorrenze `staging`→`develop` nei due file (nomi volumi, `env_file`, commenti, `APP_ENV`, `DB_DATABASE`/`DB_USERNAME`=`prenotar_develop`, `CACHE_PREFIX=prenotar_develop_`, `APP_URL`/`MAIL_FROM_ADDRESS`=`develop.prenotar.montagnaservizi.it`).
-- Aggiornati tutti i riferimenti attivi al vecchio nome: `DEPLOY.md` (sezione "Ambiente staging (UAT)" → "Ambiente develop", tutti i comandi e l'esempio Nginx), `CLAUDE.md` (roadmap Fase 8), `database/seeders/LocalDevSeeder.php` (whitelist ambienti `['local','testing','staging']` → `['local','testing','develop']`), `UAT_CHECKLIST.md`, `docs/COLLAUDO_wizard-prenotazione-miglioramenti.md`, `docs/ACCOUNT_TEST_LOCALE.md` (dominio da non usare in locale + link a DEPLOY.md).
-- Aggiunta voce in `CHANGELOG.md` sotto `## [Non rilasciato]` che documenta il rename.
-- Files changed: `docker-compose.develop.yml` (rinominato da `docker-compose.staging.yml`), `.env.develop.example` (rinominato da `.env.staging.example`), `DEPLOY.md`, `CLAUDE.md`, `CHANGELOG.md`, `UAT_CHECKLIST.md`, `docs/COLLAUDO_wizard-prenotazione-miglioramenti.md`, `docs/ACCOUNT_TEST_LOCALE.md`, `database/seeders/LocalDevSeeder.php`.
-- Verifica: `grep -rln 'staging'` su tutto il repo (esclusi `.git/`, `node_modules/`, `vendor/`) produce solo hit in `CHANGELOG.md` (voci storiche di release passate + la nuova voce che documenta il rename, entrambe intenzionalmente non riscritte), `tasks/*.md` (PRD storici, esplicitamente esentati dal criterio di accettazione) e `scripts/ralph/prd.json`/`scripts/ralph/archive/.../prd.json` (la spec stessa di questa story, materiale di pianificazione non stack). Nessun residuo su file di codice/config attivi.
-- `sail composer qa` verde: Pint OK, Larastan 0 errori su 156 file, Pest 235 test passati (495 assertion).
-- **Learnings for future iterations:**
-  - Quando si rinomina un ambiente/stack, cercare "staging" non solo in docker-compose/.env ma anche in doc di collaudo/UAT (`UAT_CHECKLIST.md`, `docs/COLLAUDO_*.md`) e nella whitelist ambienti dei seeder (`app()->environment([...])`) — sono facili da dimenticare e non vengono presi da un grep mirato ai soli file di config.
-  - Nel CHANGELOG.md le voci storiche (release già taggate) NON vanno riscritte quando si rinomina qualcosa: si aggiunge solo una nuova voce in "## [Non rilasciato]" che documenta il rename. Stesso principio già applicato ai PRD in `tasks/` (riferimento storico, esplicitamente esentato dal grep di verifica).
----
-
-## [2026-07-12] - US-003
-- Creato branch locale `develop` a partire da `main` (`git branch develop main`, non pushato — non richiesto esplicitamente dall'utente).
-- Verificato `.github/workflows/ci.yml`: il trigger `pull_request:` non ha filtro `branches`, quindi copre già automaticamente le PR verso `develop` e verso `main` senza alcuna modifica al file.
-- Aggiunta nuova sezione "Branching e workflow" in `CLAUDE.md` (tra "Hook di pre-commit" e "Convenzioni codice"): documenta che tutto lo sviluppo parte da `develop`, che `main` riceve PR solo da `develop` o da `hotfix/*`, e richiama il comportamento del trigger CI.
-- Files changed: `CLAUDE.md` (nuova sezione), branch git `develop` (creato, nessun file modificato da questo).
-- `sail composer qa` verde: Pint OK, Larastan 0 errori su 156 file, Pest 235 test passati (495 assertion) — nessun test nuovo necessario, story è solo branching/documentazione.
-- **Learnings for future iterations:**
-  - Il workflow CI esistente (`ci.yml`) già copre PR verso qualsiasi branch target grazie all'assenza di `branches:` sotto `pull_request:` — le prossime story su develop/CD (US-004..US-010) non devono toccare questo trigger, solo aggiungere nuovi workflow CD dedicati.
-  - Quando una story chiede di documentare workflow/branching in CLAUDE.md, la sezione va posizionata vicino alle altre sezioni operative (pre-commit hook, convenzioni codice) per restare coerente con la struttura esistente del file.
----
-
-## [2026-07-12] - US-004
-- Aggiunta in `DEPLOY.md`, dentro l'esempio Nginx della sezione "Ambiente develop (UAT)", una location `/mailpit/` con `proxy_pass http://127.0.0.1:${MAILPIT_UI_PORT:-8027}/` e `auth_basic` che referenzia `/etc/nginx/.htpasswd-mailpit-develop` (porta già pubblicata su host dal `docker-compose.develop.yml` esistente — nessuna modifica al compose necessaria).
-- Documentato subito sotto il blocco Nginx il comando per generare il file (`htpasswd -c /etc/nginx/.htpasswd-mailpit-develop <utente>`), con nota che il file non va committato e che la responsabilità di generazione/rotazione manuale è dell'admin tecnico (nessuna rotazione periodica automatica).
-- Aggiornata la riga "Mail interceptata da Mailpit" per menzionare il nuovo sotto-URL pubblico oltre all'accesso diretto sulla porta host.
-- Files changed: `DEPLOY.md` (solo doc, nessun codice/config eseguibile toccato).
-- `sail composer qa` verde: Pint OK, Larastan 0 errori, Pest 235 test passati (495 assertion) — nessun test nuovo necessario, story è solo documentazione.
-- **Learnings for future iterations:**
-  - Story di sola documentazione (nessun file di codice toccato) non richiedono nuovi test: basta che la suite esistente resti verde per rispettare il criterio "Typecheck/Larastan passa".
-  - Nginx non fa interpolazione shell-style `${VAR}` nativamente (serve `envsubst`/template `nginx:*-alpine`): l'acceptance criteria di questa story chiedeva letteralmente quella sintassi come esempio/placeholder in doc, quindi riportata così com'è — se in futuro l'esempio Nginx dovesse diventare eseguibile davvero, andrà sostituito con la porta letterale o con un meccanismo di template esplicito.
----
-
-## [2026-07-12] - US-005
-- Aggiornato `.env.production.example`: `MAIL_MAILER=smtp`, `MAIL_HOST=smtp.gmail.com`, `MAIL_PORT=587`, `MAIL_ENCRYPTION=tls`, `MAIL_USERNAME`/`MAIL_PASSWORD` lasciati vuoti con commento che spiega che servono un'app password Gmail dedicata (o relay SMTP Google Workspace); rimosso il commento sul vecchio `MAIL_HOST=mailpit`.
-- Rimosso il servizio `mailpit` da `docker-compose.production.yml` e ogni `condition: service_started` che lo referenziava come dependency di `app`, `horizon`, `scheduler` (produzione non cattura più le email).
-- Aggiornato `DEPLOY.md`: sezione "2. Variabili d'ambiente" ora descrive SMTP Gmail invece di Mailpit, con nota esplicita "BLOCCATO: credenziali SMTP Gmail non ancora disponibili, responsabile e data non assegnati"; rimossa la riga `mailpit` dalla tabella "5. Servizi inclusi"; annotato il passo "Mail di prova" in "9. Verifiche post-deploy" come bloccato in attesa di credenziali. Le occorrenze di Mailpit rimaste in `DEPLOY.md` riguardano tutte l'ambiente develop (US-004), non toccato da questa story.
-- Nessun invio di email reale eseguito: verifica end-to-end resta esplicitamente un passo manuale futuro, documentato come tale in `DEPLOY.md`.
-- Files changed: `.env.production.example`, `docker-compose.production.yml`, `DEPLOY.md`.
-- `sail composer qa` verde: Pint OK, Larastan 0 errori, Pest 235 test passati (495 assertion) — nessun test nuovo necessario, story è solo config/doc, nessun codice applicativo referenzia `MAIL_ENCRYPTION` (variabile presente solo come placeholder di config per quando le credenziali reali arriveranno).
-- **Learnings for future iterations:**
-  - Quando si rimuove un servizio da un compose file, cercare tutte le occorrenze del suo nome come `depends_on` key in OGNI altro servizio (non solo il primo trovato) — in questo caso `mailpit` era dependency di tre servizi diversi (`app`, `horizon`, `scheduler`).
-  - `config/mail.php` di Laravel 11 non referenzia `MAIL_ENCRYPTION` esplicitamente (Symfony Mailer inferisce TLS/STARTTLS da scheme/porta): la variabile va comunque nel `.env.production.example` come documentazione esplicita per chi valorizzerà le credenziali in futuro, anche se otiosa a livello di config Laravel.
----
-
-## [2026-07-12] - US-006
-- Creato `.github/workflows/cd-develop.yml`: trigger `on: push: branches: [develop]`, job `runs-on: [self-hosted, develop]` (label dedicata, distinta da `production` usata in US-007). Step: checkout, `build`, `up -d`, `exec -T app php artisan migrate --force` sullo stack `docker-compose.develop.yml --env-file .env.develop` — nessuna connessione SSH nel workflow, il runner self-hosted è già posizionato sulla macchina develop. Commento esplicito che il seeder (`db:seed`) resta manuale.
-- Aggiunta in `DEPLOY.md` una nuova sottosezione "CD automatico verso develop" (tra "Aggiornamento develop" e "Reset completo develop") che descrive il workflow e come verificarne l'esito dalla tab Actions di GitHub.
-- Files changed: `.github/workflows/cd-develop.yml` (nuovo), `DEPLOY.md`.
-- `sail composer qa` verde: Pint OK, Larastan 0 errori, Pest 235 test passati (495 assertion) — nessun test nuovo necessario, story tocca solo workflow CI/CD e doc, nessun codice applicativo PHP.
-- **Learnings for future iterations:**
-  - `exec -T` (non `exec` semplice) va usato nei comandi `docker compose exec` lanciati da un workflow non interattivo (niente TTY disponibile su un runner GitHub Actions self-hosted) — altrimenti il comando può bloccarsi o fallire silenziosamente in attesa di uno pseudo-terminale.
-  - US-007 dovrà usare la stessa struttura (`runs-on: [self-hosted, production]`, label distinta da `develop`) ma con step aggiuntivi di backup DB pre-deploy e retention — vedi acceptance criteria della story.
----
-
-## [2026-07-12] - US-007
-- Creato `.github/workflows/cd-production.yml`: trigger `on: push: branches: [main]`, job `runs-on: [self-hosted, production]` (label distinta da `develop`, US-006). Step in ordine: (1) backup pre-deploy con `mariadb-dump` dentro il container `mariadb` (credenziali lette dalle env var già presenti nel container stesso — `MARIADB_ROOT_PASSWORD`/`MARIADB_DATABASE`, nessun bisogno di leggere `.env` sul runner), salvato in `/var/backups/prenotar/prenotar-<timestamp>.sql`; (2) retention che mantiene solo gli ultimi 5 file (`ls -t | tail -n +6 | xargs -r rm --`); (3) `build`; (4) `up -d`; (5) `migrate --force` — stessa sequenza build/up/migrate di `cd-develop.yml` (US-006), con i due step di backup/retention aggiunti prima.
-- Aggiunta in `DEPLOY.md` (sezione "6. Aggiornamento a una nuova versione") una sottosezione "CD automatico verso produzione" che descrive il workflow, e una sottosezione "Rollback manuale da un backup" con il comando per ripristinare un dump salvato (`docker compose ... exec -T mariadb sh -c 'mariadb -u root -p"$MARIADB_ROOT_PASSWORD" "$MARIADB_DATABASE"' < backup.sql`) seguito dal restart dello stack applicativo.
-- Files changed: `.github/workflows/cd-production.yml` (nuovo), `DEPLOY.md`, `scripts/ralph/prd.json` (US-007 → `passes: true`).
-- `sail composer qa` verde: Pint OK, Larastan 0 errori su 156 file, Pest 235 test passati (495 assertion) — nessun test nuovo necessario, story tocca solo workflow CI/CD e doc, nessun codice applicativo PHP.
-- **Learnings for future iterations:**
-  - Per leggere le credenziali DB dentro un comando `docker compose exec` su un servizio MariaDB, usare le env var che il container stesso già espone (`MARIADB_ROOT_PASSWORD`, `MARIADB_DATABASE`, definite nel compose file) invece di ricavarle dal `.env` host: evita di dover fare `source .env` o passare `--env-file` extra nel workflow, e resta valido anche se il runner non ha accesso diretto al file `.env` di produzione.
-  - Le immagini `mariadb:10.11` espongono i binari come `mariadb-dump`/`mariadb` (non solo gli alias storici `mysqldump`/`mysql`): usare i nomi nativi nei nuovi script per restare allineati alla versione dell'immagine in uso.
-  - Per i workflow CD che condividono struttura (build/up/migrate), riusare l'ordine già validato in `cd-develop.yml` e aggiungere solo gli step specifici della story (qui: backup + retention prima del deploy) invece di reinventare la sequenza.
----
-
-## [2026-07-12] - US-008
-- Aggiunta in `CLAUDE.md` una nuova sezione "Flusso di hotfix" (tra "Branching e workflow" e "Convenzioni codice", collegata dal rimando già presente in US-003) che descrive la procedura: branch `hotfix/<nome>` da `main` -> fix -> PR verso `main` (coperta dalla CI esistente, nessuna modifica a `ci.yml`) -> merge -> `cd-production.yml` (US-007) parte automaticamente.
-- Specificato esplicitamente che alla chiusura dell'hotfix va aperta anche una PR `hotfix/<nome>` -> `develop` per non perdere il fix nel flusso normale, e che il merge su `main` corrisponde sempre a un bump di patch version in `CHANGELOG.md` + nuovo tag git sul commit di merge.
-- Non è stato creato `CONTRIBUTING.md` (non esisteva nel repo): la sezione è stata aggiunta a `CLAUDE.md`, coerente con dove vivono già le altre sezioni di branching/workflow (US-003).
-- Files changed: `CLAUDE.md` (nuova sezione "Flusso di hotfix").
-- `sail composer qa` verde: Pint OK, Larastan 0 errori, Pest 235 test passati (495 assertion) — nessun test nuovo necessario, story è solo documentazione.
-- **Learnings for future iterations:**
-  - US-009 (versionamento su develop) va posizionata vicino a questa sezione "Flusso di hotfix" in `CLAUDE.md` e deve rimandarci esplicitamente per l'eccezione delle patch release taggate su `main` — evitare di duplicare la spiegazione del bump patch già scritta qui.
----
-
-## [2026-07-12] - US-009
-- Aggiunta in `CLAUDE.md` una nuova sezione "Versionamento" (tra "Flusso di hotfix" e "Convenzioni codice") che descrive: bump major/minor deciso sul branch `develop` (CHANGELOG.md aggiornato + tag git creato PRIMA di aprire la PR `develop` → `main`), la PR `develop` → `main` non deve modificare il numero di versione, e rimando esplicito alla sezione "Flusso di hotfix" per l'unica eccezione (patch release taggate direttamente su `main`).
-- Files changed: `CLAUDE.md` (nuova sezione "Versionamento"), `scripts/ralph/prd.json` (US-009 → `passes: true`).
-- `sail composer qa` verde: Pint OK, Larastan 0 errori, Pest 235 test passati (495 assertion) — nessun test nuovo necessario, story è solo documentazione.
-- **Learnings for future iterations:**
-  - US-010 (checklist setup macchina produzione) è l'ultima story del PRD: va in `DEPLOY.md`, sola documentazione, nessuna esecuzione reale su `root@116.203.88.140` — coerente con il pattern già seguito da US-004/US-005/US-006/US-007 (workflow/config descritti in doc, mai eseguiti realmente dall'agente).
----
-
-## [2026-07-12] - US-010
-- Aggiunta in `DEPLOY.md` una nuova sezione "0. Setup iniziale macchina (root@116.203.88.140)", posizionata prima della sezione "1. Prerequisiti sul server" (checklist propedeutica a tutto il resto del deploy). Contiene: nota esplicita in testa che è una checklist manuale, nessuno script/agente automatico si connette a `root@116.203.88.140`; accesso via SSH a chiave già autorizzata; checklist ordinata 1) pulizia container/volumi vecchia installazione (con avviso ⚠️ distruttivo da confermare esplicitamente), 2) installazione stack develop (rimanda alla sezione "Ambiente develop (UAT)" più sotto nel file), 3) installazione stack produzione (rimanda alle sezioni 1-6 esistenti), 4) registrazione dei due self-hosted runner GitHub Actions con le label già usate dai workflow reali (`develop` e `production`, coerenti con `cd-develop.yml`/`cd-production.yml` di US-006/US-007, non le label placeholder `self-hosted-develop`/`self-hosted-production` del PRD originale in `tasks/`).
-- Elencate esplicitamente le operazioni manuali richieste all'utente: puntamento DNS per `develop.prenotar.montagnaservizi.it`, emissione/rinnovo certificati TLS, verifica che la chiave SSH sia già autorizzata (nessuno step di distribuzione chiave).
-- Nessuna azione reale eseguita su `root@116.203.88.140`: solo documentazione in `DEPLOY.md`.
-- Files changed: `DEPLOY.md` (nuova sezione "0. Setup iniziale macchina"), `scripts/ralph/prd.json` (US-010 → `passes: true`).
-- `sail composer qa` verde: Pint OK, Larastan 0 errori, Pest 235 test passati (495 assertion) — nessun test nuovo necessario, story è solo documentazione.
-- **Learnings for future iterations:**
-  - Quando un PRD in `tasks/` propone label/nomi placeholder per risorse esterne (qui i runner self-hosted), verificare prima cosa è stato effettivamente implementato nelle story precedenti (qui: label reali `develop`/`production` già usate in `cd-develop.yml`/`cd-production.yml` da US-006/US-007) e usare quelle nella documentazione, non il placeholder del PRD originale.
-  - Tutte le 10 user story del PRD `ralph/cicd-email-infra` sono ora `passes: true` — nessuna story rimanente in questo PRD.
+  - Le prossime story (US-002+) che restylano markup Blade dovranno referenziare le stesse CSS custom properties introdotte qui (`--text-brand`, `--surface-*`, `--border-strong`, token di spacing/effects) invece di hardcodare nuovi colori: sono già coerenti per pannello grazie all'override in ciascun `theme.css`.
+  - La scala "ardesia" del pannello Sezione non esiste nel file token condiviso (`tasks/design-reference/.../tokens/colors.css` copre solo pino/larice/stone): è stata derivata a mano dai valori hex effettivamente usati nel mockup `pannello-sezione.dc.html` (grep dei valori `#RRGGBB` nel file) e vive solo in `resources/css/filament/sezione/theme.css`, non nel `tokens/colors.css` condiviso.
+  - Se una story futura ha bisogno di una verifica visiva reale (screenshot/confronto mockup) e non c'è un tool MCP browser disponibile, annotarlo esplicitamente qui invece di affermare che la verifica visiva è stata completata — vedi nota sopra.
 ---

@@ -33,8 +33,9 @@ class SezionePanelProvider extends PanelProvider
             ->login()
             ->passwordReset()
             ->colors([
-                'primary' => Color::Blue,
+                'primary' => Color::hex('#2E5878'),
             ])
+            ->viteTheme('resources/css/filament/sezione/theme.css')
             ->brandName('Prenotar — Sezione')
             ->brandLogo(asset('images/cai-lombardia-placeholder.svg'))
             ->plugins([

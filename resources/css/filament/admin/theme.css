@@ -1,0 +1,17 @@
+@import '/vendor/filament/filament/resources/css/theme.css';
+
+@import '../tokens/index.css';
+
+@config '../tailwind.config.js';
+
+/* Pannello Admin — Larice (ambra scuro): sovrascrive i soli alias semantici
+   brand, le scale grezze (green/larch/stone) restano quelle condivise. */
+:root {
+  --text-brand: var(--larch-700);
+  --surface-subtle: var(--larch-100);
+  --surface-brand: var(--larch-600);
+  --surface-brand-strong: var(--larch-700);
+  --surface-inverse: var(--stone-900);
+  --border-strong: var(--larch-600);
+  --focus-ring: var(--larch-500);
+}
