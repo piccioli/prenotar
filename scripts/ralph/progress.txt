@@ -60,3 +60,13 @@ Started: Dom 12 Lug 2026 14:47:50 CEST
   - Quando si rimuove un servizio da un compose file, cercare tutte le occorrenze del suo nome come `depends_on` key in OGNI altro servizio (non solo il primo trovato) — in questo caso `mailpit` era dependency di tre servizi diversi (`app`, `horizon`, `scheduler`).
   - `config/mail.php` di Laravel 11 non referenzia `MAIL_ENCRYPTION` esplicitamente (Symfony Mailer inferisce TLS/STARTTLS da scheme/porta): la variabile va comunque nel `.env.production.example` come documentazione esplicita per chi valorizzerà le credenziali in futuro, anche se otiosa a livello di config Laravel.
 ---
+
+## [2026-07-12] - US-006
+- Creato `.github/workflows/cd-develop.yml`: trigger `on: push: branches: [develop]`, job `runs-on: [self-hosted, develop]` (label dedicata, distinta da `production` usata in US-007). Step: checkout, `build`, `up -d`, `exec -T app php artisan migrate --force` sullo stack `docker-compose.develop.yml --env-file .env.develop` — nessuna connessione SSH nel workflow, il runner self-hosted è già posizionato sulla macchina develop. Commento esplicito che il seeder (`db:seed`) resta manuale.
+- Aggiunta in `DEPLOY.md` una nuova sottosezione "CD automatico verso develop" (tra "Aggiornamento develop" e "Reset completo develop") che descrive il workflow e come verificarne l'esito dalla tab Actions di GitHub.
+- Files changed: `.github/workflows/cd-develop.yml` (nuovo), `DEPLOY.md`.
+- `sail composer qa` verde: Pint OK, Larastan 0 errori, Pest 235 test passati (495 assertion) — nessun test nuovo necessario, story tocca solo workflow CI/CD e doc, nessun codice applicativo PHP.
+- **Learnings for future iterations:**
+  - `exec -T` (non `exec` semplice) va usato nei comandi `docker compose exec` lanciati da un workflow non interattivo (niente TTY disponibile su un runner GitHub Actions self-hosted) — altrimenti il comando può bloccarsi o fallire silenziosamente in attesa di uno pseudo-terminale.
+  - US-007 dovrà usare la stessa struttura (`runs-on: [self-hosted, production]`, label distinta da `develop`) ma con step aggiuntivi di backup DB pre-deploy e retention — vedi acceptance criteria della story.
+---

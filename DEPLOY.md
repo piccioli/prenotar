@@ -242,6 +242,12 @@ docker compose -f docker-compose.develop.yml --env-file .env.develop up -d
 docker compose -f docker-compose.develop.yml --env-file .env.develop exec app php artisan migrate --force
 ```
 
+### CD automatico verso develop
+
+Ogni `push` sul branch `develop` innesca il workflow `.github/workflows/cd-develop.yml`, eseguito da un runner self-hosted con label `develop` posizionato direttamente sulla macchina develop (nessuna connessione SSH nel workflow). Il workflow esegue in sequenza gli stessi comandi della sezione "Aggiornamento develop" sopra: `build`, `up -d` e `migrate --force`. Il seeder (`db:seed`) **non** viene lanciato automaticamente: resta un'operazione manuale da eseguire quando serve reinizializzare i dati di test.
+
+Per verificare l'esito: tab **Actions** del repository su GitHub, workflow "CD Develop" → ultima esecuzione sul branch `develop`.
+
 ### Reset completo develop
 
 ```bash
