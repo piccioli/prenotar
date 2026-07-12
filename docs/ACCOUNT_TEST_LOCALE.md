@@ -30,7 +30,7 @@
    | Admin | http://localhost/admin/login |
    | MailPit (mail intercettate) | http://localhost:8026 |
 
-> `APP_URL` in `.env` locale è `http://localhost` — non usare domini `develop.*`/`prenotar.montagnaservizi.it` in sviluppo: puntano (quando risolvono) all'ambiente remoto, non a questa istanza.
+> `APP_URL` in `.env` locale è `http://localhost` — non usare domini `prenotar.develop.*`/`prenotar.montagnaservizi.com` in sviluppo: puntano (quando risolvono) all'ambiente remoto, non a questa istanza.
 
 ---
 

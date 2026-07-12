@@ -14,12 +14,17 @@ Accesso: SSH come `root@116.203.88.140`, chiave pubblica già autorizzata (nessu
 
 1. **Pulizia della vecchia installazione** — ⚠️ **distruttivo, da confermare esplicitamente prima di procedere** (rimuove container e volumi, quindi tutti i dati esistenti sulla macchina):
    ```bash
-   docker compose -f docker-compose.production.yml down -v
+   docker compose -p prenotar -f docker-compose.production.yml down -v
    docker system prune -a --volumes   # solo dopo aver verificato che non ci siano dati da conservare
    ```
-2. **Installazione stack develop** (prima di produzione): segue la checklist della sezione "Ambiente develop (UAT)" più sotto in questo file (`docker-compose.develop.yml` + `.env.develop`).
-3. **Installazione stack produzione**: segue le sezioni 1-6 di questo file (`docker-compose.production.yml` + `.env`).
-4. **Registrazione dei due self-hosted runner GitHub Actions**, con le label usate dai workflow esistenti (`develop` per `.github/workflows/cd-develop.yml`, `production` per `.github/workflows/cd-production.yml` — vedi §6 "CD automatico verso produzione" e "CD automatico verso develop"):
+2. **Creazione dei volumi condivisi per i certificati TLS** (usati da entrambi gli stack, vedi §3 "HTTPS con Certbot"):
+   ```bash
+   docker volume create prenotar_shared_certbot_conf
+   docker volume create prenotar_shared_certbot_www
+   ```
+3. **Installazione stack produzione** (deve partire per prima: pubblica le porte 80/443 necessarie anche alla validazione del certificato develop): segue le sezioni 1-6 di questo file (`docker-compose.production.yml` + `.env`, dominio `prenotar.montagnaservizi.com`).
+4. **Installazione stack develop**: segue la checklist della sezione "Ambiente develop (UAT)" più sotto in questo file (`docker-compose.develop.yml` + `.env.develop`, dominio `prenotar.develop.montagnaservizi.com`, porta HTTPS `8443`).
+5. **Registrazione dei due self-hosted runner GitHub Actions**, con le label usate dai workflow esistenti (`develop` per `.github/workflows/cd-develop.yml`, `production` per `.github/workflows/cd-production.yml` — vedi §6 "CD automatico verso produzione" e "CD automatico verso develop"):
    ```bash
    # Runner develop (directory dedicata, es. /opt/actions-runner-develop)
    ./config.sh --url https://github.com/<org>/prenotar --token <TOKEN> --labels develop --name prenotar-develop
@@ -31,8 +36,8 @@ Accesso: SSH come `root@116.203.88.140`, chiave pubblica già autorizzata (nessu
    ```
 
 **Operazioni manuali richieste all'utente** (non eseguibili da un agente automatico):
-- Puntamento DNS per `develop.prenotar.montagnaservizi.it` (produzione punta già a `prenotar.montagnaservizi.it`).
-- Emissione/rinnovo dei certificati TLS per entrambi i domini.
+- Puntamento DNS per `prenotar.montagnaservizi.com` e `prenotar.develop.montagnaservizi.com` verso l'IP del server.
+- Emissione/rinnovo dei certificati TLS per entrambi i domini (`scripts/certbot-certonly.sh` / `scripts/certbot-renew.sh`, vedi §3).
 - Verifica che la chiave SSH sia già autorizzata su `root@116.203.88.140` (nessuno step di distribuzione chiave necessario).
 
 ---
@@ -64,33 +69,49 @@ Accesso: SSH come `root@116.203.88.140`, chiave pubblica già autorizzata (nessu
 Dalla root del progetto:
 
 ```bash
-docker compose -f docker-compose.production.yml build
-docker compose -f docker-compose.production.yml up -d
+docker compose -p prenotar -f docker-compose.production.yml build
+docker compose -p prenotar -f docker-compose.production.yml up -d
 ```
 
 - **HTTP**: porta host `80` di default. Per cambiarla: `HTTP_PUBLISH=8080` nel `.env` o in shell prima di `up`.
-- **TLS**: termina HTTPS davanti a questo stack (es. reverse proxy aziendale, Traefik, Caddy) oppure estendi il compose con un servizio che espone 443.
-- **Dominio pubblico** (es. `https://prenotar.montagnaservizi.it`): il proxy esterno deve inoltrare verso la porta pubblicata dallo stack (default `80` su `HTTP_PUBLISH`) impostando `Host`, `X-Forwarded-Proto: https`, `X-Forwarded-For` e gli altri header previsti dalla tua infrastruttura. In `.env` usa `APP_URL=https://prenotar.montagnaservizi.it` e `TRUSTED_PROXIES=*` (o gli IP del proxy) come nel template.
+- **TLS**: gestito **direttamente dal container Nginx** dello stack, con **Certbot** (Let's Encrypt) — nessun reverse proxy esterno a livello host. Vedi sezione seguente.
+- **Dominio pubblico**: `https://prenotar.montagnaservizi.com`. In `.env` usa `APP_URL=https://prenotar.montagnaservizi.com` e `SESSION_SECURE_COOKIE=true` (già nel template).
 
-Esempio sintetico **Nginx** (TLS gestito da questo server; upstream = stack Docker sulla porta host `80`):
+### HTTPS con Certbot (Nginx nello stack)
 
-```nginx
-server {
-    listen 443 ssl http2;
-    server_name prenotar.montagnaservizi.it;
-    # ssl_certificate /path/fullchain.pem;
-    # ssl_certificate_key /path/privkey.pem;
+Prerequisiti: record **DNS** (A/AAAA) del dominio verso il server; porte host **80** e **443** raggiungibili da Internet (per la validazione HTTP-01 di Let's Encrypt); volumi condivisi `prenotar_shared_certbot_conf` / `prenotar_shared_certbot_www` già creati (§0, punto 2).
 
-    location / {
-        proxy_pass http://127.0.0.1:80;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Forwarded-Host $host;
-    }
-}
-```
+> Solo la **produzione** pubblica le porte 80/443 dell'host. Il dominio develop (`prenotar.develop.montagnaservizi.com`, porta 8443) condivide lo stesso volume/webroot: la sua validazione ACME passa comunque da qui — vedi sezione "Ambiente develop" più sotto.
+
+1. Nel `.env` valorizza almeno `CERTBOT_DOMAIN=prenotar.montagnaservizi.com`, `CERTBOT_EMAIL`, `APP_URL=https://prenotar.montagnaservizi.com`, `SESSION_SECURE_COOKIE=true`.
+2. Build e avvio: `docker compose -p prenotar -f docker-compose.production.yml build && docker compose -p prenotar -f docker-compose.production.yml up -d` (Nginx espone `80` e `443` e serve `/.well-known/acme-challenge/` dal volume `certbot_www`).
+3. **Prima emissione** del certificato di produzione (dalla root del repo):
+
+   ```bash
+   ./scripts/certbot-certonly.sh prenotar.montagnaservizi.com tua-email@esempio.it
+   ```
+
+   Equivalente manuale:
+
+   ```bash
+   docker compose -p prenotar -f docker-compose.production.yml --profile tools run --rm certbot certonly \
+     --webroot --webroot-path=/var/www/certbot \
+     -d "prenotar.montagnaservizi.com" --email "tua-email@esempio.it" \
+     --agree-tos --non-interactive
+   CERTBOT_DOMAIN=prenotar.montagnaservizi.com docker compose -p prenotar -f docker-compose.production.yml up -d --force-recreate nginx
+   ```
+
+   Dopo il primo certificato, l'entrypoint di Nginx abilita il **redirect HTTP→HTTPS** per `CERTBOT_DOMAIN` e il **virtual host TLS** (certificati in sola lettura da `certbot_conf`).
+
+4. **Rinnovo** (Let's Encrypt, ~90 giorni): cron sul server, ad esempio due volte al giorno:
+
+   ```bash
+   0 3,15 * * * cd /percorso/prenotar && ./scripts/certbot-renew.sh >>/var/log/prenotar-certbot.log 2>&1
+   ```
+
+   `certbot-renew.sh` rinnova **entrambi** i certificati (produzione e develop, stesso volume condiviso) e ricarica i Nginx di entrambi gli stack (quello develop solo se attivo).
+
+Il servizio Compose `certbot` usa il profilo **`tools`** e non parte con `up` di default; serve solo per `docker compose ... run --rm certbot`.
 
 ---
 
@@ -99,7 +120,7 @@ server {
 Dopo il primo `up` (con `APP_KEY` già presente nel `.env`):
 
 ```bash
-docker compose -f docker-compose.production.yml exec app php artisan migrate --force
+docker compose -p prenotar -f docker-compose.production.yml exec app php artisan migrate --force
 ```
 
 **Mai** `migrate:fresh` in produzione.
@@ -112,7 +133,8 @@ Opzionale: migrazioni automatiche ad ogni avvio del container `app` — imposta 
 
 | Servizio   | Ruolo |
 |------------|--------|
-| `nginx`    | Static da `public/`, FastCGI verso PHP-FPM |
+| `nginx`    | Static da `public/`, FastCGI verso PHP-FPM; TLS 443 + Certbot webroot |
+| `certbot`  | Immagine ufficiale (profilo `tools`): `certonly` / `renew` sui volumi condivisi `certbot_*` |
 | `app`      | `php-fpm`, cache config/route/view/event + `filament:optimize` all’avvio (disattivabile con `AUTORUN_OPTIMIZE=0`) |
 | `horizon`  | `php artisan horizon` — gestisce le queue Redis (sostituisce `queue:work`). Dashboard su `/horizon` (solo admin). |
 | `scheduler`| `php artisan schedule:work` — cron notturno `prenotazioni:nightly` (archiviazione + reminder) alle 05:00 Europe/Rome |
@@ -127,16 +149,16 @@ Allegati e file privati medialibrary: volume **`app_storage`** montato su `stora
 
 ```bash
 git pull   # o desplieg artifact
-docker compose -f docker-compose.production.yml build
-docker compose -f docker-compose.production.yml up -d
-docker compose -f docker-compose.production.yml exec app php artisan migrate --force
+docker compose -p prenotar -f docker-compose.production.yml build
+docker compose -p prenotar -f docker-compose.production.yml up -d
+docker compose -p prenotar -f docker-compose.production.yml exec app php artisan migrate --force
 ```
 
 Se cambiano solo variabili in `.env`, dopo `up` conviene ricreare la cache nel container `app`:
 
 ```bash
-docker compose -f docker-compose.production.yml exec app php artisan optimize:clear
-docker compose -f docker-compose.production.yml restart app
+docker compose -p prenotar -f docker-compose.production.yml exec app php artisan optimize:clear
+docker compose -p prenotar -f docker-compose.production.yml restart app
 ```
 
 (`restart app` riesegue l’entrypoint con `AUTORUN_OPTIMIZE=1` di default.)
@@ -152,7 +174,7 @@ Per verificare l'esito: tab **Actions** del repository su GitHub, workflow "CD P
 In caso di problemi dopo un deploy, ripristinare l'ultimo dump salvato prima del deploy:
 
 ```bash
-docker compose -f docker-compose.production.yml exec -T mariadb sh -c \
+docker compose -p prenotar -f docker-compose.production.yml exec -T mariadb sh -c \
   'mariadb -u root -p"$MARIADB_ROOT_PASSWORD" "$MARIADB_DATABASE"' \
   < /var/backups/prenotar/prenotar-<data>-<ora>.sql
 ```
@@ -160,7 +182,7 @@ docker compose -f docker-compose.production.yml exec -T mariadb sh -c \
 Sostituire `<data>-<ora>` con il timestamp del backup da cui ripristinare (`ls -t /var/backups/prenotar/` per individuare il più recente). Dopo il ripristino, riavviare lo stack applicativo per assicurarsi che cache e code ripartano allineate ai dati ripristinati:
 
 ```bash
-docker compose -f docker-compose.production.yml restart app horizon scheduler
+docker compose -p prenotar -f docker-compose.production.yml restart app horizon scheduler
 ```
 
 ---
@@ -168,15 +190,15 @@ docker compose -f docker-compose.production.yml restart app horizon scheduler
 ## 7. Log e diagnostica
 
 ```bash
-docker compose -f docker-compose.production.yml logs -f app horizon scheduler nginx
-docker compose -f docker-compose.production.yml exec app php artisan about
-docker compose -f docker-compose.production.yml exec app php artisan horizon:status
+docker compose -p prenotar -f docker-compose.production.yml logs -f app horizon scheduler nginx
+docker compose -p prenotar -f docker-compose.production.yml exec app php artisan about
+docker compose -p prenotar -f docker-compose.production.yml exec app php artisan horizon:status
 ```
 
 Dashboard Horizon: accessibile solo agli admin su `/horizon`. Per un graceful restart di Horizon dopo deploy:
 
 ```bash
-docker compose -f docker-compose.production.yml exec app php artisan horizon:terminate
+docker compose -p prenotar -f docker-compose.production.yml exec app php artisan horizon:terminate
 # Il container `horizon` si riavvia automaticamente (restart: unless-stopped)
 ```
 
@@ -220,61 +242,43 @@ Stack Docker separato sullo stesso host del server produzione. Volumi, porte e d
 
 ### Prerequisiti
 
-- Subdominio `develop.prenotar.montagnaservizi.it` puntato all'IP server.
+- Subdominio `prenotar.develop.montagnaservizi.com` puntato all'IP server (stesso IP della produzione).
 - File `.env.develop` valorizzato (copia da `.env.develop.example`).
+- Stack **produzione già attivo** (pubblica le porte 80/443 necessarie alla validazione ACME, vedi sotto) e volumi condivisi `prenotar_shared_certbot_conf` / `prenotar_shared_certbot_www` già creati (§0).
 
-### Configurazione reverse-proxy Nginx (develop)
+### HTTPS (Certbot condiviso con la produzione)
 
-```nginx
-server {
-    listen 443 ssl http2;
-    server_name develop.prenotar.montagnaservizi.it;
-    # ssl_certificate /path/fullchain.pem;
-    # ssl_certificate_key /path/privkey.pem;
+Non esiste un Nginx a livello host: ogni stack termina TLS nel proprio container Nginx. Poiché solo la produzione pubblica le porte 80/443, la validazione HTTP-01 per il dominio develop passa dal webroot condiviso dello stack produzione — nessuna configurazione aggiuntiva lato Nginx, solo il volume `certbot_conf` condiviso (già cablato in `docker-compose.develop.yml`).
 
-    location / {
-        proxy_pass http://127.0.0.1:8081;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Forwarded-Host $host;
-    }
-
-    # UI Mailpit protetta da basic auth: consultazione email develop senza tunnel SSH.
-    location /mailpit/ {
-        auth_basic "Mailpit develop";
-        auth_basic_user_file /etc/nginx/.htpasswd-mailpit-develop;
-
-        proxy_pass http://127.0.0.1:${MAILPIT_UI_PORT:-8027}/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-Il file `/etc/nginx/.htpasswd-mailpit-develop` **non va committato nel repo** (credenziali dedicate, distinte da quelle applicative). Va generato una tantum sul server:
+**Prima emissione** del certificato develop (dalla root del repo, con la produzione già `up`):
 
 ```bash
-htpasswd -c /etc/nginx/.htpasswd-mailpit-develop <utente>
+./scripts/certbot-certonly.sh prenotar.develop.montagnaservizi.com tua-email@esempio.it develop
 ```
 
-Responsabilità: l'**admin tecnico** genera il file e, se necessario, ne ruota manualmente le credenziali — non esiste un processo di rotazione periodica automatica.
+Lo script richiede il certificato passando dal webroot di produzione, poi ricrea il Nginx **develop** (`CERTBOT_DOMAIN=prenotar.develop.montagnaservizi.com`) per applicarlo. Il sito develop risulta raggiungibile su `https://prenotar.develop.montagnaservizi.com:8443`.
+
+Il **rinnovo** è cumulativo con quello di produzione: vedi `scripts/certbot-renew.sh` in §3.
+
+**Mailpit**: nessuna UI esposta pubblicamente via Nginx (non c'è un host-proxy davanti agli stack). Consultare la UI via tunnel SSH:
+
+```bash
+ssh -L 8027:127.0.0.1:8027 root@116.203.88.140
+# poi apri http://127.0.0.1:8027 in locale
+```
 
 ### Build e avvio
 
 ```bash
-docker compose -f docker-compose.develop.yml --env-file .env.develop build
-docker compose -f docker-compose.develop.yml --env-file .env.develop up -d
+docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop build
+docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop up -d
 ```
 
 ### Prima inizializzazione (UAT)
 
 ```bash
-docker compose -f docker-compose.develop.yml --env-file .env.develop exec app php artisan migrate --force
-docker compose -f docker-compose.develop.yml --env-file .env.develop exec app php artisan db:seed --class=LocalDevSeeder
+docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop exec app php artisan migrate --force
+docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop exec app php artisan db:seed --class=LocalDevSeeder
 ```
 
 Il `LocalDevSeeder` importa le 152 sezioni + 77 sottosezioni da Excel reale, imposta password `password` su tutti gli account, crea admin + GR dev e popola le impostazioni del presidente GR con firma e documento d'identità.
@@ -284,15 +288,15 @@ Il `LocalDevSeeder` importa le 152 sezioni + 77 sottosezioni da Excel reale, imp
 - GR: `gr@local.test` / `password`
 - Sezioni: tutte con password `password` (email da Excel reale)
 
-Mail interceptata da Mailpit — UI raggiungibile senza tunnel SSH su `https://develop.prenotar.montagnaservizi.it/mailpit/` (basic auth, vedi sopra), oppure direttamente su `http://127.0.0.1:8027` sul server.
+Mail intercettata da Mailpit — UI raggiungibile solo via tunnel SSH (vedi sopra) o direttamente su `http://127.0.0.1:8027` sul server.
 
 ### Aggiornamento develop
 
 ```bash
 git pull
-docker compose -f docker-compose.develop.yml --env-file .env.develop build
-docker compose -f docker-compose.develop.yml --env-file .env.develop up -d
-docker compose -f docker-compose.develop.yml --env-file .env.develop exec app php artisan migrate --force
+docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop build
+docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop up -d
+docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop exec app php artisan migrate --force
 ```
 
 ### CD automatico verso develop
@@ -304,10 +308,10 @@ Per verificare l'esito: tab **Actions** del repository su GitHub, workflow "CD D
 ### Reset completo develop
 
 ```bash
-docker compose -f docker-compose.develop.yml --env-file .env.develop down -v
-docker compose -f docker-compose.develop.yml --env-file .env.develop up -d
-docker compose -f docker-compose.develop.yml --env-file .env.develop exec app php artisan migrate --force
-docker compose -f docker-compose.develop.yml --env-file .env.develop exec app php artisan db:seed --class=LocalDevSeeder
+docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop down -v
+docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop up -d
+docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop exec app php artisan migrate --force
+docker compose -p prenotar-develop -f docker-compose.develop.yml --env-file .env.develop exec app php artisan db:seed --class=LocalDevSeeder
 ```
 
 **Mai** usare `down -v` sulla produzione — cancella tutti i dati.

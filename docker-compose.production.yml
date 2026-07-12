@@ -1,9 +1,11 @@
 # Stack produzione Prenotar (Nginx + PHP-FPM + MariaDB + Redis + worker + scheduler).
 # Sviluppo Docker: in `.env` imposta `COMPOSER_INSTALL_DEV=1` (Composer con dev deps, es. Faker per seed demo) e `APP_ENV=local`.
 # Uso: copia .env.production.example in .env, valorizza segreti e DB_*, poi:
-#   docker compose -f docker-compose.production.yml build
-#   docker compose -f docker-compose.production.yml up -d
-# Prima installazione DB: docker compose -f docker-compose.production.yml exec app php artisan migrate --force
+#   docker compose -p prenotar -f docker-compose.production.yml build
+#   docker compose -p prenotar -f docker-compose.production.yml up -d
+# Prima installazione DB: docker compose -p prenotar -f docker-compose.production.yml exec app php artisan migrate --force
+# NB: usare sempre `-p prenotar` esplicito — se manca, Docker Compose deriva il project name dalla
+# directory (uguale per lo stack develop), causando collisioni tra i due stack sullo stesso host.
 
 services:
   nginx:
@@ -15,9 +17,24 @@ services:
         COMPOSER_INSTALL_DEV: ${COMPOSER_INSTALL_DEV:-0}
     ports:
       - "${HTTP_PUBLISH:-80}:80"
+      - "${HTTPS_PUBLISH:-443}:443"
+    environment:
+      CERTBOT_DOMAIN: "${CERTBOT_DOMAIN:-}"
+    volumes:
+      - certbot_www:/var/www/certbot
+      - certbot_conf:/etc/letsencrypt:ro
     depends_on:
       - app
     restart: unless-stopped
+
+  # Non parte con `up` (profile `tools`). Uso: richiesta certificato e rinnovi — vedi DEPLOY.md e scripts/certbot-*.sh
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - certbot_conf:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    profiles:
+      - tools
 
   app:
     build:
@@ -116,3 +133,14 @@ volumes:
   mariadb_data:
   redis_data:
   app_storage:
+  # Condivisi con docker-compose.develop.yml: solo produzione pubblica la porta 80/443 dell'host,
+  # quindi l'emissione/rinnovo Certbot per ENTRAMBI i domini passa da questo stack (vedi scripts/certbot-*.sh
+  # e DEPLOY.md, sezione "HTTPS con Certbot"). Volume esterno, creato una tantum sul server:
+  #   docker volume create prenotar_shared_certbot_conf
+  #   docker volume create prenotar_shared_certbot_www
+  certbot_conf:
+    external: true
+    name: prenotar_shared_certbot_conf
+  certbot_www:
+    external: true
+    name: prenotar_shared_certbot_www

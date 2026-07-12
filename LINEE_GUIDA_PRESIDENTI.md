@@ -6,7 +6,7 @@ Guida all'uso di **Prenotar**, il sistema di prenotazione delle 2 torri di arram
 
 ## 1. Accesso alla piattaforma
 
-**URL produzione**: https://prenotar.montagnaservizi.it
+**URL produzione**: https://prenotar.montagnaservizi.com
 
 Al primo accesso riceverai un'email con oggetto **"Imposta la tua password"** contenente un link personale (valido 24 ore). Clicca il link e scegli una password sicura.
 

@@ -20,7 +20,7 @@ jobs:
         run: |
           mkdir -p "${BACKUP_DIR}"
           timestamp=$(date +%Y%m%d-%H%M%S)
-          docker compose -f docker-compose.production.yml exec -T mariadb sh -c \
+          docker compose -p prenotar -f docker-compose.production.yml exec -T mariadb sh -c \
             'mariadb-dump -u root -p"$MARIADB_ROOT_PASSWORD" "$MARIADB_DATABASE"' \
             > "${BACKUP_DIR}/prenotar-${timestamp}.sql"
 
@@ -30,10 +30,10 @@ jobs:
           ls -t prenotar-*.sql | tail -n +6 | xargs -r rm --
 
       - name: Build immagine produzione
-        run: docker compose -f docker-compose.production.yml build
+        run: docker compose -p prenotar -f docker-compose.production.yml build
 
       - name: Avvio stack produzione
-        run: docker compose -f docker-compose.production.yml up -d
+        run: docker compose -p prenotar -f docker-compose.production.yml up -d
 
       - name: Migrazioni database
-        run: docker compose -f docker-compose.production.yml exec -T app php artisan migrate --force
+        run: docker compose -p prenotar -f docker-compose.production.yml exec -T app php artisan migrate --force

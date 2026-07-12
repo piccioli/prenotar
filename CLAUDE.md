@@ -5,7 +5,8 @@
 **Nome**: Prenotar (PRENO-tazione T-orri AR-rampicata)
 **Scopo**: Sistema di prenotazione delle 2 torri di arrampicata mobili CityWall (CST, €38.131,10 cad.) del CAI GR Lombardia.
 **Scope**: Solo CAI GR Lombardia — 152 sezioni + 77 sottosezioni, ~230 account totali.
-**URL produzione**: `https://prenotar.montagnaservizi.it`
+**URL produzione**: `https://prenotar.montagnaservizi.com`
+**URL develop**: `https://prenotar.develop.montagnaservizi.com`
 **Deploy**: checklist in [`DEPLOY.md`](./DEPLOY.md); template env [`.env.production.example`](./.env.production.example).
 **Repository**: `prenotar`
 **Documento di riferimento** (locale, non versionato): `./DOCUMENTI PER LA PROGETTAZIONE/PIANO_REALIZZAZIONE.md`
