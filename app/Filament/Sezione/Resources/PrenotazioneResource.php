@@ -21,6 +21,7 @@ use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Support\Colors\Color;
 use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -536,11 +537,7 @@ class PrenotazioneResource extends Resource
                 Tables\Columns\TextColumn::make('torre.nome')
                     ->label('Torre')
                     ->badge()
-                    ->color(fn (mixed $state, Prenotazione $record): string => match ($record->torre_id) {
-                        1 => 'info',
-                        2 => 'warning',
-                        default => 'gray',
-                    })
+                    ->color(fn (Prenotazione $record): array => Color::hex(Torre::coloreHexPer($record->torre)))
                     ->default('—'),
 
                 Tables\Columns\TextColumn::make('data_inizio_prenotazione')

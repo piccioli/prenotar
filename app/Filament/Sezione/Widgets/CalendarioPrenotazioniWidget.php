@@ -37,7 +37,7 @@ class CalendarioPrenotazioniWidget extends FullCalendarWidget
                 $torreId = $pren->torre_id;
                 $colore = ($torreId !== null && isset($torriColori[$torreId]))
                     ? $torriColori[$torreId]
-                    : '#6b7280';
+                    : Torre::COLORE_DEFAULT;
 
                 $torreNome = $pren->torre !== null ? $pren->torre->nome : 'Senza torre';
 
@@ -101,14 +101,10 @@ class CalendarioPrenotazioniWidget extends FullCalendarWidget
     /** @return array<int, string> */
     private function torriColori(): array
     {
-        $palette = ['#2563eb', '#ea580c', '#16a34a', '#9333ea'];
-        $map = [];
-        $i = 0;
-        foreach (Torre::query()->where('is_active', true)->orderBy('id')->get() as $torre) {
-            $map[$torre->id] = $palette[$i] ?? '#6b7280';
-            $i++;
-        }
-
-        return $map;
+        return Torre::query()
+            ->where('is_active', true)
+            ->get()
+            ->mapWithKeys(fn (Torre $torre): array => [$torre->id => Torre::coloreHexPer($torre)])
+            ->all();
     }
 }

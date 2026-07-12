@@ -17,14 +17,12 @@
         </div>
 
         <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-            <span class="flex items-center gap-1.5">
-                <span class="inline-block h-3 w-3 rounded-sm" style="background-color:#2563eb"></span>
-                Torre 1
-            </span>
-            <span class="flex items-center gap-1.5">
-                <span class="inline-block h-3 w-3 rounded-sm" style="background-color:#ea580c"></span>
-                Torre 2
-            </span>
+            @foreach($this->getTorri() as $torre)
+                <span class="flex items-center gap-1.5">
+                    <span class="inline-block h-3 w-3 rounded-sm" style="background-color:{{ \App\Models\Torre::coloreHexPer($torre) }}"></span>
+                    {{ $torre->nome }}
+                </span>
+            @endforeach
         </div>
     </div>
 

@@ -10,6 +10,7 @@ use App\Enums\ResponsabileTipo;
 use App\Enums\TipoMezzo;
 use App\Filament\Sezione\Resources\PrenotazioneResource;
 use App\Models\Prenotazione;
+use App\Models\Torre;
 use App\Services\PrenotazioneStateMachine;
 use Filament\Actions;
 use Filament\Forms;
@@ -20,6 +21,7 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Support\Colors\Color;
 use Illuminate\Http\UploadedFile;
 
 class ViewPrenotazione extends ViewRecord
@@ -109,7 +111,11 @@ class ViewPrenotazione extends ViewRecord
                                         ->badge()
                                         ->formatStateUsing(fn (PrenotazioneStatus $state): string => $state->label())
                                         ->color(fn (PrenotazioneStatus $state): string => $state->color()),
-                                    TextEntry::make('torre.nome')->label('Torre')->badge()->default('—'),
+                                    TextEntry::make('torre.nome')
+                                        ->label('Torre')
+                                        ->badge()
+                                        ->color(fn (Prenotazione $record): array => Color::hex(Torre::coloreHexPer($record->torre)))
+                                        ->default('—'),
                                     TextEntry::make('torre.indirizzo_deposito')->label('Indirizzo deposito torre')->default('—'),
                                     TextEntry::make('data_inizio_prenotazione')->label('Da')->date('d/m/Y'),
                                     TextEntry::make('data_fine_prenotazione')->label('A')->date('d/m/Y'),

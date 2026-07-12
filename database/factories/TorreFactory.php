@@ -24,6 +24,7 @@ class TorreFactory extends Factory
             'specs_tecniche_pdf_path' => null,
             'manuale_pdf_path' => null,
             'is_active' => true,
+            'colore_hex' => $this->faker->hexColor(),
         ];
     }
 }

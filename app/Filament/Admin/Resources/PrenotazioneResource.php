@@ -8,12 +8,14 @@ use App\Enums\PrenotazioneStatus;
 use App\Filament\Admin\Resources\PrenotazioneResource\Pages;
 use App\Models\Prenotazione;
 use App\Models\PrenotazioneHistory;
+use App\Models\Torre;
 use App\Services\AuditLogger;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Support\Colors\Color;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\ViewAction;
@@ -61,6 +63,8 @@ class PrenotazioneResource extends Resource
                     ->limit(25),
                 TextColumn::make('torre.nome')
                     ->label('Torre')
+                    ->badge()
+                    ->color(fn (Prenotazione $record): array => Color::hex(Torre::coloreHexPer($record->torre)))
                     ->default('—'),
                 TextColumn::make('status')
                     ->label('Stato')

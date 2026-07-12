@@ -71,6 +71,31 @@ Started: 2026-07-12
   `RefreshDatabase`-backed feature tests happen to hit the same code path),
   without a real screenshot. Still explicitly note in progress.txt that pixel
   comparison against the mockup is deferred to manual review.
+- Per-row dynamic (non-palette) colors on a Filament `TextColumn`/`TextEntry`
+  badge: `->color()` accepts a closure returning a `Filament\Support\Colors\Color::hex($hex)`
+  array (the 50–950 shade map), evaluated per-row via Filament's own closure
+  injection (typed `$record` param resolved automatically, no manual binding
+  needed) — this renders via inline CSS custom properties
+  (`vendor/filament/support/src/helpers.php` `get_color_css_variables()`), NOT
+  via the registered-palette-name system, so no `FilamentColor::register()` or
+  Tailwind safelisting is needed for arbitrary hex values coming from a DB
+  column. A **raw hex string** passed directly to `->color()` does NOT work
+  (it's treated as a palette *name* lookup, e.g. `var(--#1D574B-500)`, which
+  doesn't exist) — always wrap with `Color::hex()` first.
+- Larastan gotcha: `$record->torre?->colore_hex ?? 'fallback'` (nullsafe on a
+  `BelongsTo` magic relation property, combined with `??`) trips the
+  `nullsafe.neverNull` rule even when the FK column genuinely is nullable in
+  the migration (`foreignId('torre_id')->nullable()`) — Larastan's relation
+  type inference for magic properties doesn't factor in DB-level nullability
+  here, so it wrongly claims the relation is never null. Don't blindly follow
+  its "use -> instead" suggestion (that produces a real null-pointer risk at
+  runtime, since the relation genuinely can be null). Instead extract a small
+  static helper with an explicitly nullable typed parameter, e.g.
+  `Model::helperMethod(?self $model): string { return $model === null ? ... : ...; }`,
+  and call it as `Helper::helperMethod($record->relation)` (plain `->`, no
+  nullsafe operator at the call site) — this satisfies Larastan AND centralizes
+  the "what's the fallback for a missing related record" logic in one place
+  instead of duplicating a ternary at every call site.
 
 ## [2026-07-12] - US-001
 - Nuovo tema Filament compilato via Vite per i 3 pannelli, con i design token del progetto (`tasks/design-reference/prenotar-ui-ruoli/tokens/*.css`) copiati 1:1 in `resources/css/filament/tokens/{colors,typography,spacing,effects,base}.css` + `fonts.css` (Manrope self-hosted via `@fontsource/manrope`, subset `latin` per weight 200-800) + `index.css` che li aggrega.
@@ -99,4 +124,21 @@ Started: 2026-07-12
 - **Learnings for future iterations:**
   - Vedi le nuove voci in Codebase Patterns sopra (render hook scopes, route naming, verifica senza browser via tinker) — sono generali e riutilizzabili per tutte le story mobile successive (US-005, US-007, US-013, US-015, US-018, US-021, US-026, US-028).
   - Il bell icon in topbar è puramente decorativo/disabled: se una story futura introduce notifiche reali, dovrà sostituire `mobile-topbar-notifications.blade.php` con `@livewire(Filament\Livewire\DatabaseNotifications::class)` e abilitare `->databaseNotifications()` sui 3 panel (richiede la migrazione standard Laravel `notifications`, non presente in questo repo) — esplicitamente fuori scope per US-002.
+---
+
+## [2026-07-12] - US-003
+- Aggiunto `colore_hex` (string, nullable, 7 char) al modello `Torre` via nuova migrazione `2026_07_12_184455_add_colore_hex_to_torri_table.php`, con backfill delle 2 torri esistenti in `TorriSeeder` (Torre 1 = `#1D574B` pino, Torre 2 = `#C77E2A` larice — stessi hex già usati nel tema Filament di US-001 e coerenti coi mockup), e default `faker->hexColor()` in `TorreFactory` per i test.
+- Nuovo helper `Torre::coloreHexPer(?Torre $torre): string` (con costante `Torre::COLORE_DEFAULT = '#64748B'`) come **unica fonte** del colore effettivo di una torre (gestisce sia torre null che colore_hex non ancora impostato) — sostituisce 4 calcoli precedentemente duplicati e incoerenti tra loro (fix BUG-07):
+  1. `CalendarioPrenotazioniWidget::torriColori()` (Sezione, condiviso dal blade GR) usava una palette hardcoded indicizzata per posizione (`['#2563eb', '#ea580c', ...]`), non per identità della torre — ora legge `colore_hex` per id.
+  2. Le legende hardcoded nei blade `gr/pages/calendario.blade.php` e `sezione/pages/calendario.blade.php` (stessi 2 hex copiati a mano, etichette statiche "Torre 1"/"Torre 2" indipendenti dai nomi reali) — ora entrambe iterano `$this->getTorri()` e mostrano nome + `Torre::coloreHexPer($torre)` reali.
+  3. I badge "torre.nome" nelle tabelle Prenotazione di Gr e Sezione usavano `match ($record->torre_id) { 1 => 'info', 2 => 'warning', default => 'gray' }` (colore semantico Filament agganciato all'id, non al colore reale) — ora `Color::hex(Torre::coloreHexPer($record->torre))`.
+  4. Il badge "torre.nome" in Admin (Prenotazione) non aveva alcun colore — allineato agli altri 2 pannelli per coerenza.
+- Stesso trattamento anche per le tab "Dettagli" delle pagine `ViewPrenotazione` (Gr e Sezione), che avevano il badge torre senza colore.
+- `TorreResource` (Admin): nuovo campo `ColorPicker::make('colore_hex')` nel form (con `->regex('/^#[0-9A-Fa-f]{6}$/')` oltre al color-picker nativo, per bloccare input manuale non valido) e nuova colonna badge colorata nella tabella (stesso helper `Torre::coloreHexPer()`).
+- Files changed: `database/migrations/2026_07_12_184455_add_colore_hex_to_torri_table.php` (nuovo), `app/Models/Torre.php`, `database/factories/TorreFactory.php`, `database/seeders/TorriSeeder.php`, `app/Filament/Admin/Resources/{TorreResource,PrenotazioneResource}.php`, `app/Filament/Gr/Resources/PrenotazioneResource.php`, `app/Filament/Gr/Resources/PrenotazioneResource/Pages/ViewPrenotazione.php`, `app/Filament/Sezione/Resources/PrenotazioneResource.php`, `app/Filament/Sezione/Resources/PrenotazioneResource/Pages/ViewPrenotazione.php`, `app/Filament/Sezione/Widgets/CalendarioPrenotazioniWidget.php`, `resources/views/filament/{gr,sezione}/pages/calendario.blade.php`, `tests/Feature/ColoreTorreConsistencyTest.php` (nuovo).
+- Nuovo test Feature `ColoreTorreConsistencyTest`: crea una torre con `colore_hex` esplicito, una prenotazione `inviata` collegata, verifica che (a) l'evento calendario (`CalendarioPrenotazioniWidget::fetchEvents()`) usi esattamente quel colore come `backgroundColor`, e (b) le colonne badge "torre.nome" delle tabelle Prenotazione **sia** GR **sia** Sezione (ottenute via `Livewire::test(ListPrenotazioni::class)->instance()->getTable()->getColumn('torre.nome')->record($prenotazione)`) restituiscano lo stesso `Color::hex($torre->colore_hex)`.
+- Verifica: `sail composer qa` verde (Pint OK, Larastan 0 errori, Pest 236 test passati/498 assertion — +1 test, nessuna regressione). Verifica end-to-end via `sail artisan tinker` (nessun tool MCP browser disponibile, vedi Codebase Patterns): dopo aver girato la nuova migrazione + re-seed di `TorriSeeder` sul DB locale, richiesta autenticata reale su `/sezione/calendario` conferma che la legenda mostra il nome vero della torre col suo `colore_hex` nell'HTML; su una prenotazione reale già seedata con torre assegnata, `CalendarioPrenotazioniWidget::fetchEvents()` e `Torre::coloreHexPer()` restituiscono lo stesso identico hex (`#1D574B`); la form di modifica torre in Admin (`/admin/torres/{id}/edit`) contiene il campo `colore_hex`. Confronto pixel con i mockup resta da fare manualmente.
+- **Learnings for future iterations:**
+  - Vedi le 2 nuove voci in Codebase Patterns sopra (badge colore dinamico via `Color::hex()` in closure, e il falso positivo Larastan `nullsafe.neverNull` su relazioni `BelongsTo` nullable) — rilevanti per qualunque story futura che leghi un colore/badge a un record correlato opzionale.
+  - Le TorreResource read-only di Gr e Sezione (`app/Filament/{Gr,Sezione}/Resources/TorreResource.php`) NON sono state toccate in questa story (nessun AC lo richiedeva): non mostrano ancora uno swatch colore nella loro tabella/infolist. Se una story futura (es. US-029 "Gestione torri desktop") volesse mostrare il colore anche lì, riusare `Torre::coloreHexPer()`.
 ---

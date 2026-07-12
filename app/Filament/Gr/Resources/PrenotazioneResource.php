@@ -12,6 +12,7 @@ use App\Models\Sottosezione;
 use App\Models\Torre;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Support\Colors\Color;
 use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -77,11 +78,7 @@ class PrenotazioneResource extends Resource
                 TextColumn::make('torre.nome')
                     ->label('Torre')
                     ->badge()
-                    ->color(fn (mixed $state, Prenotazione $record): string => match ($record->torre_id) {
-                        1 => 'info',
-                        2 => 'warning',
-                        default => 'gray',
-                    })
+                    ->color(fn (Prenotazione $record): array => Color::hex(Torre::coloreHexPer($record->torre)))
                     ->default('—'),
 
                 TextColumn::make('data_inizio_prenotazione')
