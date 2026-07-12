@@ -1,5 +1,5 @@
 <x-filament-panels::page>
-    <div class="mb-4 flex flex-wrap items-center gap-4">
+    <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center gap-2">
             <label for="filtro-torre" class="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Filtra torre:
@@ -16,15 +16,28 @@
             </select>
         </div>
 
-        <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+        <div class="flex flex-wrap items-center gap-3">
             @foreach($this->getTorri() as $torre)
-                <span class="flex items-center gap-1.5">
-                    <span class="inline-block h-3 w-3 rounded-sm" style="background-color:{{ \App\Models\Torre::coloreHexPer($torre) }}"></span>
-                    {{ $torre->nome }}
+                <span
+                    class="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[13px] font-bold"
+                    style="background-color:color-mix(in srgb, {{ \App\Models\Torre::coloreHexPer($torre) }} 16%, white); color:{{ \App\Models\Torre::coloreHexPer($torre) }}"
+                >
+                    <span class="inline-block h-[11px] w-[11px] rounded" style="background-color:{{ \App\Models\Torre::coloreHexPer($torre) }}"></span>
+                    {{ $torre->nome }} — dep. {{ $torre->indirizzo_deposito }}
                 </span>
             @endforeach
+
+            <span class="inline-flex items-center gap-1.5 text-[13px]" style="color:var(--stone-500)">
+                <x-filament::icon icon="heroicon-o-eye" class="h-[15px] w-[15px]" />
+                Sola consultazione
+            </span>
         </div>
     </div>
 
     @livewire(\App\Filament\Sezione\Widgets\CalendarioPrenotazioniWidget::class)
+
+    <div class="mt-4 flex items-center gap-2.5 text-[13px]" style="color:var(--stone-500)">
+        <x-filament::icon icon="heroicon-o-cursor-arrow-rays" class="h-[15px] w-[15px] flex-shrink-0" />
+        Cliccando su un evento della propria sezione si apre il dettaglio prenotazione. Gli eventi delle altre sezioni mostrano solo torre e periodo.
+    </div>
 </x-filament-panels::page>

@@ -296,6 +296,19 @@ Started: 2026-07-12
   does not stop the `->action()` closure from executing if called directly
   bypassing the UI, so any real guard against invalid state transitions must
   still live at the domain/service layer, not rely on the disabled flag.
+- `Filament\Resources\Resource::getUrl($name, $params)` without an explicit
+  `panel:` argument resolves the route base name against
+  `Filament::getCurrentPanel()` (the panel active for the **current request**),
+  NOT the panel the Resource class is registered to. This matters when a
+  Livewire widget/component is shared across panels (e.g.
+  `CalendarioPrenotazioniWidget` lives under `App\Filament\Sezione\Widgets` but
+  is also `@livewire`'d from the Gr panel's own calendario page): calling
+  `App\Filament\Sezione\Resources\PrenotazioneResource::getUrl('view', [...])`
+  from that shared widget would try to generate `filament.gr.resources...`
+  when rendered inside `/gr`, which doesn't exist and throws. Always pass the
+  target panel explicitly (`getUrl('view', [...], panel: 'sezione')`) from any
+  code that isn't 100% guaranteed to run only within its own panel's request
+  context.
 
 ## [2026-07-12] - US-001
 - Nuovo tema Filament compilato via Vite per i 3 pannelli, con i design token del progetto (`tasks/design-reference/prenotar-ui-ruoli/tokens/*.css`) copiati 1:1 in `resources/css/filament/tokens/{colors,typography,spacing,effects,base}.css` + `fonts.css` (Manrope self-hosted via `@fontsource/manrope`, subset `latin` per weight 200-800) + `index.css` che li aggrega.
@@ -481,4 +494,17 @@ Started: 2026-07-12
   - Vedi i 2 nuovi bullet in Codebase Patterns sopra (override `$view` di `ListRecords` + `getTableRecords()` per una card-list mobile che riusa query/tab/paginazione della tabella desktop; limite del badge-chip su `Tab::make()->badge()` per un match testuale "Label (N)" pixel-perfect).
   - Larastan non analizza i file `.blade.php`: il gotcha `nullsafe.neverNull` su `$record->torre?->prop ?? fallback` si applica solo dentro closure PHP vere (es. `->color(fn (...) => ...)` in `table()`), non quando la stessa espressione è scritta direttamente in un template Blade — lì il nullsafe diretto è già lo stile stabilito (vedi anche `prenotazioni-dashboard.blade.php` di US-005).
   - Factory `Prenotazione::factory()->create([...])` senza `sezione_id` esplicito genera una `Sezione::factory()` nuova ogni volta: se lo scopo del record ad-hoc è "un utente sezione realmente seedato ha N prenotazioni", passare sempre `'sezione_id' => $user->sezione_id` per evitare collisioni sul vincolo unique `sezioni.codice` in verifiche ripetute nella stessa sessione tinker.
+---
+
+## 2026-07-12 - US-014
+- Restyle di `CalendarioPage`/`CalendarioPrenotazioniWidget` (Sezione) secondo il mockup `pannello-sezione.dc.html` sezione "1h — Calendario torri — sola consultazione". La struttura era già "calendario unico, non a tab per torre" (BUG-07 già risolto in US-003, confermato nessuna tab residua nel codice) — questa story copre: legenda con indirizzo deposito (BUG-08) al posto del solo nome torre, badge "Sola consultazione", hint di click-to-detail, e il comportamento di click sugli eventi che prima non esisteva affatto.
+- `CalendarioPrenotazioniWidget::fetchEvents()`: per ogni prenotazione calcola `$diPropria = $pren->user_id === auth()->id()`. Se vero: titolo evento = `nome_evento` (non più il nome torre) e `EventData->url(PrenotazioneResource::getUrl('view', ['record' => $pren], panel: 'sezione'))` (click apre il dettaglio). Se falso (prenotazione di un'altra sezione): titolo resta il nome torre, nessun url — coerente col testo del mockup "Gli eventi delle altre sezioni mostrano solo torre e periodo." Vedi nuovo bullet in Codebase Patterns sopra sul motivo per cui `panel: 'sezione'` va passato esplicitamente (il widget è condiviso anche dal pannello Gr).
+- `resources/views/filament/sezione/pages/calendario.blade.php`: la legenda per-torre ora è una pillola colorata (`color-mix` per lo sfondo tenue, colore pieno per testo/pallino, stessa tecnica via `Torre::coloreHexPer()` di US-003/006/008/009/012/013) con testo `"{nome} — dep. {indirizzo_deposito}"` invece del solo nome; aggiunto badge "Sola consultazione" (icona `heroicon-o-eye`) e, sotto il widget calendario, l'hint di click (icona `heroicon-o-cursor-arrow-rays`) con lo stesso testo del mockup.
+- Nessuna migrazione/logica di dominio toccata: `eventiCalendarioPubblico()` invariato, la policy `PrenotazionePolicy::view()` (già `$user->id === $prenotazione->user_id` per il ruolo sezione) resta l'unica fonte di verità sui permessi — il flag `$diPropria` nel widget è solo presentazionale (decide se mostrare/nascondere l'url), non un controllo di sicurezza duplicato: un utente che visitasse comunque l'URL di una prenotazione altrui otterrebbe comunque 403 dalla policy sulla pagina `ViewPrenotazione`.
+- Il pannello Gr riusa lo stesso `CalendarioPrenotazioniWidget` (`resources/views/filament/gr/pages/calendario.blade.php`, invariato in questa story — il suo restyle è US-023): il nuovo comportamento click-to-detail non ha effetto lì perché nessun GR manager può mai possedere una prenotazione (`user_id` non coincide mai), quindi `$diPropria` è sempre falso in quel contesto e il calendario Gr continua a mostrare solo nome torre come prima, nessuna regressione.
+- Files changed: `app/Filament/Sezione/Widgets/CalendarioPrenotazioniWidget.php`, `resources/views/filament/sezione/pages/calendario.blade.php`.
+- Verifica: `sail composer qa` verde (Pint OK, Larastan 0 errori/157 file, Pest 243 test/535 assertion — stesso numero di US-013, nessuna regressione, nessun nuovo test Pest aggiunto: la story non introduce nuova logica di dominio testabile, solo presentazione + un url generato da un metodo Filament già affidabile). Verifica end-to-end via `sail artisan tinker` (nessun tool MCP browser disponibile, confermato ancora): creata una prenotazione posseduta dall'utente sezione reale loggato e una di un altro utente sezione, entrambe sulla stessa torre in stato Inviata — `fetchEvents()` chiamato direttamente restituisce per la propria "Evento Test Tinker Own" con `url` valorizzato verso `/sezione/prenotaziones/{id}`, per quella altrui il nome torre e `url: null`, esattamente come da mockup. GET autenticata su `/sezione/calendario`: 200, HTML contiene "Sola consultazione", entrambi gli indirizzi deposito reali (`dep. Via Duccio...`, `dep. Via Pizzo...`) e il testo esatto dell'hint "Cliccando su un evento...". Record di test ripuliti a fine verifica. Confronto pixel reale col mockup resta da fare manualmente (nessun tool screenshot/browser disponibile in questa sessione).
+- **Learnings for future iterations:**
+  - Vedi il nuovo bullet in Codebase Patterns sopra su `Resource::getUrl()` e `Filament::getCurrentPanel()` per widget condivisi tra pannelli — rilevante anche per US-023 (Calendario GR) che riusa lo stesso widget.
+  - Quando un widget/pagina è condiviso da più pannelli Filament (stesso namespace di classe usato via `@livewire()` da entrambi), qualunque nuova funzionalità che dipende dall'utente autenticato va progettata per degradare in modo sicuro nel pannello "non previsto" (qui: nessun url generato se l'utente non può possedere il record), invece di assumere che venga sempre invocata dal proprio pannello di appartenenza.
 ---

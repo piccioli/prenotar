@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Sezione\Widgets;
 
+use App\Filament\Sezione\Resources\PrenotazioneResource;
 use App\Models\Prenotazione;
 use App\Models\Torre;
 use Illuminate\Support\Carbon;
@@ -40,16 +41,22 @@ class CalendarioPrenotazioniWidget extends FullCalendarWidget
                     : Torre::COLORE_DEFAULT;
 
                 $torreNome = $pren->torre !== null ? $pren->torre->nome : 'Senza torre';
+                $diPropria = $pren->user_id === auth()->id();
 
-                return EventData::make()
+                $evento = EventData::make()
                     ->id($pren->id)
-                    ->title($torreNome)
+                    ->title($diPropria ? $pren->nome_evento : $torreNome)
                     ->start($pren->data_inizio_prenotazione)
                     ->end($pren->data_fine_prenotazione->addDay())
                     ->backgroundColor($colore)
                     ->borderColor($colore)
-                    ->allDay(true)
-                    ->toArray();
+                    ->allDay(true);
+
+                if ($diPropria) {
+                    $evento->url(PrenotazioneResource::getUrl('view', ['record' => $pren], panel: 'sezione'));
+                }
+
+                return $evento->toArray();
             })
             ->values()
             ->all();
