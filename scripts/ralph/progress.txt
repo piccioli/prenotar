@@ -3,6 +3,26 @@ Started: 2026-07-12
 ---
 
 ## Codebase Patterns
+- Per isolare visivamente in un dropdown di riga (`ActionGroup`) un sottoinsieme
+  di azioni "pericolose" separato dalle azioni ordinarie (stesso pattern del
+  mockup "menu ⋮ con sezione Azioni straordinarie in fondo, divisa da una
+  riga"): annidare un secondo `ActionGroup::make([...])->dropdown(false)`
+  dentro l'`ActionGroup` esterno (che resta con dropdown di default, diventa
+  il trigger ⋮). Con `->dropdown(false)` il gruppo annidato NON crea un
+  sotto-menu a comparsa ma viene "appiattito" in una SECONDA
+  `<x-filament::dropdown.list>` dentro lo stesso pannello — e il pannello
+  `x-filament::dropdown` applica già `divide-y divide-gray-100` ai suoi figli
+  diretti, quindi la riga di separazione tra le due liste è automatica, zero
+  CSS custom. Per un'etichetta/intestazione tipo "Azioni straordinarie" sopra
+  il gruppo (il vendor non offre uno slot header dentro `ActionGroup`), usare
+  una `Action` finta come primo elemento del gruppo annidato:
+  `Action::make('...')->label('...')->icon(...)->color('gray')->disabled()`
+  (nessun `->action()` necessario, il `disabled()` la rende non cliccabile) —
+  condizionarne la `->visible()` con lo stesso OR delle visibilità delle azioni
+  reali sottostanti, altrimenti l'header/divisore resta visibile anche quando
+  nessuna delle azioni reali lo è (la `isHidden()` di un `ActionGroup` annidato
+  ritorna `false` — quindi il gruppo/etichetta compare comunque — finché ANCHE
+  UNA SOLA delle sue azioni figlie, header incluso, non è nascosta).
 - Per trasformare una pagina `ListRecords` Filament da tabella (desktop) a
   card (mobile) senza duplicare query/tab/paginazione: override `protected
   static string $view` sulla sottoclasse `ListRecords` con un template Blade
@@ -936,3 +956,12 @@ Started: 2026-07-12
 - **Learnings for future iterations:**
   - A differenza del pattern "tabella desktop + card mobile" già consolidato (US-013/US-027/US-028), quando il mockup disegna esplicitamente una griglia di card ANCHE a 1440px desktop per una risorsa con dataset piccolo e fisso (qui: 2 torri), la scelta corretta è sostituire integralmente `{{ $this->table }}` nella view della `ListRecords` con la griglia di card, non affiancare le due presentazioni via `hidden md:block`/`md:hidden`. La configurazione `table()` della Resource resta comunque necessaria e va mantenuta invariata: alimenta ancora `getTableRecords()` (query/sort/search/eager-load dei counts) e `getTable()->getAction('nome')` per riusare le azioni di riga già registrate, semplicemente non viene mai reso come `<table>` HTML.
   - `Table::getAction(string $name): ?Action` (in `Filament\Tables\Table`, trait `HasActions`) recupera una singola azione di riga già registrata in `table()->actions([...])` per nome, senza dover passare per `getActions()` (array intero) e filtrarlo a mano — utile quando in una view custom serve UNA sola azione esistente (qui `toggle_active`) accanto a un link "Modifica" costruito a mano, evitando di duplicare `EditAction::make()` (che altrimenti comparirebbe due volte: una nel link custom, una se si passasse l'intero `getActions()` a `<x-filament-tables::actions>`).
+
+## 2026-07-13 - US-030
+- Restyle di `app/Filament/Admin/Resources/PrenotazioneResource.php` (tabella "sola lettura + azioni straordinarie") secondo il mockup `pannello-admin.dc.html` "1d — Prenotazioni — sola lettura + azioni straordinarie": le 3 azioni di riga (`ViewAction`, `force_state`, `hard_delete`), prima renderizzate come 3 bottoni separati inline, sono ora raggruppate in un unico `ActionGroup` (trigger ⋮, icona di default `ellipsis-vertical`) con due liste separate da un divisore automatico — "Vedi dettaglio" da sola in cima, poi un'etichetta finta "Azioni straordinarie" (icona `shield-exclamation`, colore gray, `->disabled()`) seguita da "Force stato…" (warning, icona `wrench`) e "Elimina definitivamente…" (danger, icona `trash`) — vedi nuova voce in Codebase Patterns sopra per la tecnica `ActionGroup` annidato con `->dropdown(false)`.
+- Nessuna modifica alla logica esistente: stessa `visible()` per policy (`forceState`/`hardDelete`), stessi `form()`/`action()`/`AuditLogger::logAdminAction()`/`forceDelete()` di prima — solo etichette (italianizzate: "Force state" → "Force stato…", "Hard delete" → "Elimina definitivamente…"), icone e raggruppamento visivo sono cambiati.
+- File modificati: `app/Filament/Admin/Resources/PrenotazioneResource.php`.
+- Verifica: `sail composer qa` verde (Pint OK, Larastan 0 errori, Pest 262 test passati/592 assertion — invariato, nessuna regressione, atteso perché nessuna logica di dominio toccata; `ForceStatePrenotazioneTest` testa la logica di dominio direttamente, non il rendering della tabella, quindi non è impattato dal restyle). Verifica end-to-end via `sail artisan tinker` (nessun tool MCP browser disponibile, confermato ancora una volta): richiesta GET autenticata reale su `/admin/prenotaziones` come admin seedato → 200 OK, HTML contiene "Vedi dettaglio", "Azioni straordinarie", "Force stato", "Elimina definitivamente", 13 pannelli dropdown con `divide-y divide-gray-100` (una lista divisa per riga, coerente con 14 prenotazioni totali nel seed) e le classi colore `fi-color-warning`/`fi-color-danger` presenti una volta per riga. Confronto pixel reale col mockup resta da fare manualmente (nessun tool screenshot/browser disponibile in questa sessione).
+- **Learnings for future iterations:**
+  - Vedi la nuova voce in Codebase Patterns sopra (`ActionGroup` annidato con `->dropdown(false)` per una sezione dropdown "isolata" con divisore automatico e pseudo-header via `Action` disabilitata) — riusabile per qualunque altra risorsa che debba isolare visivamente azioni pericolose/straordinarie in un menu a tendina invece che come bottoni inline separati.
+---

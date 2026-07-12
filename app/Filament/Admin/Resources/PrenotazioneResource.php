@@ -17,6 +17,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Support\Colors\Color;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
@@ -93,93 +94,105 @@ class PrenotazioneResource extends Resource
                     ->relationship('torre', 'nome'),
             ])
             ->actions([
-                ViewAction::make(),
-                Action::make('force_state')
-                    ->label('Force state')
-                    ->icon('heroicon-o-arrow-path')
-                    ->color('warning')
-                    ->requiresConfirmation()
-                    ->modalHeading('Bypass state machine — azione straordinaria')
-                    ->modalDescription('Questa azione bypassa la state machine. Inserisci una motivazione dettagliata obbligatoria.')
-                    ->form([
-                        Select::make('status')
-                            ->label('Nuovo stato')
-                            ->options(PrenotazioneStatus::class)
-                            ->required(),
-                        Textarea::make('motivo')
-                            ->label('Motivazione (obbligatoria)')
-                            ->required()
-                            ->minLength(10),
-                    ])
-                    ->visible(fn (Prenotazione $record) => auth()->user()?->can('forceState', $record))
-                    ->action(function (Prenotazione $record, array $data): void {
-                        $oldStatus = $record->status;
-                        $newStatus = PrenotazioneStatus::from($data['status']);
+                ActionGroup::make([
+                    ViewAction::make()
+                        ->label('Vedi dettaglio'),
+                    ActionGroup::make([
+                        Action::make('azioni_straordinarie')
+                            ->label('Azioni straordinarie')
+                            ->icon('heroicon-o-shield-exclamation')
+                            ->color('gray')
+                            ->disabled()
+                            ->visible(fn (Prenotazione $record) => (auth()->user()?->can('forceState', $record) ?? false)
+                                || (auth()->user()?->can('hardDelete', $record) ?? false)),
+                        Action::make('force_state')
+                            ->label('Force stato…')
+                            ->icon('heroicon-o-wrench')
+                            ->color('warning')
+                            ->requiresConfirmation()
+                            ->modalHeading('Bypass state machine — azione straordinaria')
+                            ->modalDescription('Questa azione bypassa la state machine. Inserisci una motivazione dettagliata obbligatoria.')
+                            ->form([
+                                Select::make('status')
+                                    ->label('Nuovo stato')
+                                    ->options(PrenotazioneStatus::class)
+                                    ->required(),
+                                Textarea::make('motivo')
+                                    ->label('Motivazione (obbligatoria)')
+                                    ->required()
+                                    ->minLength(10),
+                            ])
+                            ->visible(fn (Prenotazione $record) => auth()->user()?->can('forceState', $record))
+                            ->action(function (Prenotazione $record, array $data): void {
+                                $oldStatus = $record->status;
+                                $newStatus = PrenotazioneStatus::from($data['status']);
 
-                        DB::transaction(function () use ($record, $data, $oldStatus, $newStatus): void {
-                            $record->update(['status' => $newStatus]);
+                                DB::transaction(function () use ($record, $data, $oldStatus, $newStatus): void {
+                                    $record->update(['status' => $newStatus]);
 
-                            PrenotazioneHistory::create([
-                                'prenotazione_id' => $record->id,
-                                'user_id' => auth()->id(),
-                                'status_from' => $oldStatus,
-                                'status_to' => $newStatus,
-                                'note' => '[FORCE STATE] '.$data['motivo'],
-                                'created_at' => now(),
-                            ]);
-                        });
+                                    PrenotazioneHistory::create([
+                                        'prenotazione_id' => $record->id,
+                                        'user_id' => auth()->id(),
+                                        'status_from' => $oldStatus,
+                                        'status_to' => $newStatus,
+                                        'note' => '[FORCE STATE] '.$data['motivo'],
+                                        'created_at' => now(),
+                                    ]);
+                                });
 
-                        app(AuditLogger::class)->logAdminAction(
-                            'prenotazione.force_state',
-                            $record->fresh(),
-                            $data['motivo'],
-                            ['from' => $oldStatus->value, 'to' => $newStatus->value],
-                        );
+                                app(AuditLogger::class)->logAdminAction(
+                                    'prenotazione.force_state',
+                                    $record->fresh(),
+                                    $data['motivo'],
+                                    ['from' => $oldStatus->value, 'to' => $newStatus->value],
+                                );
 
-                        Notification::make()
-                            ->title("Stato forzato: {$oldStatus->label()} → {$newStatus->label()}")
-                            ->success()
-                            ->send();
-                    }),
-                Action::make('hard_delete')
-                    ->label('Hard delete')
-                    ->icon('heroicon-o-trash')
-                    ->color('danger')
-                    ->requiresConfirmation()
-                    ->modalHeading('Eliminazione definitiva — azione irreversibile')
-                    ->modalDescription('Il record verrà eliminato permanentemente. Lo snapshot sarà conservato nell\'audit log.')
-                    ->form([
-                        Textarea::make('motivo')
-                            ->label('Motivazione (obbligatoria)')
-                            ->required()
-                            ->minLength(10),
-                    ])
-                    ->visible(fn (Prenotazione $record) => auth()->user()?->can('hardDelete', $record))
-                    ->action(function (Prenotazione $record, array $data): void {
-                        app(AuditLogger::class)->logAdminAction(
-                            'prenotazione.hard_delete',
-                            $record,
-                            $data['motivo'],
-                            [
-                                'snapshot' => [
-                                    'id' => $record->id,
-                                    'nome_evento' => $record->nome_evento,
-                                    'status' => $record->status->value,
-                                    'user_id' => $record->user_id,
-                                    'torre_id' => $record->torre_id,
-                                    'data_inizio_prenotazione' => $record->data_inizio_prenotazione->toDateString(),
-                                    'data_fine_prenotazione' => $record->data_fine_prenotazione->toDateString(),
-                                ],
-                            ],
-                        );
+                                Notification::make()
+                                    ->title("Stato forzato: {$oldStatus->label()} → {$newStatus->label()}")
+                                    ->success()
+                                    ->send();
+                            }),
+                        Action::make('hard_delete')
+                            ->label('Elimina definitivamente…')
+                            ->icon('heroicon-o-trash')
+                            ->color('danger')
+                            ->requiresConfirmation()
+                            ->modalHeading('Eliminazione definitiva — azione irreversibile')
+                            ->modalDescription('Il record verrà eliminato permanentemente. Lo snapshot sarà conservato nell\'audit log.')
+                            ->form([
+                                Textarea::make('motivo')
+                                    ->label('Motivazione (obbligatoria)')
+                                    ->required()
+                                    ->minLength(10),
+                            ])
+                            ->visible(fn (Prenotazione $record) => auth()->user()?->can('hardDelete', $record))
+                            ->action(function (Prenotazione $record, array $data): void {
+                                app(AuditLogger::class)->logAdminAction(
+                                    'prenotazione.hard_delete',
+                                    $record,
+                                    $data['motivo'],
+                                    [
+                                        'snapshot' => [
+                                            'id' => $record->id,
+                                            'nome_evento' => $record->nome_evento,
+                                            'status' => $record->status->value,
+                                            'user_id' => $record->user_id,
+                                            'torre_id' => $record->torre_id,
+                                            'data_inizio_prenotazione' => $record->data_inizio_prenotazione->toDateString(),
+                                            'data_fine_prenotazione' => $record->data_fine_prenotazione->toDateString(),
+                                        ],
+                                    ],
+                                );
 
-                        $record->forceDelete();
+                                $record->forceDelete();
 
-                        Notification::make()
-                            ->title('Prenotazione eliminata definitivamente.')
-                            ->success()
-                            ->send();
-                    }),
+                                Notification::make()
+                                    ->title('Prenotazione eliminata definitivamente.')
+                                    ->success()
+                                    ->send();
+                            }),
+                    ])->dropdown(false),
+                ]),
             ])
             ->bulkActions([BulkActionGroup::make([])])
             ->defaultSort('created_at', 'desc')
