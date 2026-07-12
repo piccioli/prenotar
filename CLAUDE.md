@@ -192,6 +192,32 @@ Ogni transizione registra un record in `prenotazione_history` (autore + timestam
 
 ---
 
+## Stato del deploy (infrastruttura)
+
+**Versione corrente**: `v0.10.1` (tag su `main`).
+
+**Server**: `root@116.203.88.140` (Hetzner Cloud, Ubuntu 24.04) — un solo host per entrambi gli ambienti.
+
+| Ambiente | URL | TLS | Deploy automatico |
+|----------|-----|-----|--------------------|
+| Produzione | `https://prenotar.montagnaservizi.com` (porta 443) | Let's Encrypt, Certbot in-container | push su `main` → `.github/workflows/cd-production.yml` (con backup DB pre-deploy) |
+| Develop | `https://prenotar.develop.montagnaservizi.com:8443` | Let's Encrypt, webroot condiviso con produzione (solo prod pubblica le porte 80/443) | push su `develop` → `.github/workflows/cd-develop.yml` |
+
+**CI/CD**: due runner self-hosted GitHub Actions **online**, ciascuno legato al proprio branch tramite label:
+- `prenotar-production` (label `production`) — checkout in `/opt/actions-runner-production/_work/prenotar/prenotar`, branch `main`
+- `prenotar-develop` (label `develop`) — checkout in `/opt/actions-runner-develop/_work/prenotar/prenotar`, branch `develop`
+- Checkout admin per operazioni manuali (backup, rinnovo certificati, ecc.): `/root/prenotar`, branch `main`
+
+**Dati**:
+- Produzione: DB migrato ma **vuoto** — nessun import Excel reale eseguito (da fare al go-live effettivo).
+- Develop: seedato con `LocalDevSeeder` (229 sezioni/sottosezioni reali, admin/GR demo, password `password` per tutti gli account).
+
+**Bloccato**: credenziali SMTP Gmail reali non ancora disponibili — mailer configurato ma non attivabile in produzione (vedi `.env.production.example` e `DEPLOY.md` §2).
+
+Dettagli operativi completi (setup da zero, emissione/rinnovo certificati, rollback, troubleshooting): vedi `DEPLOY.md`.
+
+---
+
 ## Roadmap fasi (anti-scope creep)
 
 | Fase | Contenuto | Status |
@@ -204,7 +230,7 @@ Ogni transizione registra un record in `prenotazione_history` (autore + timestam
 | 5 | Template PDF (Richiesta parete + Modulo 3) | ✅ |
 | 6 | Pannello /admin + impersonate UI + audit log | ✅ |
 | 7 | Job archiviazione + reminder + Horizon | ✅ |
-| 8 | UAT + polish + deploy develop | ⏳ |
+| 8 | UAT + polish + deploy develop | ⏳ (infra di deploy live, vedi "Stato del deploy" — mancano UAT reale e import Excel produzione) |
 
 ---
 
