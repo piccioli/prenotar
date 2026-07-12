@@ -196,56 +196,93 @@ class PrenotazioneResource extends Resource
 
             Forms\Components\Wizard\Step::make('Logistica trasporto')
                 ->icon('heroicon-o-truck')
-                ->schema([
-                    Forms\Components\Grid::make(2)->schema([
-                        Forms\Components\DatePicker::make('data_ritiro')
-                            ->label('Data ritiro torre')
-                            ->native(false)
-                            ->displayFormat('d/m/Y'),
+                ->schema(function (): array {
+                    $isMezzoPrivato = fn (Forms\Get $get): bool => $get('tipo_mezzo') === TipoMezzo::Privato->value;
+                    $isMezzoAziendale = fn (Forms\Get $get): bool => $get('tipo_mezzo') !== TipoMezzo::Privato->value;
 
-                        Forms\Components\TextInput::make('luogo_ritiro')
-                            ->label('Luogo ritiro')
-                            ->maxLength(255),
+                    return [
+                        Forms\Components\Section::make('Come trasporterai la torre?')
+                            ->description('Date e luoghi di ritiro e riconsegna presso il deposito, e mezzo utilizzato.')
+                            ->schema([
+                                Forms\Components\Grid::make(2)->schema([
+                                    Forms\Components\DatePicker::make('data_ritiro')
+                                        ->label('Data ritiro torre')
+                                        ->native(false)
+                                        ->displayFormat('d/m/Y')
+                                        ->prefixIcon('heroicon-o-calendar'),
 
-                        Forms\Components\DatePicker::make('data_riconsegna')
-                            ->label('Data riconsegna torre')
-                            ->native(false)
-                            ->displayFormat('d/m/Y'),
+                                    Forms\Components\TextInput::make('luogo_ritiro')
+                                        ->label('Luogo ritiro')
+                                        ->maxLength(255)
+                                        ->prefixIcon('heroicon-o-map-pin'),
 
-                        Forms\Components\TextInput::make('luogo_riconsegna')
-                            ->label('Luogo riconsegna')
-                            ->maxLength(255),
-                    ]),
+                                    Forms\Components\DatePicker::make('data_riconsegna')
+                                        ->label('Data riconsegna torre')
+                                        ->native(false)
+                                        ->displayFormat('d/m/Y')
+                                        ->prefixIcon('heroicon-o-calendar')
+                                        ->helperText('È la stessa data mostrata nel calendario delle torri.'),
 
-                    Forms\Components\Grid::make(2)->schema([
-                        Forms\Components\TextInput::make('azienda_trasporto')
-                            ->label('Azienda di trasporto')
-                            ->default('Montagna Servizi')
-                            ->maxLength(255),
+                                    Forms\Components\TextInput::make('luogo_riconsegna')
+                                        ->label('Luogo riconsegna')
+                                        ->maxLength(255)
+                                        ->prefixIcon('heroicon-o-map-pin'),
 
-                        Forms\Components\TextInput::make('targa_autoveicolo')
-                            ->label('Targa autoveicolo')
-                            ->maxLength(20),
-                    ]),
+                                    Forms\Components\TextInput::make('azienda_trasporto')
+                                        ->label('Azienda di trasporto')
+                                        ->default('Montagna Servizi')
+                                        ->maxLength(255)
+                                        ->prefixIcon('heroicon-o-building-office'),
 
-                    Forms\Components\Radio::make('tipo_mezzo')
-                        ->label('Tipo mezzo')
-                        ->options(collect(TipoMezzo::cases())->mapWithKeys(
-                            fn (TipoMezzo $t) => [$t->value => $t->label()]
-                        ))
-                        ->default(TipoMezzo::Aziendale->value)
-                        ->required()
-                        ->live()
-                        ->inline(),
+                                    Forms\Components\TextInput::make('targa_autoveicolo')
+                                        ->label('Targa autoveicolo')
+                                        ->maxLength(20)
+                                        ->prefixIcon('heroicon-o-identification'),
+                                ]),
+                            ]),
 
-                    Forms\Components\Select::make('categoria_patente_privato')
-                        ->label('Categoria patente')
-                        ->options(collect(CategoriaPatente::cases())->mapWithKeys(
-                            fn (CategoriaPatente $c) => [$c->value => $c->label()]
-                        ))
-                        ->visible(fn (Forms\Get $get): bool => $get('tipo_mezzo') === TipoMezzo::Privato->value)
-                        ->required(fn (Forms\Get $get): bool => $get('tipo_mezzo') === TipoMezzo::Privato->value),
-                ]),
+                        Forms\Components\Section::make('Che mezzo userai per il traino?')
+                            ->schema([
+                                Forms\Components\ToggleButtons::make('tipo_mezzo')
+                                    ->hiddenLabel()
+                                    ->options(collect(TipoMezzo::cases())->mapWithKeys(
+                                        fn (TipoMezzo $t) => [$t->value => $t->label()]
+                                    ))
+                                    ->colors(collect(TipoMezzo::cases())->mapWithKeys(
+                                        fn (TipoMezzo $t) => [$t->value => 'primary']
+                                    )->all())
+                                    ->default(TipoMezzo::Aziendale->value)
+                                    ->required()
+                                    ->live()
+                                    ->grouped()
+                                    ->inline(),
+
+                                Forms\Components\Placeholder::make('mezzo_aziendale_hint')
+                                    ->hiddenLabel()
+                                    ->visible($isMezzoAziendale)
+                                    ->content('Il trasporto è affidato all\'azienda indicata: nessun altro dato richiesto.'),
+
+                                Forms\Components\Section::make('Categoria patente di chi guida')
+                                    ->description('Con mezzo privato serve la patente adeguata al peso del rimorchio. Dovrai allegarne copia prima dell\'invio.')
+                                    ->visible($isMezzoPrivato)
+                                    ->schema([
+                                        Forms\Components\Radio::make('categoria_patente_privato')
+                                            ->hiddenLabel()
+                                            ->options(collect(CategoriaPatente::cases())->mapWithKeys(
+                                                fn (CategoriaPatente $c) => [$c->value => 'Patente '.$c->label()]
+                                            ))
+                                            ->descriptions([
+                                                CategoriaPatente::B->value => 'Rimorchio fino a 750 kg',
+                                                CategoriaPatente::BE->value => 'Rimorchio oltre 750 kg',
+                                            ])
+                                            ->visible($isMezzoPrivato)
+                                            ->required($isMezzoPrivato)
+                                            ->inline()
+                                            ->view('filament.sezione.forms.components.radio-option-cards'),
+                                    ]),
+                            ]),
+                    ];
+                }),
 
             Forms\Components\Wizard\Step::make('Responsabile in loco')
                 ->icon('heroicon-o-user')

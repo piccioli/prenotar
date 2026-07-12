@@ -181,6 +181,30 @@ Started: 2026-07-12
   `app()->handle($request)` (US-001 through US-006's usual no-browser
   verification technique) cannot exercise since it only ever renders the
   initial GET state.
+- A generic "radio card" Blade view (bordered clickable card, title + optional
+  subtitle, no torre-specific color dot/address) lives at
+  `resources/views/filament/sezione/forms/components/radio-option-cards.blade.php`:
+  unlike `torre-radio-cards.blade.php` (US-006, hardcoded `Torre::find()`
+  lookup), it reads only `$hasDescription($value)`/`$getDescription($value)`
+  (native `Radio`/`HasDescriptions` methods, set via `->descriptions([...])`)
+  — reuse this for any future simple "select one of N options as a card"
+  field instead of writing a new view per field.
+- `Forms\Components\ToggleButtons::make(...)->grouped()->inline()` is the
+  closest core-Filament component to a mockup "segmented pill toggle" (2+
+  mutually exclusive states rendered as a `fi-btn-group`) — prefer it over
+  `Radio->inline()` when a mockup shows a pill instead of radio dots. It
+  ALWAYS needs an explicit `->colors([...])` per option value (never leave it
+  unset/`null`): the grouped view passes `:color="$getColor($value)"`
+  straight into `<x-filament::button>`, and an explicit `null` there silently
+  loses the "primary" default (same `@props` gotcha already noted above for
+  Wizard actions) instead of falling back to the panel's primary color.
+- When several elements in the same `Step`/`Section` schema need to share one
+  visibility/required condition (e.g. "mezzo privato" toggles both a whole
+  `Section` on and an unrelated hint `Placeholder` off), pass a **closure** to
+  `->schema(function (): array { ... return [...]; })` instead of a static
+  array — Filament's `schema()` accepts either, and the closure form lets you
+  declare the shared condition variable once in scope and reuse it across
+  multiple `->visible()`/`->required()` calls without duplicating the ternary.
 
 ## [2026-07-12] - US-001
 - Nuovo tema Filament compilato via Vite per i 3 pannelli, con i design token del progetto (`tasks/design-reference/prenotar-ui-ruoli/tokens/*.css`) copiati 1:1 in `resources/css/filament/tokens/{colors,typography,spacing,effects,base}.css` + `fonts.css` (Manrope self-hosted via `@fontsource/manrope`, subset `latin` per weight 200-800) + `index.css` che li aggrega.
@@ -266,6 +290,21 @@ Started: 2026-07-12
 - **Learnings for future iterations:**
   - Vedi le 3 nuove voci in Codebase Patterns sopra (field `->view()`/`->viewData()` per restyle "solo presentazione" senza toccare la logica, sentinel `''` per un'opzione "nessuna preferenza" cliccabile su `Radio`, limite del footer del `Wizard` senza slot per contenuto extra) — rilevanti per tutte le prossime story del wizard (US-007, US-008, US-009, US-010) che restylano altri step con pattern simili (campi raggruppati in card, checkbox/box colorati in base allo stato).
   - US-007 (stesso step 1 ma mobile) può riusare **esattamente** le stesse due viste Blade (`torre-radio-cards.blade.php`, `manuale-checkbox.blade.php`) già responsive (grid `grid-cols-1 sm:grid-cols-3`) — non serve una versione mobile separata per i field, solo il layout esterno del wizard (topbar/progress/CTA fissa) va adattato.
+---
+
+## [2026-07-12] - US-008
+- Restyle di `PrenotazioneResource::wizardSteps()` (Sezione), Step 3 "Logistica trasporto", secondo il mockup `pannello-sezione.dc.html` "Wizard step 3 Logistica": nessun campo rimosso/rinominato, nessuna nuova regola di validazione — solo raggruppamento in `Section`, icone prefisso, e cambio di **componente** (non di dato) per `tipo_mezzo` e `categoria_patente_privato`.
+- I 6 campi data/luogo/azienda/targa sono raggruppati in `Forms\Components\Section::make('Come trasporterai la torre?')` con heading+description come nel mockup, con `->prefixIcon()` (calendar/map-pin/building-office/identification) e un nuovo `->helperText('È la stessa data mostrata nel calendario delle torri.')` su `data_riconsegna` (solo testo esplicativo, BUG-04 era già risolto architetturalmente in US-003/precedenti — single source of truth Eloquent, qui si rende solo visibile il concetto).
+- `tipo_mezzo`: da `Forms\Components\Radio->inline()` a `Forms\Components\ToggleButtons->grouped()->inline()` (pillola segmentata come nel mockup, componente Filament core — nessun fork/vista custom necessaria) con `->colors([...'primary'])` esplicito per ciascuna option: **senza** questo, `$getColor($value)` restituirebbe `null` e — per il gotcha già noto (vedi Codebase Patterns US-007 su `:color="null"` passato esplicitamente ad `<x-filament::button>`) — la pillola selezionata renderebbe con lo stile "custom" invece del colore primario del pannello.
+- `categoria_patente_privato`: da `Select` a `Forms\Components\Radio` con nuova vista generica riusabile `resources/views/filament/sezione/forms/components/radio-option-cards.blade.php` (card bordate cliccabili con titolo+sottotitolo, stesso pattern/markup di `torre-radio-cards.blade.php` da US-006 ma **senza** dipendenze torre-specifiche — usa `$hasDescription()`/`$getDescription()` nativi di `Radio` invece di un lookup su un modello, quindi riusabile per qualunque radio "a card" futura senza duplicare il markup). Le 2 descrizioni ("Rimorchio fino a 750 kg"/"oltre 750 kg") sono passate inline nello step, non nell'enum `CategoriaPatente` (l'enum non ha un metodo descrizione e non era richiesto cambiarlo).
+- La condizione `tipo_mezzo === Privato` è stata estratta una sola volta in una closure locale `$isMezzoPrivato` (più `$isMezzoAziendale` per il ramo opposto), riusata sia per `->visible()` sulla `Section` "Categoria patente di chi guida" sia per `->visible()`/`->required()` sul `Radio` al suo interno (stesso pattern "estrai la closure una volta, riusala su piu hook" di US-007) — **non** rimuove la `->visible()`/`->required()` originali dal field (ridondante con la Section ma a costo zero e più difensivo, dato che l'obiettivo di questa story è zero regressioni di validazione).
+- Un `Forms\Components\Placeholder` mostra il testo "Il trasporto è affidato all'azienda indicata: nessun altro dato richiesto." quando il mezzo è aziendale (ramo opposto del box patente), corrispondente all'info-line del mockup.
+- Files changed: `app/Filament/Sezione/Resources/PrenotazioneResource.php` (solo Step 3 di `wizardSteps()`, ora una closure invece di un array statico — necessario per condividere le 2 closure `$isMezzoPrivato`/`$isMezzoAziendale` tra i vari elementi dello step senza duplicare la condizione), `resources/views/filament/sezione/forms/components/radio-option-cards.blade.php` (nuovo).
+- Verifica: `sail composer qa` verde (Pint OK, Larastan 0 errori/157 file, Pest 240 test passati/509 assertion — stesso numero di prima, nessuna regressione; `PrenotazioneTipoMezzoValidationTest`, `PrenotazioneWizardCreateTest`, `PrenotazioneBloccoWizardAttivaTest`, `PrenotazioneManualeLettoTest` tutti verdi senza modifiche, dato che nessuno asserisce sul tipo di componente Filament usato, solo su `fillForm`/stato). `sail npm run build` verde, nessun nuovo asset CSS necessario (nessuna nuova classe custom). Verifica end-to-end via `sail artisan tinker`: richiesta GET autenticata reale su `/sezione/prenotaziones/create` → 200 OK, HTML contiene "Come trasporterai la torre?", "Che mezzo userai per il traino?" e la classe `fi-btn-group` (segmented control renderizzato); con `Filament::setCurrentPanel(...)` + `Livewire::test(CreatePrenotazione::class)->set('data.tipo_mezzo', 'privato')->html()` conferma che compaiono "Categoria patente di chi guida", "Patente B", "Rimorchio fino a 750 kg" e **non** compare il testo del ramo aziendale; il test gemello senza set (default aziendale) conferma l'opposto (hint aziendale presente, box patente assente). Confronto pixel reale con il mockup resta da fare manualmente (nessun tool screenshot/browser disponibile in questa sessione, confermato ancora una volta).
+- **Learnings for future iterations:**
+  - Nuovo pattern generico in Codebase Patterns sotto: vista Blade "radio a card" riusabile per qualunque `Radio` (non solo torre_id) leggendo `$hasDescription()`/`$getDescription()` nativi invece di un lookup su modello — usarla per la prossima story che ha bisogno di card radio semplici (titolo+sottotitolo, senza pallino colore/indirizzo).
+  - Quando un `Step`/`Section` ha bisogno di più elementi che condividono la stessa condizione di visibilità/required (qui: mezzo privato mostra sia la Section patente sia nasconde l'hint aziendale), passare `->schema(function (): array { ... return [...]; })` (closure invece di array statico) per poter dichiarare le closure di condizione una volta sola nello scope e riusarle su più chiamate `->visible()`/`->required()` senza duplicare la logica — Filament accetta sia array che closure per `->schema()`.
+  - `Forms\Components\ToggleButtons::make(...)->grouped()` è il componente Filament core più vicino visivamente a un "segmented pill toggle" da mockup (`fi-btn-group`, stile identico a un gruppo di bottoni raggruppati) — preferirlo a `Radio->inline()` quando il mockup mostra esplicitamente una pillola a 2+ stati invece di pallini radio, ma **richiede sempre** `->colors([...])` esplicito per option (mai lasciare `null` implicito) per il gotcha già noto sul prop `color` di `<x-filament::button>`.
 ---
 
 ## [2026-07-12] - US-007
