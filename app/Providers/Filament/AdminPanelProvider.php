@@ -71,6 +71,14 @@ class AdminPanelProvider extends PanelProvider
                 fn (): string => view('filament.components.mobile-topbar-notifications')->render(),
             )
             ->renderHook(
+                PanelsRenderHook::TOPBAR_END,
+                fn (): string => request()->routeIs('filament.admin.pages.dashboard')
+                    ? view('filament.admin.widgets.dashboard-status-pill', [
+                        'erroriRecenti' => (new StatoSistemaWidget)->getErroriRecenti(),
+                    ])->render()
+                    : '',
+            )
+            ->renderHook(
                 PanelsRenderHook::BODY_END,
                 fn (): string => view('filament.components.mobile-bottom-nav', [
                     'items' => self::mobileNavItems(),

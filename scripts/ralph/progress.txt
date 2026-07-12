@@ -462,6 +462,24 @@ Started: 2026-07-12
   import (e.g. `use Filament\Infolists\Components\View as ViewInfolist;`) if
   the page already imports Laravel's own `Illuminate\Contracts\View\View` or
   similar under the plain `View` name.
+- **`->renderHook(HOOK, $closure, scopes: [PageClass::class])` only works for
+  hooks whose Blade call site actually forwards a scope.** Confirmed by reading
+  `Filament\Support\View\ViewManager::renderHook()`: when the Blade template
+  calls `FilamentView::renderHook(NAME)` with **no** `$scopes` argument (as
+  `vendor/filament/filament/resources/views/components/topbar/index.blade.php`
+  does for `TOPBAR_START`/`TOPBAR_END`/`GLOBAL_SEARCH_*`), `Arr::wrap(null)`
+  resolves to `[]`, so only hooks registered with scope `null` (global) ever
+  render there — a scope passed at registration time is silently never
+  matched, no error, the hook simply never outputs anything. `PAGE_START`/
+  `PAGE_END` (rendered from `components/page/index.blade.php` with
+  `scopes: [static::class]` of the current Livewire page, confirmed working in
+  US-021) DO support scoping. To show something in the **topbar** only on one
+  specific page (no page-scoped topbar hook exists), register the hook
+  unscoped and gate the content inline in the closure with
+  `request()->routeIs('filament.<panel>.pages.<page-slug>')` — same "route-based
+  active check" pattern already documented above for nav items, just applied
+  to visibility instead of styling. Always verify a "it doesn't show up" bug
+  with a scoped render hook against this before assuming the Blade/view is wrong.
 
 ## [2026-07-12] - US-001
 - Nuovo tema Filament compilato via Vite per i 3 pannelli, con i design token del progetto (`tasks/design-reference/prenotar-ui-ruoli/tokens/*.css`) copiati 1:1 in `resources/css/filament/tokens/{colors,typography,spacing,effects,base}.css` + `fonts.css` (Manrope self-hosted via `@fontsource/manrope`, subset `latin` per weight 200-800) + `index.css` che li aggrega.
@@ -814,4 +832,16 @@ Started: 2026-07-12
   - `failed_jobs` (tabella Laravel standard, driver `database-uuid` già configurato in `config/queue.php`) è la fonte dati corretta per qualunque futuro "errori recenti"/"stato job falliti" — non serve introdurre un log applicativo parallelo, il dato è già lì.
   - `Illuminate\Support\Facades\Queue::size()` è sicuro da chiamare sia in ambiente reale (driver `redis`) sia nei test Pest (driver `sync` da `phpunit.xml`, confermato leggendo `SyncQueue::size()` in vendor) — nessun bisogno di un fallback/try-catch difensivo per "queue non disponibile", scenario che non si verifica in questo progetto.
   - Per una dashboard "solo desktop" (mobile rimandato a story separata, come qui e come già in US-004/US-017 prima delle rispettive story US-005/US-018): non avvolgere il markup in `hidden md:...` — lasciarlo visibile a tutte le larghezze e rimandare la responsive-izzazione vera e propria (blocchi `md:hidden` sibling) alla story mobile dedicata, per coerenza con lo schema già consolidato nel resto dell'epic.
+---
+
+## [2026-07-13] - US-026
+- Restyle mobile di `StatoSistemaWidget` (Admin) secondo il mockup `mobile-3-ruoli.dc.html` "Mobile Admin Dashboard": stesso pattern "widget con vista responsive" già consolidato in US-005/US-018 — solo il Blade `stato-sistema.blade.php` toccato (nessun nuovo metodo sul widget, tutti i dati/URL già esposti da US-025), blocco stat esistente avvolto in `hidden md:grid` e affiancato da un nuovo blocco `grid grid-cols-2 gap-3 md:hidden` (griglia 2 colonne, ordine mockup Utenti/Errori/Import/Coda, indipendente dall'ordine desktop, come già osservato in US-018 per l'ordine card GR), stessa cosa per "Ultimi eventi di sistema" (card compatte invece della griglia a colonne `md:grid-cols-[190px_1fr_220px]`).
+- Bottom nav Home/Utenti/Prenotazioni/Audit log già correttamente wired da `AdminPanelProvider::mobileNavItems()` (US-002): nessuna modifica necessaria, verificato che le route/icone combaciano già col mockup.
+- Pallino di stato "OK"/"Attenzione" in topbar (mockup, sostituisce concettualmente l'icona notifiche solo su questa schermata specifica): nuovo Blade `resources/views/filament/admin/widgets/dashboard-status-pill.blade.php`, riusa la stessa soglia `erroriRecenti > 0` già usata dalla card "Errori recenti" desktop (US-025) per scegliere fra verde "OK" e larice "Attenzione" — deviazione consapevole dal mockup (che mostra sempre "OK" anche con errori>0 nello screenshot): resa reattiva ai dati reali invece di una label statica, più utile e comunque coerente con lo stile a pillola del mockup.
+- **Bug intercettato e corretto in fase di verifica (mai committato rotto)**: prima versione registrava il render hook con `->renderHook(PanelsRenderHook::TOPBAR_END, $closure, scopes: [Pages\Dashboard::class])` (stesso pattern PAGE_START scoped di US-021) — la pillola non compariva mai nell'HTML. Causa: `TOPBAR_END` è renderizzato da `vendor/filament/filament/resources/views/components/topbar/index.blade.php` chiamando `FilamentView::renderHook(NAME)` **senza** passare `$scopes`, quindi (vedi `ViewManager::renderHook()`) solo gli hook globali (scope `null`) vengono mai renderizzati in quel punto — uno scope passato in fase di registrazione lì non fa mai match, silenziosamente. Corretto rimuovendo lo scope e spostando la condizione dentro la closure stessa: `request()->routeIs('filament.admin.pages.dashboard') ? view(...)->render() : ''` (stesso pattern "route-based active check" già documentato in Codebase Patterns per i nav item, qui applicato alla visibilità invece che allo stile). Vedi nuova voce in Codebase Patterns sopra.
+- Files changed: `resources/views/filament/admin/widgets/stato-sistema.blade.php`, `resources/views/filament/admin/widgets/dashboard-status-pill.blade.php` (nuovo), `app/Providers/Filament/AdminPanelProvider.php` (nuovo renderHook `TOPBAR_END` non scoped, gate via `request()->routeIs()`).
+- Verifica: `sail composer qa` verde (Pint OK, Larastan 0 errori/158 file, Pest 262 test passati/592 assertion — invariato rispetto a US-025, nessuna regressione, nessun nuovo test Pest: story puramente di presentazione, coerente con US-018/US-021). `sail npm run build` verde, nessun asset nuovo necessario. Verifica end-to-end via `sail artisan tinker` (nessun tool MCP browser disponibile, confermato ancora una volta): richiesta HTTP reale su `/admin` come utente `admin` seedato → 200 OK, HTML contiene la griglia mobile (`grid grid-cols-2 gap-3 md:hidden`), "Ultimi eventi" (heading mobile) e "Attenzione" (2 `failed_jobs` reali presenti nel DB dev, quindi correttamente NON "OK" — comportamento reattivo confermato); richiesta su `/admin/users` (stessa sessione admin) → pillola assente (route-gate funziona). Confronto pixel reale col mockup resta da fare manualmente (nessun tool screenshot/browser disponibile in questa sessione, confermato ancora una volta).
+- **Learnings for future iterations:**
+  - Vedi la nuova voce in Codebase Patterns sopra sul gotcha `renderHook(..., scopes: [...])` che non funziona per `TOPBAR_START`/`TOPBAR_END`/`GLOBAL_SEARCH_*` (nessuno scope forwarded dal Blade core) — rilevante per qualunque story futura (nessuna in coda al momento) che debba aggiungere chrome topbar-only condizionata a una singola pagina in uno qualunque dei 3 pannelli.
+  - Tutte le story "Dashboard *** - mobile" rimanenti sono già completate (US-005, US-018, US-026); il pattern "widget con vista responsive, solo Blade toccato" è ormai stabile su tutti e 3 i pannelli.
 ---
