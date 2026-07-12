@@ -25,7 +25,10 @@ use Filament\Support\Colors\Color;
 use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\HtmlString;
 
 class PrenotazioneResource extends Resource
 {
@@ -158,13 +161,7 @@ class PrenotazioneResource extends Resource
                     Forms\Components\Select::make('tipo_evento')
                         ->label('Tipo evento')
                         ->required()
-                        ->options([
-                            'fiera' => 'Fiera',
-                            'manifestazione_cai' => 'Manifestazione CAI',
-                            'evento_promozionale' => 'Evento promozionale',
-                            'corso' => 'Corso',
-                            'altro' => 'Altro',
-                        ]),
+                        ->options(self::tipoEventoOptions()),
 
                     Forms\Components\Textarea::make('descrizione_evento')
                         ->label('Descrizione')
@@ -323,47 +320,144 @@ class PrenotazioneResource extends Resource
             Forms\Components\Wizard\Step::make('Riepilogo')
                 ->icon('heroicon-o-check-circle')
                 ->schema([
-                    Forms\Components\Placeholder::make('riepilogo_evento')
-                        ->label('Evento')
-                        ->content(fn (Forms\Get $get): string => implode(' — ', array_filter([
-                            $get('nome_evento'),
-                            $get('tipo_evento'),
-                            $get('indirizzo_evento'),
-                        ]))),
-
-                    Forms\Components\Placeholder::make('riepilogo_periodo')
-                        ->label('Periodo prenotazione torre')
-                        ->content(fn (Forms\Get $get): string => implode(' → ', array_filter([
-                            $get('data_inizio_prenotazione'),
-                            $get('data_fine_prenotazione'),
-                        ]))),
-
-                    Forms\Components\Placeholder::make('riepilogo_trasporto')
-                        ->label('Trasporto')
-                        ->content(function (Forms\Get $get): string {
-                            $tipoMezzo = TipoMezzo::tryFrom((string) $get('tipo_mezzo'));
-
-                            return implode(' — ', array_filter([
-                                $tipoMezzo?->label(),
-                                $tipoMezzo === TipoMezzo::Privato
-                                    ? 'Patente '.(CategoriaPatente::tryFrom((string) $get('categoria_patente_privato'))?->label() ?? '—')
-                                    : null,
-                            ]));
-                        }),
-
-                    Forms\Components\Placeholder::make('riepilogo_responsabile')
-                        ->label('Responsabile in loco')
-                        ->content(fn (Forms\Get $get): string => implode(', ', array_filter([
-                            $get('responsabile_nome'),
-                            $get('responsabile_tipo'),
-                            $get('responsabile_telefono'),
-                        ]))),
+                    Forms\Components\Placeholder::make('riepilogo')
+                        ->hiddenLabel()
+                        ->content(fn (Forms\Get $get): Htmlable => new HtmlString(
+                            view('filament.sezione.forms.components.riepilogo', [
+                                'gruppi' => self::gruppiRiepilogo($get),
+                            ])->render()
+                        )),
 
                     Forms\Components\Placeholder::make('avviso_delibera')
-                        ->label('Passo successivo')
-                        ->content('Dopo aver salvato la bozza, carica la delibera del consiglio dalla pagina di modifica per poter inviare la richiesta al GR.'),
+                        ->hiddenLabel()
+                        ->content(new HtmlString(
+                            view('filament.sezione.forms.components.avviso-delibera')->render()
+                        )),
                 ]),
         ];
+    }
+
+    /** @return list<array{icon: string, titolo: string, stepId: string, righe: list<array<string, mixed>>}> */
+    private static function gruppiRiepilogo(Forms\Get $get): array
+    {
+        $torre = Torre::find($get('torre_id'));
+        $tipoMezzo = TipoMezzo::tryFrom((string) $get('tipo_mezzo'));
+
+        return [
+            [
+                'icon' => 'heroicon-o-calendar-days',
+                'titolo' => 'Quando & dove',
+                'stepId' => 'quando-dove',
+                'righe' => [
+                    ['tipo' => 'testo', 'label' => 'Periodo di utilizzo', 'valore' => self::formattaPeriodo($get('data_inizio_prenotazione'), $get('data_fine_prenotazione'))],
+                    ['tipo' => 'torre', 'label' => 'Torre richiesta', 'torre' => $torre],
+                    ['tipo' => 'testo', 'label' => 'Deposito torre', 'valore' => self::depositoTorre($torre)],
+                    ['tipo' => 'manuale', 'label' => 'Manuale d\'istruzioni', 'torre' => $torre, 'confermato' => (bool) $get('manuale_letto_confirm')],
+                ],
+            ],
+            [
+                'icon' => 'heroicon-o-flag',
+                'titolo' => 'Evento',
+                'stepId' => 'evento',
+                'righe' => [
+                    ['tipo' => 'testo', 'label' => 'Nome evento', 'valore' => $get('nome_evento') ?: '—'],
+                    ['tipo' => 'testo', 'label' => 'Tipo', 'valore' => self::labelTipoEvento($get('tipo_evento'))],
+                    ['tipo' => 'testo', 'label' => 'Indirizzo', 'valore' => $get('indirizzo_evento') ?: '—'],
+                    ['tipo' => 'testo', 'label' => 'Date evento', 'valore' => self::formattaPeriodo($get('data_inizio_evento'), $get('data_fine_evento'))],
+                ],
+            ],
+            [
+                'icon' => 'heroicon-o-truck',
+                'titolo' => 'Logistica trasporto',
+                'stepId' => 'logistica-trasporto',
+                'righe' => [
+                    ['tipo' => 'testo', 'label' => 'Ritiro', 'valore' => self::formattaDataLuogo($get('data_ritiro'), $get('luogo_ritiro'))],
+                    ['tipo' => 'testo', 'label' => 'Riconsegna', 'valore' => self::formattaDataLuogo($get('data_riconsegna'), $get('luogo_riconsegna'))],
+                    ['tipo' => 'testo', 'label' => 'Mezzo', 'valore' => self::formattaMezzo($tipoMezzo, $get('azienda_trasporto'), $get('targa_autoveicolo'), $get('categoria_patente_privato'))],
+                ],
+            ],
+            [
+                'icon' => 'heroicon-o-user',
+                'titolo' => 'Responsabile in loco',
+                'stepId' => 'responsabile-in-loco',
+                'righe' => [
+                    ['tipo' => 'testo', 'label' => 'Nome', 'valore' => $get('responsabile_nome') ?: '—'],
+                    ['tipo' => 'testo', 'label' => 'Tipo e titolo CAI', 'valore' => self::formattaResponsabileTipo($get('responsabile_tipo'), $get('responsabile_titolo_cai'))],
+                    ['tipo' => 'testo', 'label' => 'Contatti', 'valore' => self::formattaContatti($get('responsabile_telefono'), $get('responsabile_email'))],
+                ],
+            ],
+        ];
+    }
+
+    private static function depositoTorre(?Torre $torre): string
+    {
+        return $torre === null ? '—' : (string) $torre->indirizzo_deposito;
+    }
+
+    private static function formattaPeriodo(?string $inizio, ?string $fine): string
+    {
+        $formatta = fn (?string $valore): ?string => filled($valore) ? Carbon::parse($valore)->format('d/m/Y') : null;
+        $parti = array_filter([$formatta($inizio), $formatta($fine)]);
+
+        return $parti === [] ? '—' : implode(' → ', $parti);
+    }
+
+    private static function formattaDataLuogo(?string $data, ?string $luogo): string
+    {
+        $dataFormattata = filled($data) ? Carbon::parse($data)->format('d/m/Y') : null;
+        $parti = array_filter([$dataFormattata, $luogo]);
+
+        return $parti === [] ? '—' : implode(' · ', $parti);
+    }
+
+    private static function formattaMezzo(?TipoMezzo $tipoMezzo, ?string $azienda, ?string $targa, ?string $categoriaPatente): string
+    {
+        if ($tipoMezzo === TipoMezzo::Privato) {
+            $categoria = CategoriaPatente::tryFrom((string) $categoriaPatente)?->label();
+
+            $parti = array_filter([
+                $tipoMezzo->label(),
+                filled($targa) ? 'targa '.$targa : null,
+                $categoria !== null ? 'patente '.$categoria : null,
+            ]);
+
+            return $parti === [] ? '—' : implode(' · ', $parti);
+        }
+
+        $parti = array_filter([$tipoMezzo?->label(), $azienda]);
+
+        return $parti === [] ? '—' : implode(' · ', $parti);
+    }
+
+    private static function formattaResponsabileTipo(?string $tipo, ?string $titolo): string
+    {
+        $parti = array_filter([ResponsabileTipo::tryFrom((string) $tipo)?->label(), $titolo]);
+
+        return $parti === [] ? '—' : implode(' · ', $parti);
+    }
+
+    private static function formattaContatti(?string $telefono, ?string $email): string
+    {
+        $parti = array_filter([$telefono, $email]);
+
+        return $parti === [] ? '—' : implode(' · ', $parti);
+    }
+
+    /** @return array<string, string> */
+    private static function tipoEventoOptions(): array
+    {
+        return [
+            'fiera' => 'Fiera',
+            'manifestazione_cai' => 'Manifestazione CAI',
+            'evento_promozionale' => 'Evento promozionale',
+            'corso' => 'Corso',
+            'altro' => 'Altro',
+        ];
+    }
+
+    private static function labelTipoEvento(?string $value): string
+    {
+        return self::tipoEventoOptions()[$value] ?? '—';
     }
 
     public static function form(Form $form): Form
@@ -401,13 +495,7 @@ class PrenotazioneResource extends Resource
                     Forms\Components\Select::make('tipo_evento')
                         ->label('Tipo evento')
                         ->required()
-                        ->options([
-                            'fiera' => 'Fiera',
-                            'manifestazione_cai' => 'Manifestazione CAI',
-                            'evento_promozionale' => 'Evento promozionale',
-                            'corso' => 'Corso',
-                            'altro' => 'Altro',
-                        ]),
+                        ->options(self::tipoEventoOptions()),
 
                     Forms\Components\Textarea::make('descrizione_evento')
                         ->label('Descrizione')
