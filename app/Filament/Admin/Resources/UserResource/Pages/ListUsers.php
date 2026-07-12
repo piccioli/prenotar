@@ -14,6 +14,14 @@ class ListUsers extends ListRecords
 {
     protected static string $resource = UserResource::class;
 
+    /**
+     * Override del template stock (US-028): sotto il breakpoint mobile, la
+     * tabella lascia spazio a una lista di card (pattern US-013), riusando le
+     * stesse azioni di riga (Impersona/Reset/Attiva-Disattiva) via
+     * `$this->getTable()->getActions()`.
+     */
+    protected static string $view = 'filament.admin.resources.user-resource.pages.list-users';
+
     protected function getHeaderActions(): array
     {
         return [

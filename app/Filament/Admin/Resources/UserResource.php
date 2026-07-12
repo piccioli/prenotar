@@ -96,11 +96,7 @@ class UserResource extends Resource
                     ->label('Ruolo')
                     ->badge()
                     ->getStateUsing(fn (User $record): string => self::ruoloLabel($record))
-                    ->color(fn (string $state): string => match ($state) {
-                        'Admin' => 'warning',
-                        'GR Manager' => 'success',
-                        default => 'info',
-                    }),
+                    ->color(fn (string $state): string => self::ruoloColor($state)),
                 TextColumn::make('appartenenza')
                     ->label('Appartenenza')
                     ->html()
@@ -206,6 +202,15 @@ class UserResource extends Resource
             $record->isGrManager() => 'GR Manager',
             $record->sottosezione_id !== null => 'Sottosezione',
             default => 'Sezione',
+        };
+    }
+
+    public static function ruoloColor(string $label): string
+    {
+        return match ($label) {
+            'Admin' => 'warning',
+            'GR Manager' => 'success',
+            default => 'info',
         };
     }
 
