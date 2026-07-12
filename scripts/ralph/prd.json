@@ -462,7 +462,7 @@
         "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
       ],
       "priority": 32,
-      "passes": false,
+      "passes": true,
       "notes": ""
     }
   ]

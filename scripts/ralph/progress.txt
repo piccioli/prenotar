@@ -3,6 +3,16 @@ Started: 2026-07-12
 ---
 
 ## Codebase Patterns
+- `Filament\Tables\Enums\FiltersLayout::AboveContent` (`->filtersLayout(FiltersLayout::AboveContent)`
+  su `Table`) rende i filtri sempre visibili come riga di form sopra la tabella
+  invece che dietro il trigger "Filtri" a comparsa (default `Dropdown`) — usarlo
+  quando un mockup mostra chip/filtri sempre presenti invece del pattern
+  dropdown-on-click.
+- Per una colonna Filament che legge una relazione polimorfica (es. `causer` su
+  `Spatie\Activitylog\Models\Activity`, morphTo generico verso `Model`),
+  Larastan segnala `property.notFound` se si accede a una proprietà del
+  modello concreto (`->email`) senza `instanceof` esplicito prima — serve
+  `$record->causer instanceof User ? $record->causer->email : null`.
 - Per isolare visivamente in un dropdown di riga (`ActionGroup`) un sottoinsieme
   di azioni "pericolose" separato dalle azioni ordinarie (stesso pattern del
   mockup "menu ⋮ con sezione Azioni straordinarie in fondo, divisa da una
@@ -980,4 +990,17 @@ Started: 2026-07-12
 - **Learnings for future iterations:**
   - `TextColumn::badge(bool|Closure $condition = true)` (in `Filament\Tables\Columns\TextColumn`, non nel trait condiviso `HasBadge` di `Filament\Support`) accetta una closure che decide RIGA PER RIGA se renderizzare la pillola — utile ogni volta che il mockup mostra "pillola solo per gli stati anomali, testo semplice altrimenti" invece del classico badge sempre-presente già usato altrove nel codebase (`->badge()` senza argomenti).
   - Prima di restylare una resource esistente, verificare se ha già `recordUrl()`/`actions()` configurati: `ExcelImportResource` non li aveva, quindi il suo `view` page-route era irraggiungibile dalla UI (solo per URL diretto) — un gap "latente" scoperto durante il restyle, non introdotto da questa story, coerente col pattern già visto in US-027 (bug latente `roles.name` non distingue Sezione/Sottosezione).
+---
+
+## [2026-07-13] - US-032
+- Restyle di `AuditLogResource` (Admin) secondo il mockup `pannello-admin.dc.html` "1f · Audit log": tabella con 4 colonne primarie in linea col mockup — "Quando" (created_at, grigio), "Chi" (causer.name in grassetto + email come `->description()` sotto, searchable su `['name', 'email']`, default "Sistema" per eventi senza causer come i job notturni), "Cosa" (colonna calcolata via `->getStateUsing()`, non più il grezzo `description`/`event` duplicato), "Tipo" (badge condizionale: pillola colorata solo per eventi sensibili, testo semplice uppercase per gli altri, come nel mockup dove "impersonate" e "hard-delete" hanno una pillola e gli eventi normali sono testo piatto).
+- Le colonne tecniche preesistenti (`log_name`, `subject_type`, `subject_id`) sono state mantenute ma spostate a `->toggleable(isToggledHiddenByDefault: true)` invece di essere rimosse, così la vista di default combacia col mockup (solo 4 colonne) senza perdere la possibilità di riattivarle per debug.
+- Filtro "Tipo evento" riordinato per primo (era terzo) e con label leggibili in italiano (`eventoOptions()`, riusata sia dal `SelectFilter` sia da `etichettaEvento()` per la colonna "Tipo" — nessuna duplicazione della mappa evento→label); `->filtersLayout(FiltersLayout::AboveContent)` per rendere i filtri sempre visibili sopra la tabella invece che dietro il trigger "Filtri" di default, più vicino al layout a chip sempre presenti del mockup (nessun fork di vista necessario, è un'opzione nativa dell'enum `Filament\Tables\Enums\FiltersLayout`).
+- Colonna "Cosa" (`descrizioneEvento()`): se `properties['motivo']` è presente (tutti gli eventi loggati esplicitamente via `AuditLogger::logAdminAction()`, es. "Impersonate avviato da admin", "Reset password da admin") lo mostra as-is; altrimenti (eventi automatici del trait `LogsActivity` su Torre/Prenotazione/User, dove `description` di spatie/laravel-activitylog default coincide col nome dell'evento, es. "updated" — ridondante con la colonna Tipo) compone una frase leggibile "{Entità} #{id} {participio}" con genere corretto per entità (`entitaLabel()`: Torre/Prenotazione = femminile "aggiornata", User→"Utente" = maschile "aggiornato") invece di lasciare `class_basename` inglese misto a un participio italiano.
+- Files changed: `app/Filament/Admin/Resources/AuditLogResource.php` (solo `table()` + 5 metodi helper privati/statici nuovi: `eventoOptions`, `etichettaEvento`, `coloreEvento`, `descrizioneEvento`, `entitaLabel`); `tests/Feature/Admin/AuditLogResourceTest.php` (nuovo — 2 test Feature: pagina lista raggiungibile con "Cosa"/"Tipo" leggibili per un evento con motivo esplicito, e frase italiana generata correttamente per un evento automatico senza motivo).
+- Verifica: `sail composer pint` OK, `sail composer phpstan` 0 errori/158 file, `sail composer test` 264 test passati/597 assertion (262 preesistenti + 2 nuovi, nessuna regressione). Nessun tool MCP browser/screenshot disponibile in questa sessione — verifica visiva pixel-perfect col mockup resta da fare manualmente; verificato invece via Pest+`assertSee` che l'HTML reale renderizzato contiene le stringhe attese (label evento, frase "Cosa" composta, motivo esplicito).
+- **Learnings for future iterations:**
+  - `Filament\Tables\Enums\FiltersLayout::AboveContent` (già presente nel vendor, `->filtersLayout(FiltersLayout::AboveContent)` su `Table`) rende i filtri sempre visibili come riga di form sopra la tabella invece che dietro il trigger "Filtri" a comparsa — utile ogni volta che un mockup mostra chip/filtri "sempre presenti" invece del pattern dropdown-on-click usato di default nelle altre resource del progetto (nessuna resource precedente in questo codebase aveva ancora usato questa opzione, tutte usavano il default `Dropdown`).
+  - Il modello `Spatie\Activitylog\Models\Activity` casta `properties` a `Illuminate\Support\Collection` (non array): `$record->properties['chiave']` funziona comunque perché `Collection` implementa `ArrayAccess`, stesso pattern già usato in `ViewAuditLog::infolist()` (`empty($record->properties['attributes'])`) — nessun bisogno di `->toArray()` prima di leggere una chiave singola.
+  - Per una colonna Filament che referenzia una relazione polimorfica (`causer` di `Activity`, morphTo generico verso `Model`), Larastan segnala `property.notFound` se si accede a una proprietà specifica del modello concreto (es. `->email`) senza un `instanceof` esplicito prima — il type-hint generico `Model` della relazione non basta, serve `$record->causer instanceof User ? $record->causer->email : null`.
 ---
