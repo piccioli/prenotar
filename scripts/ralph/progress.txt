@@ -96,6 +96,41 @@ Started: 2026-07-12
   nullsafe operator at the call site) — this satisfies Larastan AND centralizes
   the "what's the fallback for a missing related record" logic in one place
   instead of duplicating a ternary at every call site.
+- Custom "card-style" presentation for a Filament form field (e.g. selectable
+  cards instead of a plain `<select>`, or a stateful colored info box instead
+  of a plain checkbox) without forking the package or writing a Livewire
+  component: any `Forms\Components\*` Field (`Radio`, `Checkbox`, etc.) can
+  call `->view('your.custom.view')` (inherited from
+  `Filament\Support\Components\ViewComponent`) to swap only its Blade template
+  while keeping 100% of the original state binding/validation/`live()`/
+  `afterStateUpdated()` logic untouched — copy the relevant bits from the
+  stock view (e.g. `vendor/filament/forms/resources/views/components/radio.blade.php`)
+  for the input itself (`<x-filament::input.radio>` / `<x-filament::input.checkbox>`,
+  `$applyStateBindingModifiers('wire:model')`, `$getExtraInputAttributeBag()`,
+  `$errors->has($statePath)`) and freely restyle everything around it. Every
+  public method of the component (`$getOptions()`, `$getState()`, `$isDisabled()`,
+  `$isOptionDisabled()`, etc.) is auto-extracted into the Blade scope, so no
+  extra wiring is needed. Use `->viewData(fn (Get $get) => [...])` (also
+  inherited from `ViewComponent`) to inject extra data a plain option/label
+  can't carry (e.g. a related model instance) — the closure is evaluated via
+  Filament's own closure-injection (`Get $get`, `$record`, etc. resolved by
+  parameter name/type), exactly like `->visible()` or `->content()` closures.
+- A `Radio`/`Select` "no selection" placeholder can be turned into a real,
+  clickable option (e.g. an explicit "Nessuna preferenza" card) by adding an
+  option with key `''` (empty string) instead of relying on a `->placeholder()`
+  (which Radio doesn't support anyway). Existing `$get('field') ? ... : null`
+  ternaries elsewhere in the form (rules, etc.) keep working unchanged since
+  `''` is falsy in PHP, exactly like `null` — the only place that needs an
+  explicit adjustment is dehydration before save: add
+  `->dehydrateStateUsing(fn ($state) => filled($state) ? (int) $state : null)`
+  so the empty-string sentinel never reaches an integer/nullable FK DB column.
+- Filament's `Wizard` component footer (Annulla/Continua/Salva buttons) is
+  rendered entirely by `vendor/filament/forms/resources/views/components/wizard.blade.php`
+  with no slot for extra per-step content beside the buttons — short of
+  forking that view via `Wizard::make(...)->view(...)`, an explanatory message
+  about why "Continua" is disabled has to live inside the step's own content
+  (e.g. inside the same colored info box that blocks the button), not literally
+  beside the button as some mockups draw it.
 
 ## [2026-07-12] - US-001
 - Nuovo tema Filament compilato via Vite per i 3 pannelli, con i design token del progetto (`tasks/design-reference/prenotar-ui-ruoli/tokens/*.css`) copiati 1:1 in `resources/css/filament/tokens/{colors,typography,spacing,effects,base}.css` + `fonts.css` (Manrope self-hosted via `@fontsource/manrope`, subset `latin` per weight 200-800) + `index.css` che li aggrega.
@@ -167,4 +202,18 @@ Started: 2026-07-12
   - Per creare una `Prenotazione` via factory in tinker/debug su un DB già seedato (LocalDevSeeder, 229 sezioni con codici 1-229), **non** lasciare che la factory generi una nuova `Sezione`/`Sottosezione` random: il `codice` fake di Faker può collidere con un codice già esistente (`UniqueConstraintViolationException` su `sezioni_codice_unique`). Passare sempre `sezione_id => $user->sezione_id, sottosezione_id => $user->sottosezione_id` espliciti quando si crea una prenotazione per uno user seedato esistente.
   - Elenco icone Heroicons effettivamente disponibili (pacchetto `blade-ui-kit/blade-heroicons` vendorizzato): verificare sempre con `find vendor/blade-ui-kit/blade-heroicons/resources/svg -iname "o-<nome>*"` prima di usare un nome heroicon in un Blade — non tutti i nomi "plausibili" esistono (es. `heroicon-o-document-exclamation` NON esiste, usare `heroicon-o-exclamation-triangle`).
   - `x-filament::button` (componente anonimo in `vendor/filament/support/resources/views/components/button/index.blade.php`) supporta i prop `color`, `outlined` (bool), `size` (xs/sm/md/lg/xl), `tag="a"` + `href`, `icon` — utile per restyle futuri senza dover cercare la sorgente ogni volta.
+---
+
+## [2026-07-12] - US-006
+- Restyle di `PrenotazioneResource::wizardSteps()` (Sezione), Step 1 "Quando & dove", secondo il mockup `pannello-sezione.dc.html` "Wizard step 1 Quando e dove": nessuna modifica alla logica di validazione/blocco esistente (checkbox manuale bloccante, reset al cambio torre, disabilitazione di "Continua"), solo alla presentazione — come richiesto esplicitamente dall'AC.
+- Le due date (`data_inizio_prenotazione`/`data_fine_prenotazione`) e la scelta torre sono ora raggruppate in un `Forms\Components\Section::make('Quando ti serve la torre?')` con heading+description come nel mockup (il calendario embedded è in una seconda `Section::make('Disponibilità')` separata, entrambe dentro lo stesso Step "Quando & dove" — il testo dello step stesso non è stato toccato, resta "Quando & dove" per non rompere `PrenotazioneWizardCreateTest`/`PrenotazioneBloccoWizardAttivaTest` che fanno `assertSee('Quando & dove')`).
+- `torre_id` non è più un `Select` ma un `Forms\Components\Radio` con vista custom (`->view('filament.sezione.forms.components.torre-radio-cards')`): stessa options list di prima **più** una nuova opzione con chiave stringa vuota `''` ("Nessuna preferenza", equivalente al vecchio placeholder del Select ma ora realmente cliccabile/visibile come card, come nel mockup) — aggiunto `->dehydrateStateUsing(fn ($state) => filled($state) ? (int) $state : null)` per normalizzare `''`/stringa-numerica a `int|null` prima del salvataggio; il resto (`->live()`, `->afterStateUpdated()` di reset del flag manuale, `->rules()` con `NoOverlapTorre`) è invariato carattere per carattere (il cast ternario `$get('torre_id') ? (int) $get('torre_id') : null` già presente gestiva correttamente anche `''` perché falsy in PHP, quindi zero modifiche di logica necessarie lì).
+- La vista `torre-radio-cards.blade.php` itera `$getOptions()`, per ogni opzione non-vuota carica `Torre::find($value)` per mostrare indirizzo deposito (BUG-08) e un pallino colorato via `Torre::coloreHexPer($torre)` (stessa fonte unica introdotta in US-003) — card evidenziata con `--border-strong`/`--surface-subtle` quando selezionata. Riusa `<x-filament::input.radio>` + lo stesso pattern di merge attributi (`$applyStateBindingModifiers('wire:model')`, `$getExtraInputAttributeBag()`) della vista stock di Filament, quindi mantiene intatta l'integrazione con validazione/errori/stato Livewire.
+- Il box "manuale d'istruzioni" (Placeholder col link + Checkbox di conferma) è stato consolidato in un unico `Forms\Components\Checkbox::make('manuale_letto_confirm')->view('filament.sezione.forms.components.manuale-checkbox')->viewData(fn (Get $get) => ['torre' => Torre::find($get('torre_id'))])`: la vista mostra icona/titolo/testo/link al manuale (o "Manuale non ancora disponibile" se `manuale_pdf_path` è vuoto) e la checkbox stessa dentro un riquadro che cambia colore (larice=da confermare, verde=confermato) in base a `$getState()` — riduce da 2 componenti Filament a 1 senza toccare `dehydrated(false)`, `->rules()`, `->afterStateUpdated()` esistenti.
+- Il messaggio "Conferma la lettura del manuale per continuare" del mockup (mostrato a fianco del pulsante "Continua" nel footer) **non** è stato replicato in quella posizione esatta: il footer del `Wizard` Filament è generato interamente da `vendor/filament/forms/resources/views/components/wizard.blade.php`, senza slot per contenuto extra — forkare quella vista per un messaggio di 6 parole non valeva il rischio/costo. Il messaggio equivalente resta ben visibile dentro il riquadro manuale stesso (già implementato, non nuovo in questa story) immediatamente sopra il footer. Annotato esplicitamente come scostamento consapevole dal mockup, non come lavoro mancante.
+- Files changed: `app/Filament/Sezione/Resources/PrenotazioneResource.php` (solo Step 1 di `wizardSteps()`, gli altri 4 step invariati), `resources/views/filament/sezione/forms/components/torre-radio-cards.blade.php` (nuovo), `resources/views/filament/sezione/forms/components/manuale-checkbox.blade.php` (nuovo).
+- Verifica: `sail composer qa` verde (Pint OK, Larastan 0 errori/157 file, Pest 240 test passati/509 assertion — stesso numero di prima, nessuna regressione, nessun nuovo test Pest aggiunto perché l'AC di questa story richiede esplicitamente "nessuna regressione ai test Pest esistenti" senza nuova copertura). `PrenotazioneWizardCreateTest`, `PrenotazioneBloccoWizardAttivaTest`, `PrenotazioneManualeLettoTest`, `PrenotazioneOverlapValidationTest` tutti verdi senza modifiche. Verifica end-to-end via `sail artisan tinker` (nessun tool MCP browser disponibile, confermato ancora): richiesta GET autenticata reale su `/sezione/prenotaziones/create` → 200 OK, HTML contiene la griglia card (`grid grid-cols-1 gap-3.5`), la card "Nessuna preferenza", l'heading "Quando ti serve la torre?", i due nomi torre reali seedati ("Torre di arrampicata 1/2") con i rispettivi `background-color:#1D574B`/`#C77E2A` e "Deposito:" per entrambe. Il comportamento del box manuale (colore larice→verde al conferma) non è stato ri-verificabile via tinker puro (Livewire::test fuori da un vero ciclo HTTP non risolve il panel Filament corrente, errore preesistente non legato a questa story), ma è coperto end-to-end dai 4 test di `PrenotazioneManualeLettoTest` che passano tutti (fillForm + set + assertHasFormErrors/assertSet), il che dimostra che le nuove viste Blade compilano e funzionano correttamente in entrambi gli stati. Confronto pixel reale con il mockup resta da fare manualmente.
+- **Learnings for future iterations:**
+  - Vedi le 3 nuove voci in Codebase Patterns sopra (field `->view()`/`->viewData()` per restyle "solo presentazione" senza toccare la logica, sentinel `''` per un'opzione "nessuna preferenza" cliccabile su `Radio`, limite del footer del `Wizard` senza slot per contenuto extra) — rilevanti per tutte le prossime story del wizard (US-007, US-008, US-009, US-010) che restylano altri step con pattern simili (campi raggruppati in card, checkbox/box colorati in base allo stato).
+  - US-007 (stesso step 1 ma mobile) può riusare **esattamente** le stesse due viste Blade (`torre-radio-cards.blade.php`, `manuale-checkbox.blade.php`) già responsive (grid `grid-cols-1 sm:grid-cols-3`) — non serve una versione mobile separata per i field, solo il layout esterno del wizard (topbar/progress/CTA fissa) va adattato.
 ---

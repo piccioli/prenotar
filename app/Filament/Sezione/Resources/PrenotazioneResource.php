@@ -26,7 +26,6 @@ use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\HtmlString;
 
 class PrenotazioneResource extends Resource
 {
@@ -57,96 +56,95 @@ class PrenotazioneResource extends Resource
             Forms\Components\Wizard\Step::make('Quando & dove')
                 ->icon('heroicon-o-calendar')
                 ->schema([
-                    Forms\Components\Grid::make(3)->schema([
-                        Forms\Components\DatePicker::make('data_inizio_prenotazione')
-                            ->label('Data inizio prenotazione')
-                            ->required()
-                            ->native(false)
-                            ->displayFormat('d/m/Y')
-                            ->minDate(fn () => today()->addDays(app(GrSettings::class)->giorni_minimi_caricamento_documenti))
-                            ->live(onBlur: true)
-                            ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get, $livewire): void {
-                                if ($state && $get('data_fine_prenotazione') && $get('data_fine_prenotazione') < $state) {
-                                    $set('data_fine_prenotazione', $state);
-                                }
-                                $livewire->dispatch('preview-range-changed',
-                                    inizio: $state,
-                                    fine: $get('data_fine_prenotazione'),
-                                );
-                            })
-                            ->rules([new UnicaPrenotazioneAttivaPerUser(auth()->user())])
-                            ->helperText(fn () => 'Deve essere almeno '.app(GrSettings::class)->giorni_minimi_caricamento_documenti.' giorni da oggi.'),
+                    Forms\Components\Section::make('Quando ti serve la torre?')
+                        ->description('Indica il periodo di utilizzo. La disponibilità qui sotto si aggiorna in base alle date.')
+                        ->schema([
+                            Forms\Components\Grid::make(2)->schema([
+                                Forms\Components\DatePicker::make('data_inizio_prenotazione')
+                                    ->label('Data inizio utilizzo')
+                                    ->required()
+                                    ->native(false)
+                                    ->displayFormat('d/m/Y')
+                                    ->minDate(fn () => today()->addDays(app(GrSettings::class)->giorni_minimi_caricamento_documenti))
+                                    ->live(onBlur: true)
+                                    ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get, $livewire): void {
+                                        if ($state && $get('data_fine_prenotazione') && $get('data_fine_prenotazione') < $state) {
+                                            $set('data_fine_prenotazione', $state);
+                                        }
+                                        $livewire->dispatch('preview-range-changed',
+                                            inizio: $state,
+                                            fine: $get('data_fine_prenotazione'),
+                                        );
+                                    })
+                                    ->rules([new UnicaPrenotazioneAttivaPerUser(auth()->user())])
+                                    ->helperText(fn () => 'Deve essere almeno '.app(GrSettings::class)->giorni_minimi_caricamento_documenti.' giorni da oggi.'),
 
-                        Forms\Components\DatePicker::make('data_fine_prenotazione')
-                            ->label('Data fine prenotazione')
-                            ->required()
-                            ->native(false)
-                            ->displayFormat('d/m/Y')
-                            ->minDate(fn (Forms\Get $get) => $get('data_inizio_prenotazione') ?? today())
-                            ->live(onBlur: true)
-                            ->afterStateUpdated(function ($state, Forms\Get $get, $livewire): void {
-                                $livewire->dispatch('preview-range-changed',
-                                    inizio: $get('data_inizio_prenotazione'),
-                                    fine: $state,
-                                );
-                            }),
+                                Forms\Components\DatePicker::make('data_fine_prenotazione')
+                                    ->label('Data fine utilizzo')
+                                    ->required()
+                                    ->native(false)
+                                    ->displayFormat('d/m/Y')
+                                    ->minDate(fn (Forms\Get $get) => $get('data_inizio_prenotazione') ?? today())
+                                    ->live(onBlur: true)
+                                    ->afterStateUpdated(function ($state, Forms\Get $get, $livewire): void {
+                                        $livewire->dispatch('preview-range-changed',
+                                            inizio: $get('data_inizio_prenotazione'),
+                                            fine: $state,
+                                        );
+                                    }),
+                            ]),
 
-                        Forms\Components\Select::make('torre_id')
-                            ->label('Torre (opzionale)')
-                            ->options(Torre::where('is_active', true)->pluck('nome', 'id'))
-                            ->placeholder('Nessuna preferenza — il GR assegnerà la torre disponibile')
-                            ->live()
-                            ->afterStateUpdated(function (Forms\Set $set): void {
-                                $set('manuale_letto_confirm', false);
-                                $set('manuale_letto_confermato_at', null);
-                                $set('manuale_letto_torre_id', null);
-                            })
-                            ->rules(fn (Forms\Get $get): array => [
-                                new NoOverlapTorre(
-                                    torreId: $get('torre_id') ? (int) $get('torre_id') : null,
-                                    dataInizio: (string) ($get('data_inizio_prenotazione') ?? ''),
-                                    dataFine: (string) ($get('data_fine_prenotazione') ?? ''),
-                                ),
-                            ])
-                            ->helperText('Puoi lasciare vuoto. Il GR assegnerà la torre in fase di approvazione.'),
-                    ]),
+                            Forms\Components\Radio::make('torre_id')
+                                ->label('Quale torre preferisci?')
+                                ->helperText('Facoltativo: se non scegli, sarà il Gruppo Regionale ad assegnarla.')
+                                ->options(fn (): array => ['' => 'Nessuna preferenza']
+                                    + Torre::where('is_active', true)->pluck('nome', 'id')->all())
+                                ->live()
+                                ->afterStateUpdated(function (Forms\Set $set): void {
+                                    $set('manuale_letto_confirm', false);
+                                    $set('manuale_letto_confermato_at', null);
+                                    $set('manuale_letto_torre_id', null);
+                                })
+                                ->dehydrateStateUsing(fn ($state) => filled($state) ? (int) $state : null)
+                                ->rules(fn (Forms\Get $get): array => [
+                                    new NoOverlapTorre(
+                                        torreId: $get('torre_id') ? (int) $get('torre_id') : null,
+                                        dataInizio: (string) ($get('data_inizio_prenotazione') ?? ''),
+                                        dataFine: (string) ($get('data_fine_prenotazione') ?? ''),
+                                    ),
+                                ])
+                                ->view('filament.sezione.forms.components.torre-radio-cards')
+                                ->columnSpanFull(),
 
-                    Forms\Components\Placeholder::make('manuale_link')
-                        ->hiddenLabel()
-                        ->visible(fn (Forms\Get $get): bool => filled($get('torre_id')))
-                        ->content(function (Forms\Get $get): HtmlString {
-                            $torre = Torre::find($get('torre_id'));
+                            Forms\Components\Checkbox::make('manuale_letto_confirm')
+                                ->label('Ho letto e compreso il manuale d\'istruzioni')
+                                ->hiddenLabel()
+                                ->live()
+                                ->dehydrated(false)
+                                ->default(false)
+                                ->visible(fn (Forms\Get $get): bool => filled($get('torre_id')))
+                                ->rules(fn (Forms\Get $get): array => filled($get('torre_id')) ? ['accepted'] : [])
+                                ->validationMessages([
+                                    'accepted' => 'Devi confermare di aver letto il manuale d\'istruzioni prima di proseguire.',
+                                ])
+                                ->afterStateUpdated(function (?bool $state, Forms\Set $set, Forms\Get $get): void {
+                                    $set('manuale_letto_confermato_at', $state ? now() : null);
+                                    $set('manuale_letto_torre_id', $state ? $get('torre_id') : null);
+                                })
+                                ->viewData(fn (Forms\Get $get): array => ['torre' => Torre::find($get('torre_id'))])
+                                ->view('filament.sezione.forms.components.manuale-checkbox')
+                                ->columnSpanFull(),
 
-                            if (! $torre || blank($torre->manuale_pdf_path)) {
-                                return new HtmlString('<span class="text-sm text-gray-500 dark:text-gray-400">Manuale non ancora disponibile.</span>');
-                            }
+                            Forms\Components\Hidden::make('manuale_letto_confermato_at'),
+                            Forms\Components\Hidden::make('manuale_letto_torre_id'),
+                        ]),
 
-                            return new HtmlString(sprintf(
-                                '<a href="%s" target="_blank" rel="noopener" class="text-sm font-medium text-primary-600 underline hover:text-primary-500">Visualizza/scarica il manuale d\'istruzioni della torre selezionata</a>',
-                                e(asset('storage/'.$torre->manuale_pdf_path))
-                            ));
-                        }),
-
-                    Forms\Components\Checkbox::make('manuale_letto_confirm')
-                        ->label('Ho letto e compreso il manuale d\'istruzioni')
-                        ->live()
-                        ->dehydrated(false)
-                        ->default(false)
-                        ->visible(fn (Forms\Get $get): bool => filled($get('torre_id')))
-                        ->rules(fn (Forms\Get $get): array => filled($get('torre_id')) ? ['accepted'] : [])
-                        ->validationMessages([
-                            'accepted' => 'Devi confermare di aver letto il manuale d\'istruzioni prima di proseguire.',
-                        ])
-                        ->afterStateUpdated(function (?bool $state, Forms\Set $set, Forms\Get $get): void {
-                            $set('manuale_letto_confermato_at', $state ? now() : null);
-                            $set('manuale_letto_torre_id', $state ? $get('torre_id') : null);
-                        }),
-
-                    Forms\Components\Hidden::make('manuale_letto_confermato_at'),
-                    Forms\Components\Hidden::make('manuale_letto_torre_id'),
-
-                    Forms\Components\Livewire::make(CalendarioPrenotazioniWidget::class)
-                        ->columnSpanFull(),
+                    Forms\Components\Section::make('Disponibilità')
+                        ->description('I giorni occupati sono evidenziati per torre nel calendario qui sotto.')
+                        ->schema([
+                            Forms\Components\Livewire::make(CalendarioPrenotazioniWidget::class)
+                                ->columnSpanFull(),
+                        ]),
                 ]),
 
             Forms\Components\Wizard\Step::make('Evento')
