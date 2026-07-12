@@ -13,8 +13,8 @@ use App\Models\Torre;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Support\Colors\Color;
+use Filament\Support\Enums\IconPosition;
 use Filament\Tables;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -59,21 +59,28 @@ class PrenotazioneResource extends Resource
     {
         return $table
             ->defaultSort('data_inizio_prenotazione', 'desc')
+            ->searchPlaceholder('Cerca sezione o evento…')
             ->columns([
                 TextColumn::make('proprietario_label')
-                    ->label('Sezione / Sez.')
+                    ->label('Richiedente')
+                    ->html()
                     ->searchable(query: function (Builder $query, string $search): Builder {
                         return $query->where(function (Builder $q) use ($search): void {
                             $q->whereHas('sezione', fn (Builder $sq) => $sq->where('nominativo', 'like', "%{$search}%"))
                                 ->orWhereHas('sottosezione', fn (Builder $sq) => $sq->where('nominativo', 'like', "%{$search}%"));
                         });
                     })
-                    ->getStateUsing(fn (Prenotazione $record): string => $record->proprietario_label),
+                    ->getStateUsing(fn (Prenotazione $record): string => self::richiedenteLabel($record)),
 
                 TextColumn::make('nome_evento')
                     ->label('Evento')
                     ->searchable()
                     ->limit(30),
+
+                TextColumn::make('periodo')
+                    ->label('Periodo')
+                    ->getStateUsing(fn (Prenotazione $record): string => self::periodoLabel($record))
+                    ->sortable(query: fn (Builder $query, string $direction): Builder => $query->orderBy('data_inizio_prenotazione', $direction)),
 
                 TextColumn::make('torre.nome')
                     ->label('Torre')
@@ -81,26 +88,11 @@ class PrenotazioneResource extends Resource
                     ->color(fn (Prenotazione $record): array => Color::hex(Torre::coloreHexPer($record->torre)))
                     ->default('—'),
 
-                TextColumn::make('data_inizio_prenotazione')
-                    ->label('Da')
-                    ->date('d/m/Y')
-                    ->sortable(),
-
-                TextColumn::make('data_fine_prenotazione')
-                    ->label('A')
-                    ->date('d/m/Y')
-                    ->sortable(),
-
                 TextColumn::make('status')
                     ->label('Stato')
                     ->badge()
                     ->formatStateUsing(fn (PrenotazioneStatus $state): string => $state->label())
                     ->color(fn (PrenotazioneStatus $state): string => $state->color()),
-
-                IconColumn::make('has_delibera')
-                    ->label('Delibera')
-                    ->boolean()
-                    ->getStateUsing(fn (Prenotazione $record): bool => $record->hasMedia('delibera_consiglio')),
             ])
             ->filters([
                 SelectFilter::make('status')
@@ -125,12 +117,34 @@ class PrenotazioneResource extends Resource
                     ->options(Sottosezione::orderBy('nominativo')->pluck('nominativo', 'id')),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                Tables\Actions\ViewAction::make()
+                    ->label('Vedi')
+                    ->icon('heroicon-o-arrow-right')
+                    ->iconPosition(IconPosition::After),
             ])
             ->bulkActions([])
             ->emptyStateHeading('Nessuna prenotazione')
             ->emptyStateDescription('Non ci sono prenotazioni che corrispondono ai criteri di ricerca.')
             ->emptyStateIcon('heroicon-o-clipboard-document-list');
+    }
+
+    private static function richiedenteLabel(Prenotazione $record): string
+    {
+        if ($record->sottosezione !== null) {
+            return view('filament.components.etichetta-sezione', ['sottosezione' => $record->sottosezione])->render();
+        }
+
+        return 'Sezione di '.view('filament.components.etichetta-sezione', ['sezione' => $record->sezione])->render();
+    }
+
+    private static function periodoLabel(Prenotazione $record): string
+    {
+        $inizio = $record->data_inizio_prenotazione;
+        $fine = $record->data_fine_prenotazione;
+
+        return $inizio->isSameDay($fine)
+            ? $inizio->translatedFormat('d M Y')
+            : $inizio->translatedFormat('d M').' – '.$fine->translatedFormat('d M Y');
     }
 
     public static function getPages(): array
