@@ -35,11 +35,9 @@ Accesso: SSH come `root@116.203.88.140`, chiave pubblica già autorizzata (nessu
    ./svc.sh install && ./svc.sh start
    ```
 
-   **Prima di avviare i servizi** (`svc.sh start`): `.env`/`.env.develop` non sono in git (contengono segreti). I workflow CD usano `clean: false` nel checkout per preservarli tra un run e l'altro, ma alla primissima esecuzione la working directory del runner (`<runner>/_work/prenotar/prenotar/`) non esiste ancora — va creata a mano con un clone e il rispettivo `.env`/`.env.develop` copiato dentro, altrimenti il primo deploy automatico fallisce per file mancante:
+   **Dopo il primo avvio dei servizi**: `.env`/`.env.develop` non sono in git (contengono segreti), quindi il **primissimo** deploy automatico di ciascun runner fallisce sempre con "file .env non trovato" — `actions/checkout` cancella e reinizializza da zero la working directory (`<runner>/_work/prenotar/prenotar/`) al primo utilizzo, anche con `clean: false` (che preserva i file solo nei run successivi, una volta che checkout "conosce" già quella directory). È previsto, non serve preseeding preventivo: dopo il primo fallimento, copia semplicemente il rispettivo `.env`/`.env.develop` nella working directory già creata dal checkout, poi rilancia il workflow (`gh run rerun <id>` o un nuovo push) — da quel momento in poi il file persiste automaticamente:
    ```bash
    # Esempio per il runner develop (stesso pattern per produzione con .env)
-   mkdir -p /opt/actions-runner-develop/_work/prenotar/prenotar
-   git clone -b develop git@github.com:<org>/prenotar.git /opt/actions-runner-develop/_work/prenotar/prenotar
    cp /root/prenotar/.env.develop /opt/actions-runner-develop/_work/prenotar/prenotar/.env.develop
    ```
 
