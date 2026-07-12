@@ -35,7 +35,14 @@ class ViewExcelImport extends ViewRecord
                         RepeatableEntry::make('log')
                             ->label('')
                             ->schema([
-                                TextEntry::make('')->formatStateUsing(fn ($state) => $state),
+                                TextEntry::make('')
+                                    ->hiddenLabel()
+                                    ->formatStateUsing(fn ($state) => $state)
+                                    ->icon('heroicon-o-x-circle')
+                                    ->iconColor('danger')
+                                    ->extraAttributes([
+                                        'class' => 'rounded-lg border border-danger-200 bg-white px-4 py-3 dark:bg-transparent',
+                                    ]),
                             ])
                             ->contained(false),
                     ])
