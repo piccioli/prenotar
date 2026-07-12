@@ -37,3 +37,14 @@ Started: Dom 12 Lug 2026 14:47:50 CEST
   - Il workflow CI esistente (`ci.yml`) già copre PR verso qualsiasi branch target grazie all'assenza di `branches:` sotto `pull_request:` — le prossime story su develop/CD (US-004..US-010) non devono toccare questo trigger, solo aggiungere nuovi workflow CD dedicati.
   - Quando una story chiede di documentare workflow/branching in CLAUDE.md, la sezione va posizionata vicino alle altre sezioni operative (pre-commit hook, convenzioni codice) per restare coerente con la struttura esistente del file.
 ---
+
+## [2026-07-12] - US-004
+- Aggiunta in `DEPLOY.md`, dentro l'esempio Nginx della sezione "Ambiente develop (UAT)", una location `/mailpit/` con `proxy_pass http://127.0.0.1:${MAILPIT_UI_PORT:-8027}/` e `auth_basic` che referenzia `/etc/nginx/.htpasswd-mailpit-develop` (porta già pubblicata su host dal `docker-compose.develop.yml` esistente — nessuna modifica al compose necessaria).
+- Documentato subito sotto il blocco Nginx il comando per generare il file (`htpasswd -c /etc/nginx/.htpasswd-mailpit-develop <utente>`), con nota che il file non va committato e che la responsabilità di generazione/rotazione manuale è dell'admin tecnico (nessuna rotazione periodica automatica).
+- Aggiornata la riga "Mail interceptata da Mailpit" per menzionare il nuovo sotto-URL pubblico oltre all'accesso diretto sulla porta host.
+- Files changed: `DEPLOY.md` (solo doc, nessun codice/config eseguibile toccato).
+- `sail composer qa` verde: Pint OK, Larastan 0 errori, Pest 235 test passati (495 assertion) — nessun test nuovo necessario, story è solo documentazione.
+- **Learnings for future iterations:**
+  - Story di sola documentazione (nessun file di codice toccato) non richiedono nuovi test: basta che la suite esistente resti verde per rispettare il criterio "Typecheck/Larastan passa".
+  - Nginx non fa interpolazione shell-style `${VAR}` nativamente (serve `envsubst`/template `nginx:*-alpine`): l'acceptance criteria di questa story chiedeva letteralmente quella sintassi come esempio/placeholder in doc, quindi riportata così com'è — se in futuro l'esempio Nginx dovesse diventare eseguibile davvero, andrà sostituito con la porta letterale o con un meccanismo di template esplicito.
+---

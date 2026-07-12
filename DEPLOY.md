@@ -187,8 +187,28 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header X-Forwarded-Host $host;
     }
+
+    # UI Mailpit protetta da basic auth: consultazione email develop senza tunnel SSH.
+    location /mailpit/ {
+        auth_basic "Mailpit develop";
+        auth_basic_user_file /etc/nginx/.htpasswd-mailpit-develop;
+
+        proxy_pass http://127.0.0.1:${MAILPIT_UI_PORT:-8027}/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
 }
 ```
+
+Il file `/etc/nginx/.htpasswd-mailpit-develop` **non va committato nel repo** (credenziali dedicate, distinte da quelle applicative). Va generato una tantum sul server:
+
+```bash
+htpasswd -c /etc/nginx/.htpasswd-mailpit-develop <utente>
+```
+
+Responsabilità: l'**admin tecnico** genera il file e, se necessario, ne ruota manualmente le credenziali — non esiste un processo di rotazione periodica automatica.
 
 ### Build e avvio
 
@@ -211,7 +231,7 @@ Il `LocalDevSeeder` importa le 152 sezioni + 77 sottosezioni da Excel reale, imp
 - GR: `gr@local.test` / `password`
 - Sezioni: tutte con password `password` (email da Excel reale)
 
-Mail interceptata da Mailpit — UI su `http://127.0.0.1:8027` sul server.
+Mail interceptata da Mailpit — UI raggiungibile senza tunnel SSH su `https://develop.prenotar.montagnaservizi.it/mailpit/` (basic auth, vedi sopra), oppure direttamente su `http://127.0.0.1:8027` sul server.
 
 ### Aggiornamento develop
 
