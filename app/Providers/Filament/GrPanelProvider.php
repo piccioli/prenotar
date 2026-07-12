@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Providers\Filament;
 
+use App\Filament\Gr\Pages\CalendarioPage;
+use App\Filament\Gr\Pages\ImpostazioniPage;
+use App\Filament\Gr\Resources\PrenotazioneResource;
 use App\Filament\Gr\Widgets\PrenotazioniDaApprovareWidget;
 use App\Filament\Pages\FirstAccessPage;
 use App\Http\Middleware\EnsureContactEmail;
@@ -15,6 +18,7 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -51,6 +55,20 @@ class GrPanelProvider extends PanelProvider
             ->widgets([
                 PrenotazioniDaApprovareWidget::class,
             ])
+            ->renderHook(
+                PanelsRenderHook::TOPBAR_START,
+                fn (): string => view('filament.components.mobile-topbar-brand')->render(),
+            )
+            ->renderHook(
+                PanelsRenderHook::TOPBAR_END,
+                fn (): string => view('filament.components.mobile-topbar-notifications')->render(),
+            )
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): string => view('filament.components.mobile-bottom-nav', [
+                    'items' => self::mobileNavItems(),
+                ])->render(),
+            )
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -66,5 +84,41 @@ class GrPanelProvider extends PanelProvider
                 Authenticate::class,
                 EnsureContactEmail::class,
             ]);
+    }
+
+    /**
+     * @return array<int, array{label: string, icon: string, url: string, active: bool}>
+     */
+    private static function mobileNavItems(): array
+    {
+        return [
+            [
+                'label' => 'Home',
+                'icon' => 'heroicon-o-home',
+                'url' => Pages\Dashboard::getUrl(),
+                'active' => request()->routeIs('filament.gr.pages.dashboard'),
+            ],
+            [
+                'label' => 'Prenotazioni',
+                'icon' => 'heroicon-o-clipboard-document-list',
+                'url' => PrenotazioneResource::getUrl(),
+                'active' => request()->routeIs([
+                    'filament.gr.resources.prenotaziones.index',
+                    'filament.gr.resources.prenotaziones.view',
+                ]),
+            ],
+            [
+                'label' => 'Calendario',
+                'icon' => 'heroicon-o-calendar-days',
+                'url' => CalendarioPage::getUrl(),
+                'active' => request()->routeIs('filament.gr.pages.calendario'),
+            ],
+            [
+                'label' => 'Impostazioni',
+                'icon' => 'heroicon-o-cog-6-tooth',
+                'url' => ImpostazioniPage::getUrl(),
+                'active' => request()->routeIs('filament.gr.pages.impostazioni-page'),
+            ],
+        ];
     }
 }

@@ -1,6 +1,7 @@
 @import '/vendor/filament/filament/resources/css/theme.css';
 
 @import '../tokens/index.css';
+@import '../mobile-shell.css';
 
 @config '../tailwind.config.js';
 

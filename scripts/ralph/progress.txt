@@ -39,6 +39,38 @@ Started: 2026-07-12
   them directly into a compiled bundle. Copy the values 1:1 into the app's own
   `resources/css/...` tree (with a comment noting the source of truth), so the
   design-reference folder is read-only reference material, never shipped.
+- Extending Filament panel layout without forking the package: use
+  `Panel::renderHook(\Filament\View\PanelsRenderHook::X, fn (): string => view(...)->render())`
+  in the `*PanelProvider::panel()` chain (list of slots in
+  `vendor/filament/filament/src/View/PanelsRenderHook.php`, e.g. `TOPBAR_START`,
+  `TOPBAR_END`, `BODY_END`). These closures run on every request (not cached),
+  so route-based "is this nav item active" logic can live inline via
+  `request()->routeIs('filament.<panel>.pages.dashboard')` /
+  `request()->routeIs([...])` (array = OR match) with no extra state needed.
+  `renderHook()` also accepts a `$scopes` 3rd arg (page/Livewire component
+  class name(s)) to target a hook at one specific page only — useful for
+  page-specific additions (e.g. a FAB) without touching the shared panel-wide
+  hooks.
+- With Filament's default **sidebar** navigation (not top navigation), the
+  brand logo/name is rendered inside the sidebar header, NOT in the topbar —
+  on mobile, with the sidebar collapsed off-canvas by default, the topbar
+  shows only the hamburger button and nothing else unless you inject
+  something via `TOPBAR_START`/`TOPBAR_END`.
+- Resource route names follow `filament.<panel>.resources.<slug>.<index|create|view|edit>`
+  where `<slug>` is the auto-pluralized model name (e.g. `Prenotazione` →
+  `prenotaziones`, `Torre` → `torres`, not Italian-correct plurals) and page
+  routes follow `filament.<panel>.pages.<page-slug>` (dashboard included, e.g.
+  `filament.sezione.pages.dashboard`) — confirmed via
+  `sail artisan route:list`, don't guess these from the resource/page class name.
+- No MCP browser/screenshot tool available in this environment (confirmed
+  again this session): for "visual verification" ACs, use
+  `sail artisan tinker --execute="..."` to build a `Request`, call
+  `app()->handle($request)` as an authenticated seeded user, and grep the
+  returned HTML for the expected markup/classes — this validates the render
+  hooks and Blade actually execute end-to-end (not just that Pest's
+  `RefreshDatabase`-backed feature tests happen to hit the same code path),
+  without a real screenshot. Still explicitly note in progress.txt that pixel
+  comparison against the mockup is deferred to manual review.
 
 ## [2026-07-12] - US-001
 - Nuovo tema Filament compilato via Vite per i 3 pannelli, con i design token del progetto (`tasks/design-reference/prenotar-ui-ruoli/tokens/*.css`) copiati 1:1 in `resources/css/filament/tokens/{colors,typography,spacing,effects,base}.css` + `fonts.css` (Manrope self-hosted via `@fontsource/manrope`, subset `latin` per weight 200-800) + `index.css` che li aggrega.
@@ -53,4 +85,18 @@ Started: 2026-07-12
   - Le prossime story (US-002+) che restylano markup Blade dovranno referenziare le stesse CSS custom properties introdotte qui (`--text-brand`, `--surface-*`, `--border-strong`, token di spacing/effects) invece di hardcodare nuovi colori: sono già coerenti per pannello grazie all'override in ciascun `theme.css`.
   - La scala "ardesia" del pannello Sezione non esiste nel file token condiviso (`tasks/design-reference/.../tokens/colors.css` copre solo pino/larice/stone): è stata derivata a mano dai valori hex effettivamente usati nel mockup `pannello-sezione.dc.html` (grep dei valori `#RRGGBB` nel file) e vive solo in `resources/css/filament/sezione/theme.css`, non nel `tokens/colors.css` condiviso.
   - Se una story futura ha bisogno di una verifica visiva reale (screenshot/confronto mockup) e non c'è un tool MCP browser disponibile, annotarlo esplicitamente qui invece di affermare che la verifica visiva è stata completata — vedi nota sopra.
+---
+
+## [2026-07-12] - US-002
+- Shell mobile condivisa per i 3 pannelli (Admin/GR/Sezione), implementata via `Panel::renderHook()` (nessun fork di Filament, nessun vendor:publish): topbar mobile con logo/nome pannello + icona notifiche, bottom tab bar fissa a 4 voci, tutto attivo solo sotto 768px (`md:hidden`).
+- 3 nuovi Blade partial condivisi in `resources/views/filament/components/`: `mobile-topbar-brand.blade.php` (logo + `filament()->getBrandName()`, agganciato su `TOPBAR_START`), `mobile-topbar-notifications.blade.php` (icona campanella statica/disabled, non esiste ancora un canale di notifiche reale — fuori scope di questo restyle puramente visivo — agganciato su `TOPBAR_END`), `mobile-bottom-nav.blade.php` (nav a 4 voci, riceve `$items` già risolti dal PanelProvider, agganciato su `BODY_END`).
+- I 3 `*PanelProvider.php` aggiungono i 3 `->renderHook(...)` sopra + un metodo privato statico `mobileNavItems()` che costruisce i 4 item (label/icon/url/active) per quel pannello, usando `Resource::getUrl()` / `Page::getUrl()` esistenti (nessun URL hardcoded) e `request()->routeIs(...)` per lo stato attivo: Sezione = Home/Nuova/Prenotazioni/Calendario, GR = Home/Prenotazioni/Calendario/Impostazioni, Admin = Home/Utenti/Prenotazioni/Audit log (icone Heroicons outline: home, plus, clipboard-document-list, calendar-days, cog-6-tooth, users, document-text).
+- Nuovo `resources/css/filament/mobile-shell.css` (importato da tutti e 3 i `theme.css`, dopo i token condivisi e prima di `@config`): aggiunge solo `padding-bottom` a `.fi-main` sotto 767px perché il contenuto non finisca sotto la bottom nav fissa.
+- Tap target: bottom nav items con `min-h-[44px]` (colonne di una grid a 4, larghezza già ampiamente >44px); l'hamburger esistente è quello nativo di Filament, non toccato.
+- FAB: **non implementato in questa story** — nel mockup compare solo nella schermata "Le mie prenotazioni" mobile a card (US-013, non ancora esistente), non nella dashboard/wizard già presenti. La shell supporta il pattern per aggiungerlo in futuro tramite `renderHook(PanelsRenderHook::BODY_END, ..., scopes: [ListPrenotazioni::class])` scoped alla sola pagina che ne ha bisogno (vedi Codebase Patterns sopra), senza toccare `mobile-bottom-nav.blade.php`. Deciso così per non introdurre un meccanismo generico non richiesto da nessuna pagina esistente.
+- Files changed: `app/Providers/Filament/{Admin,Gr,Sezione}PanelProvider.php`, `resources/views/filament/components/mobile-{topbar-brand,topbar-notifications,bottom-nav}.blade.php` (nuovi), `resources/css/filament/mobile-shell.css` (nuovo), `resources/css/filament/{admin,gr,sezione}/theme.css` (aggiunto `@import '../mobile-shell.css';`).
+- Verifica: `sail composer qa` verde (Pint OK, Larastan 0 errori, Pest 235 test passati/495 assertion, nessuna regressione). Nessun tool MCP browser/screenshot disponibile in questa sessione (confermato di nuovo, vedi Codebase Patterns): verificato invece via `sail artisan tinker` — richiesta HTTP simulata come utente autenticato reale (seed `LocalDevSeeder`) su `/sezione`, `/gr`, `/admin` → 200 OK, markup `fi-mobile-bottom-nav` e brand name presenti in tutti e 3; su `/sezione/calendario` la voce "Calendario" risulta correttamente evidenziata (`text-[color:var(--text-brand)]`) mentre "Home" no. Confronto pixel con `mobile-3-ruoli.dc.html` resta da fare manualmente (nessun tool screenshot disponibile).
+- **Learnings for future iterations:**
+  - Vedi le nuove voci in Codebase Patterns sopra (render hook scopes, route naming, verifica senza browser via tinker) — sono generali e riutilizzabili per tutte le story mobile successive (US-005, US-007, US-013, US-015, US-018, US-021, US-026, US-028).
+  - Il bell icon in topbar è puramente decorativo/disabled: se una story futura introduce notifiche reali, dovrà sostituire `mobile-topbar-notifications.blade.php` con `@livewire(Filament\Livewire\DatabaseNotifications::class)` e abilitare `->databaseNotifications()` sui 3 panel (richiede la migrazione standard Laravel `notifications`, non presente in questo repo) — esplicitamente fuori scope per US-002.
 ---

@@ -1,0 +1,8 @@
+/* Montagna Servizi — shell mobile condivisa (US-002): spazio riservato nel contenuto
+   perché la bottom tab bar fissa (.fi-mobile-bottom-nav) non copra l'ultima porzione
+   di pagina. Attivo solo sotto 768px, coerente col breakpoint md della bottom nav stessa. */
+@media (max-width: 767px) {
+  .fi-main {
+    padding-bottom: 4.5rem;
+  }
+}
