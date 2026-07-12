@@ -76,6 +76,18 @@
 
 ---
 
+## Hook di pre-commit (QA obbligatoria)
+
+Il repository include `.githooks/pre-commit`, che lancia `./vendor/bin/sail composer qa` (Pint + Larastan + Pest) e blocca il commit se la QA fallisce o se i container Sail non sono in esecuzione.
+
+Attivazione **una tantum** su ogni macchina di sviluppo:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+---
+
 ## Convenzioni codice
 
 - `declare(strict_types=1)` in testa a ogni file PHP.
