@@ -5,4 +5,16 @@
   .fi-main {
     padding-bottom: 4.5rem;
   }
+
+  /* Wizard prenotazione (US-007): la CTA fissa del wizard sostituisce la bottom nav
+     globale sulla pagina di creazione, le due barre fisse in fondo allo schermo non
+     possono coesistere. Selettore scoped alle 2 classi che il template della pagina di
+     creazione già applica (vedi create-prenotazione.blade.php), non un cambio globale. */
+  .fi-resource-prenotaziones.fi-resource-create-record-page .fi-mobile-bottom-nav {
+    display: none;
+  }
+
+  .fi-resource-prenotaziones.fi-resource-create-record-page .fi-main {
+    padding-bottom: 7.5rem;
+  }
 }

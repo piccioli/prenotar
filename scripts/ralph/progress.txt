@@ -130,7 +130,57 @@ Started: 2026-07-12
   forking that view via `Wizard::make(...)->view(...)`, an explanatory message
   about why "Continua" is disabled has to live inside the step's own content
   (e.g. inside the same colored info box that blocks the button), not literally
-  beside the button as some mockups draw it.
+  beside the button as some mockups draw it. **Update (US-007): forking IS
+  viable and not that costly** — `Wizard` extends `Component` extends
+  `ViewComponent` exactly like `Radio`/`Checkbox`, so `->view('custom.blade')`
+  works on it too. Copy vendor's `wizard.blade.php` verbatim (same `x-data`/
+  `x-init`/Alpine functions), then only add new markup + toggle `hidden md:*`
+  classes on the parts you want to replace per breakpoint — every Alpine
+  function (`getStepIndex`, `isFirstStep`, `isLastStep`, `previousStep`, the
+  `$wire.dispatchFormEvent('wizard::nextStep', ...)` call) keeps working
+  because the new markup lives inside the same root `x-data` div. A per-step
+  "why is Continua disabled" hint string CAN reach that forked view without
+  duplicating the disabling condition: extract the condition to a local
+  closure variable once in the page's `form()` method, pass it to both
+  `->nextAction(fn ($action) => $action->disabled($condition))` and
+  `->viewData(fn (Get $get) => ['hint' => $condition($get) ? '...' : null])`
+  (same source, evaluated twice, not two implementations).
+- Rendering the same Filament `Action` object (e.g. a Wizard's `$nextAction`)
+  twice in one Blade view (once for a desktop-only footer, once for a
+  mobile-only fixed footer, toggled via `hidden md:flex` / `md:hidden`) is safe
+  functionally (both copies are purely presentational registrations of
+  `x-on:click`/`wire:loading.class` on their own wrapping `<span>`, no
+  `document.getElementById` dependency) but produces two DOM nodes sharing the
+  same `id` — invalid HTML. Prefer building the second (mobile) instance as a
+  plain `<x-filament::button>` reading `$action->getLabel()`/`->getColor()`/
+  `->isDisabled()` (not re-rendering `{{ $action }}` itself) so there is one
+  real Action element and one lightweight styled clone, and pass
+  `?? 'primary'` when forwarding `->getColor()` into `<x-filament::button
+  :color="...">` — that prop's Blade `@props` default only applies when the
+  key is *absent*, not when explicitly `null` (which is what an unstyled
+  Wizard next-action's `getColor()` returns), so an unguarded pass-through
+  silently loses the primary styling.
+- To hide one globally-registered `renderHook()` element (e.g. the shared
+  mobile bottom tab bar from US-002) on a single page without touching the
+  `*PanelProvider`'s render hook itself: give that page's own Blade template a
+  distinguishing class (Filament's stock `CreateRecord` page view already
+  emits `fi-resource-create-record-page` + `fi-resource-{slug}`) and add a
+  scoped CSS rule (`.fi-resource-<slug>.fi-resource-create-record-page
+  .fi-mobile-bottom-nav { display: none }`) in the shared mobile-shell
+  stylesheet — no PHP/render-hook changes needed, and it stays obviously
+  scoped to that one page's classes instead of a global toggle.
+- Correction to the US-006 note about `Livewire::test()` outside a real HTTP
+  cycle: it DOES resolve the current Filament panel correctly, as long as
+  `Filament::setCurrentPanel(Filament::getPanel('<id>'))` is called explicitly
+  before `Livewire::test(...)` in the tinker/script context (a real HTTP
+  request resolves this automatically via panel routing middleware; tinker
+  doesn't go through that middleware, so it must be done by hand). With that
+  one extra line, `Livewire::test(Page::class)->set('data.field', $value)->html()`
+  works fine in `sail artisan tinker` for verifying **reactive** `->live()`
+  state (colors/messages that only appear after a field changes), which plain
+  `app()->handle($request)` (US-001 through US-006's usual no-browser
+  verification technique) cannot exercise since it only ever renders the
+  initial GET state.
 
 ## [2026-07-12] - US-001
 - Nuovo tema Filament compilato via Vite per i 3 pannelli, con i design token del progetto (`tasks/design-reference/prenotar-ui-ruoli/tokens/*.css`) copiati 1:1 in `resources/css/filament/tokens/{colors,typography,spacing,effects,base}.css` + `fonts.css` (Manrope self-hosted via `@fontsource/manrope`, subset `latin` per weight 200-800) + `index.css` che li aggrega.
@@ -216,4 +266,19 @@ Started: 2026-07-12
 - **Learnings for future iterations:**
   - Vedi le 3 nuove voci in Codebase Patterns sopra (field `->view()`/`->viewData()` per restyle "solo presentazione" senza toccare la logica, sentinel `''` per un'opzione "nessuna preferenza" cliccabile su `Radio`, limite del footer del `Wizard` senza slot per contenuto extra) — rilevanti per tutte le prossime story del wizard (US-007, US-008, US-009, US-010) che restylano altri step con pattern simili (campi raggruppati in card, checkbox/box colorati in base allo stato).
   - US-007 (stesso step 1 ma mobile) può riusare **esattamente** le stesse due viste Blade (`torre-radio-cards.blade.php`, `manuale-checkbox.blade.php`) già responsive (grid `grid-cols-1 sm:grid-cols-3`) — non serve una versione mobile separata per i field, solo il layout esterno del wizard (topbar/progress/CTA fissa) va adattato.
+---
+
+## [2026-07-12] - US-007
+- Restyle mobile del Wizard di `CreatePrenotazione` (Sezione), secondo il mockup `mobile-3-ruoli.dc.html` "Mobile Sezione Wizard step 1": nessun campo toccato (US-006 aveva già reso `torre-radio-cards`/`manuale-checkbox` responsive), solo il "guscio" esterno del Wizard — che essendo un unico componente condiviso da tutti e 5 gli step, ora si applica automaticamente anche agli step 2-5 (contenuto dei quali resta fuori scope di questa story, coperto da US-008/009/010).
+- Nuovo `resources/views/filament/sezione/forms/components/prenotazione-wizard.blade.php`: fork di `vendor/filament/forms/resources/views/components/wizard.blade.php` (stesso `x-data`/Alpine/eventi Livewire, invariati) con 3 aggiunte, tutte `md:hidden`/`hidden md:*` (mai un secondo componente parallelo):
+  1. Topbar scura (`var(--surface-inverse)`, ardesia-900 = `#1A3448`) con freccia indietro (`previousStep()`, disabilitata via opacity sul primo step) + "Nuova prenotazione" + "Passo N di 5 — {label dello step corrente}" (calcolato via Alpine, nuovo hidden input `x-ref="stepsLabels"` con le label JSON-encoded, stesso pattern del già esistente `stepsData`). **Non sostituisce** la topbar standard di Filament (hamburger/notifiche, US-002): resta sotto di essa (`sticky top-16`, 4rem = altezza `h-16` della topbar Filament) — scostamento consapevole dal mockup (che nella cornice isolata del telefono non la mostra) per non perdere la via di navigazione verso le altre pagine del pannello.
+  2. Barra di avanzamento sottile: un segmento per step (5), colorato (`var(--border-strong)`, ardesia-600 = `#2E5878`) solo per lo step corrente, `var(--stone-300)` per gli altri — replica esatta del mockup (un solo segmento acceso, non un riempimento cumulativo).
+  3. CTA fissa in basso (`fixed inset-x-0 bottom-0`): stesso evento (`$wire.dispatchFormEvent('wizard::nextStep', ...)` per "Continua", submit nativo del form per l'ultimo step) ma resa come `<x-filament::button class="w-full">` invece di ri-renderizzare `{{ $nextAction }}`/`{{ $getSubmitAction() }}` (evita 2 elementi DOM con lo stesso `id`, vedi Codebase Patterns), con l'eventuale messaggio di blocco (`$mobileNextHint`) sotto al pulsante.
+- `CreatePrenotazione::form()`: la condizione `filled($get('torre_id')) && ! $get('manuale_letto_confirm')` ora vive in una closure locale (`$torreSenzaManualeConfermato`) usata sia per `->nextAction(...)->disabled(...)` (invariato) sia per `->viewData(fn (Get $get) => ['mobileNextHint' => ...])` — stessa fonte, nessuna duplicazione. Aggiunto anche `->label('Continua')` sul next action (prima "Successivo", label stock di Filament): entrambi i mockup (desktop US-006 e mobile) mostrano "Continua", quindi corretto qui per farli coincidere — cambia anche il testo del pulsante desktop già esistente, effetto collaterale voluto e a basso rischio (nessun test asserisce "Successivo").
+- `resources/css/filament/mobile-shell.css`: 2 nuove regole scoped a `.fi-resource-prenotaziones.fi-resource-create-record-page` (classi già presenti su questa pagina, vedi `create-prenotazione.blade.php`) sotto 768px — nascondono `.fi-mobile-bottom-nav` (altrimenti in conflitto con la nuova CTA fissa del wizard, entrambe `fixed bottom-0`) e portano il `padding-bottom` di `.fi-main` da 4.5rem a 7.5rem (altezza della nuova CTA fissa, non della bottom nav che qui è nascosta).
+- Files changed: `app/Filament/Sezione/Resources/PrenotazioneResource/Pages/CreatePrenotazione.php`, `resources/views/filament/sezione/forms/components/prenotazione-wizard.blade.php` (nuovo), `resources/css/filament/mobile-shell.css`.
+- Verifica: `sail composer qa` verde (Pint OK, Larastan 0 errori/157 file, Pest 240 test passati/509 assertion — stesso numero di prima, nessuna regressione; `PrenotazioneWizardCreateTest`, `PrenotazioneManualeLettoTest`, `PrenotazioneBloccoWizardAttivaTest`, `PrenotazioneOverlapValidationTest` tutti verdi senza modifiche). `sail npm run build` produce il manifest senza errori. Verifica end-to-end via `sail artisan tinker`: richiesta GET autenticata reale su `/sezione/prenotaziones/create` → 200 OK, HTML contiene `sticky top-16`, `stepsLabels`, "Nuova prenotazione", la CTA fissa (`fixed inset-x-0 bottom-0 z-30 flex flex-col`) e la label "Continua"; con `Filament::setCurrentPanel(...)` impostato esplicitamente prima di `Livewire::test(CreatePrenotazione::class)->set('data.torre_id', $torre->id)->html()` (vedi correzione in Codebase Patterns), l'HTML risultante contiene sia "Conferma la lettura del manuale per continuare" sia "Salva come bozza" — conferma che l'hint mobile compare esattamente quando la condizione di blocco è vera. Confronto pixel reale a viewport 390x844 contro il mockup resta da fare manualmente (nessun tool screenshot/browser disponibile in questa sessione, confermato ancora).
+- **Learnings for future iterations:**
+  - Vedi le 4 nuove voci in Codebase Patterns sopra (fork di `Wizard` via `->view()`, rischio di ID duplicati renderizzando due volte lo stesso `Action`, hide di un render hook globale scoped per pagina via classe CSS, correzione sul funzionamento di `Livewire::test()` in tinker) — rilevanti per tutte le prossime story mobile che toccano pagine con azioni fisse in basso (US-011, US-013, US-015, US-018, US-020, US-021, US-026, US-028: tutte quelle con "azioni fisse in basso"/FAB nei mockup mobile).
+  - US-008/009/010 (restyle Step 3/5/2/4, solo desktop) erediteranno automaticamente il nuovo guscio mobile del Wizard essendo lo stesso componente condiviso: non serve toccare `prenotazione-wizard.blade.php` per quelle story, a meno che non introducano contenuti che necessitino di adattamenti specifici del guscio (es. step con contenuto molto più lungo, verificare che lo scroll sotto la CTA fissa resti leggibile).
 ---
