@@ -91,3 +91,11 @@ Started: Dom 12 Lug 2026 14:47:50 CEST
 - **Learnings for future iterations:**
   - US-009 (versionamento su develop) va posizionata vicino a questa sezione "Flusso di hotfix" in `CLAUDE.md` e deve rimandarci esplicitamente per l'eccezione delle patch release taggate su `main` — evitare di duplicare la spiegazione del bump patch già scritta qui.
 ---
+
+## [2026-07-12] - US-009
+- Aggiunta in `CLAUDE.md` una nuova sezione "Versionamento" (tra "Flusso di hotfix" e "Convenzioni codice") che descrive: bump major/minor deciso sul branch `develop` (CHANGELOG.md aggiornato + tag git creato PRIMA di aprire la PR `develop` → `main`), la PR `develop` → `main` non deve modificare il numero di versione, e rimando esplicito alla sezione "Flusso di hotfix" per l'unica eccezione (patch release taggate direttamente su `main`).
+- Files changed: `CLAUDE.md` (nuova sezione "Versionamento"), `scripts/ralph/prd.json` (US-009 → `passes: true`).
+- `sail composer qa` verde: Pint OK, Larastan 0 errori, Pest 235 test passati (495 assertion) — nessun test nuovo necessario, story è solo documentazione.
+- **Learnings for future iterations:**
+  - US-010 (checklist setup macchina produzione) è l'ultima story del PRD: va in `DEPLOY.md`, sola documentazione, nessuna esecuzione reale su `root@116.203.88.140` — coerente con il pattern già seguito da US-004/US-005/US-006/US-007 (workflow/config descritti in doc, mai eseguiti realmente dall'agente).
+---

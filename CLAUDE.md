@@ -110,6 +110,14 @@ Il merge di un hotfix su `main` corrisponde **sempre** a un bump di **patch vers
 
 ---
 
+## Versionamento
+
+- Il bump di versione (major/minor, primo o secondo numero, es. `1.2.3` → `1.3.0` o `2.0.0`) va deciso **sul branch `develop`**: aggiornare `CHANGELOG.md` (spostare le voci da `## [Non rilasciato]` alla nuova versione) e creare il tag git corrispondente **prima** di aprire la PR `develop` → `main`.
+- La PR `develop` → `main` **non deve modificare** il numero di versione: è già stato deciso e taggato su `develop`, il merge su `main` porta solo il codice già versionato.
+- L'unica eccezione è la **patch release da hotfix**, taggata direttamente su `main` invece che su `develop` — vedi "Flusso di hotfix" qui sopra.
+
+---
+
 ## Convenzioni codice
 
 - `declare(strict_types=1)` in testa a ogni file PHP.
