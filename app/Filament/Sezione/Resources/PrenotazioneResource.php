@@ -153,42 +153,55 @@ class PrenotazioneResource extends Resource
             Forms\Components\Wizard\Step::make('Evento')
                 ->icon('heroicon-o-map-pin')
                 ->schema([
-                    Forms\Components\TextInput::make('nome_evento')
-                        ->label('Nome evento')
-                        ->required()
-                        ->maxLength(255),
+                    Forms\Components\Section::make('Racconta l\'evento')
+                        ->description('Queste informazioni appariranno nella richiesta e sui documenti generati.')
+                        ->schema([
+                            Forms\Components\TextInput::make('nome_evento')
+                                ->label('Nome evento')
+                                ->required()
+                                ->maxLength(255)
+                                ->prefixIcon('heroicon-o-megaphone'),
 
-                    Forms\Components\Select::make('tipo_evento')
-                        ->label('Tipo evento')
-                        ->required()
-                        ->options(self::tipoEventoOptions()),
+                            Forms\Components\Select::make('tipo_evento')
+                                ->label('Tipo evento')
+                                ->required()
+                                ->options(self::tipoEventoOptions())
+                                ->prefixIcon('heroicon-o-tag'),
 
-                    Forms\Components\Textarea::make('descrizione_evento')
-                        ->label('Descrizione')
-                        ->rows(3)
-                        ->maxLength(2000)
-                        ->columnSpanFull(),
+                            Forms\Components\Textarea::make('descrizione_evento')
+                                ->label('Descrizione')
+                                ->rows(3)
+                                ->maxLength(2000)
+                                ->columnSpanFull(),
+                        ]),
 
-                    Forms\Components\TextInput::make('indirizzo_evento')
-                        ->label('Indirizzo evento')
-                        ->required()
-                        ->maxLength(255),
+                    Forms\Components\Section::make('Dove e quando si svolge')
+                        ->schema([
+                            Forms\Components\TextInput::make('indirizzo_evento')
+                                ->label('Indirizzo evento')
+                                ->required()
+                                ->maxLength(255)
+                                ->prefixIcon('heroicon-o-map-pin')
+                                ->columnSpanFull(),
 
-                    Forms\Components\Grid::make(2)->schema([
-                        Forms\Components\DatePicker::make('data_inizio_evento')
-                            ->label('Data inizio evento')
-                            ->required()
-                            ->native(false)
-                            ->displayFormat('d/m/Y')
-                            ->minDate(fn (Forms\Get $get) => $get('data_inizio_prenotazione')),
+                            Forms\Components\Grid::make(2)->schema([
+                                Forms\Components\DatePicker::make('data_inizio_evento')
+                                    ->label('Data inizio evento')
+                                    ->required()
+                                    ->native(false)
+                                    ->displayFormat('d/m/Y')
+                                    ->prefixIcon('heroicon-o-calendar')
+                                    ->minDate(fn (Forms\Get $get) => $get('data_inizio_prenotazione')),
 
-                        Forms\Components\DatePicker::make('data_fine_evento')
-                            ->label('Data fine evento')
-                            ->required()
-                            ->native(false)
-                            ->displayFormat('d/m/Y')
-                            ->minDate(fn (Forms\Get $get) => $get('data_inizio_evento')),
-                    ]),
+                                Forms\Components\DatePicker::make('data_fine_evento')
+                                    ->label('Data fine evento')
+                                    ->required()
+                                    ->native(false)
+                                    ->displayFormat('d/m/Y')
+                                    ->prefixIcon('heroicon-o-calendar')
+                                    ->minDate(fn (Forms\Get $get) => $get('data_inizio_evento')),
+                            ]),
+                        ]),
                 ]),
 
             Forms\Components\Wizard\Step::make('Logistica trasporto')
@@ -284,37 +297,49 @@ class PrenotazioneResource extends Resource
             Forms\Components\Wizard\Step::make('Responsabile in loco')
                 ->icon('heroicon-o-user')
                 ->schema([
-                    Forms\Components\Grid::make(2)->schema([
-                        Forms\Components\TextInput::make('responsabile_nome')
-                            ->label('Nome e cognome')
-                            ->required()
-                            ->maxLength(255),
+                    Forms\Components\Section::make('Chi è il responsabile in loco?')
+                        ->description('La persona di riferimento per la torre durante l\'evento.')
+                        ->schema([
+                            Forms\Components\Grid::make(2)->schema([
+                                Forms\Components\TextInput::make('responsabile_nome')
+                                    ->label('Nome e cognome')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->prefixIcon('heroicon-o-user'),
 
-                        Forms\Components\Select::make('responsabile_tipo')
-                            ->label('Qualifica CAI')
-                            ->required()
-                            ->options(collect(ResponsabileTipo::cases())->mapWithKeys(
-                                fn (ResponsabileTipo $t) => [$t->value => $t->label()]
-                            )),
-                    ]),
+                                Forms\Components\Select::make('responsabile_tipo')
+                                    ->label('Qualifica CAI')
+                                    ->required()
+                                    ->options(collect(ResponsabileTipo::cases())->mapWithKeys(
+                                        fn (ResponsabileTipo $t) => [$t->value => $t->label()]
+                                    ))
+                                    ->prefixIcon('heroicon-o-identification'),
+                            ]),
 
-                    Forms\Components\TextInput::make('responsabile_titolo_cai')
-                        ->label('Titolo CAI')
-                        ->maxLength(255),
+                            Forms\Components\TextInput::make('responsabile_titolo_cai')
+                                ->label('Titolo CAI')
+                                ->maxLength(255)
+                                ->prefixIcon('heroicon-o-academic-cap'),
+                        ]),
 
-                    Forms\Components\Grid::make(2)->schema([
-                        Forms\Components\TextInput::make('responsabile_telefono')
-                            ->label('Telefono')
-                            ->required()
-                            ->tel()
-                            ->maxLength(20),
+                    Forms\Components\Section::make('Contatti')
+                        ->schema([
+                            Forms\Components\Grid::make(2)->schema([
+                                Forms\Components\TextInput::make('responsabile_telefono')
+                                    ->label('Telefono')
+                                    ->required()
+                                    ->tel()
+                                    ->maxLength(20)
+                                    ->prefixIcon('heroicon-o-phone'),
 
-                        Forms\Components\TextInput::make('responsabile_email')
-                            ->label('Email')
-                            ->required()
-                            ->email()
-                            ->maxLength(255),
-                    ]),
+                                Forms\Components\TextInput::make('responsabile_email')
+                                    ->label('Email')
+                                    ->required()
+                                    ->email()
+                                    ->maxLength(255)
+                                    ->prefixIcon('heroicon-o-envelope'),
+                            ]),
+                        ]),
                 ]),
 
             Forms\Components\Wizard\Step::make('Riepilogo')
