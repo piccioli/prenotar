@@ -435,6 +435,33 @@ Started: 2026-07-12
   nav's `z-30`) combined with an opaque background and a taller bar is enough
   to visually cover the nav completely — no need to hide the global nav or
   scope its renderHook away for a single page.
+- To render a Heroicon by a **dynamic string name** inside a plain Blade
+  partial (not a Filament component's `->icon()`, which handles this itself)
+  use the global `svg($name, $classOrAttributes)` helper from
+  `blade-ui-kit/blade-icons` (the package backing both `heroicon-o-*` static
+  tags and Filament's own `->icon()` resolution) — **never** `{!! svg(...) !!}`:
+  it returns a `BladeUI\Icons\Svg` object implementing `Htmlable` (a `toHtml()`
+  method, no `__toString()`), and Blade's raw `{!! !!}` echo does not know
+  about `Htmlable` (it's a plain PHP `echo`, which throws "Object ... could
+  not be converted to string"). Use `{{ svg(...) }}` instead — Laravel's `e()`
+  helper (which `{{ }}` compiles to) explicitly checks `instanceof Htmlable`
+  and calls `->toHtml()` without escaping, so the raw SVG markup still comes
+  through unescaped despite the "safe" `{{ }}` syntax. Confirmed via a real
+  500 error caught in `storage/logs/laravel.log` (not visible from the tinker
+  `app()->handle($request)` response body itself, which just returns a
+  generic error page — always tail the log file when a tinker-rendered page
+  returns 500 with no useful HTML).
+- For an Infolist entry that needs to render a whole custom Blade partial
+  driven by data computed once per-request in PHP (not bound to any model
+  attribute/state, e.g. a timeline/list built from a relationship) —
+  `Filament\Infolists\Components\View::make($viewPath)->viewData($arrayOrClosure)`
+  (the Infolist-native equivalent of `Forms\Components\*->view()`/`->viewData()`
+  already used for form fields): plain array `viewData` works fine (no need
+  for a closure) when the data is computed inline in the page's `infolist()`
+  method, since that method itself already runs fresh per request. Alias the
+  import (e.g. `use Filament\Infolists\Components\View as ViewInfolist;`) if
+  the page already imports Laravel's own `Illuminate\Contracts\View\View` or
+  similar under the plain `View` name.
 
 ## [2026-07-12] - US-001
 - Nuovo tema Filament compilato via Vite per i 3 pannelli, con i design token del progetto (`tasks/design-reference/prenotar-ui-ruoli/tokens/*.css`) copiati 1:1 in `resources/css/filament/tokens/{colors,typography,spacing,effects,base}.css` + `fonts.css` (Manrope self-hosted via `@fontsource/manrope`, subset `latin` per weight 200-800) + `index.css` che li aggrega.
@@ -737,4 +764,18 @@ Started: 2026-07-12
   - Quando la STESSA azione Filament (Infolist o Form) deve comparire in due punti diversi del DOM (qui: card desktop + barra fissa mobile) per essere sempre cliccabile a prescindere dal breakpoint attivo (a differenza del pattern "singolo elemento, CSS responsive" usato altrove in questo repo), non si può riusare la stessa istanza PHP dell'Action in due posizioni dello schema: va estratta la sua definizione (form/closure `->action()`) in un metodo privato parametrizzato da un `$name` opzionale, richiamato due volte con nomi diversi (es. `approva`/`approva_mobile`) per evitare collisioni fra le due istanze — confermato via `Livewire::test()->callInfolistAction()` che invocare l'una o l'altra istanza esegue comunque la stessa logica reale (stesso closure), quindi il comportamento resta identico, cambia solo l'id usato per il mount lato Livewire.
   - Un `Group` (Infolists\Components\Group) di primo livello, sibling di un `Tabs::make()` nello stesso array `$infolist->schema([...])`, resta visibile a prescindere dal tab attivo (a differenza di qualunque schema annidato DENTRO una `Tabs\Tab::make()->schema([...])`, che sparisce quando quel tab non è quello selezionato) — utile per qualunque elemento persistente "fuori dai tab" (qui la barra azioni fissa), non serve duplicarlo in ciascun `Tab`.
   - Conflitto noto (non nuovo, già presente e accettato da US-007): qualunque barra `fixed inset-x-0 bottom-0 md:hidden` aggiunta da una pagina/wizard condivide lo stesso spazio della bottom-nav globale del pannello (`mobile-bottom-nav.blade.php`, renderHook `BODY_END` non scoped, sempre presente su ogni pagina). Per farla vincere visivamente basta un `z-index` più alto (qui `z-40` contro `z-30` della nav) — non serve nascondere esplicitamente la nav globale né scopare quel renderHook, la sovrapposizione con sfondo opaco la copre già del tutto quando la barra è più alta di lei (qui 2 pulsanti vs 1 riga di icone).
+---
+
+## 2026-07-12 - US-022
+- Restyle della tab "Storico" di `ViewPrenotazione` (Gr) secondo il mockup `pannello-gr.dc.html` "GR Dettaglio Storico": da tabella `RepeatableEntry` a 4 colonne a timeline verticale (pallino icona+colore per riga, linea connettore tra i pallini tranne sull'ultimo, titolo/autore+data/nota opzionale in un riquadro chiaro).
+- Nuovo `ViewPrenotazione::historyTimelineItems(): array` (sostituisce la `RepeatableEntry::make('history')->getStateUsing(...)` esistente) che legge `$this->prenotazione()->history()->orderBy('created_at', 'desc')->get()` (stessa fonte dati di prima, nessuna nuova migrazione) e mappa ogni riga a `['icon', 'color', 'title', 'author', 'date', 'note']`.
+- Icona/colore per riga **non** riusano `PrenotazioneStatus::color()` (quello è pensato per il badge di stato corrente, dove "Inviata assicurazione" è verde brand come "Approvata" — nella timeline invece vanno distinte visivamente, come nel mockup che usa blu per gli invii via email): nuovi metodi dedicati `historyIcon()`/`historyColor()` con mapping esplicito per ciascun caso di `PrenotazioneStatus` (Bozza/Concluso → grigio "stone", Inviata → warning, Approvata → success, Annullata → danger, InviatoPdfFirmato/InviatoAssicurazione → info). Il titolo resta `status_to->label()` (stesso testo di prima, nessuna nuova stringa di business inventata).
+- Autore riga: nuovo helper `historyAuthor(PrenotazioneHistory $entry): string` con parametro esplicitamente tipato (non nullable operator + `??` sulla relazione) per evitare il falso positivo Larastan `nullsafe.neverNull` già noto (vedi Codebase Patterns) su `user_id` nullable.
+- Nuova vista `resources/views/filament/gr/resources/prenotazione-resource/pages/storico-timeline.blade.php`, agganciata via `Filament\Infolists\Components\View::make(...)->viewData(['items' => $this->historyTimelineItems()])` (aliasata `ViewInfolist` in fase di import per non confliggere con altri usi del nome `View`) dentro la tab "Storico" — nuovo pattern generale per un Infolist "solo vista" non legato a un attributo, vedi Codebase Patterns.
+- Bug intercettato e corretto durante la verifica end-to-end (non in produzione, mai committato rotto): la prima versione della vista usava `{!! svg($item['icon'], 'h-4 w-4') !!}` per renderizzare l'icona Heroicon per nome dinamico, che lanciava un 500 reale ("Object of class BladeUI\Icons\Svg could not be converted to string") perché `{!! !!}` è un echo raw che non chiama `->toHtml()` sull'oggetto `Htmlable` restituito da `svg()`. Corretto in `{{ svg(...) }}` (vedi nuova voce in Codebase Patterns per il perché).
+- Files changed: `app/Filament/Gr/Resources/PrenotazioneResource/Pages/ViewPrenotazione.php` (solo tab "Storico": nuovi metodi + import), `resources/views/filament/gr/resources/prenotazione-resource/pages/storico-timeline.blade.php` (nuovo).
+- Verifica: `sail composer qa` verde (Pint OK, Larastan 0 errori/157 file, Pest 258 test passati/583 assertion — invariato, nessun nuovo test Pest: l'AC di questa story non lo richiede esplicitamente, pura presentazione su dati già esistenti, coerente con US-018/US-021). Verifica end-to-end via `sail artisan tinker` (nessun tool MCP browser disponibile, confermato ancora): richiesta GET autenticata reale come `gr_manager` su `/gr/prenotaziones/{id}` con 2 righe `prenotazione_history` create ad-hoc (una "inviata" senza nota, una "approvata" con nota) → 200 OK, HTML contiene il wrapper della card (`rounded-[20px]`), i 2 titoli "Inviata"/"Approvata", il testo della nota, `var(--warning-100)`/`var(--success-100)` per i rispettivi pallini, markup `<svg` renderizzato, nome utente reale. Verificato anche lo stato vuoto (prenotazione seedata senza righe `history`, creata direttamente dal seeder senza passare dalla state machine): mostra "Nessuna transizione registrata." invece di un errore. Righe di history di test ripulite a fine verifica. Confronto pixel reale col mockup resta da fare manualmente, nessun tool screenshot/browser disponibile in questa sessione.
+- **Learnings for future iterations:**
+  - Vedi le 2 nuove voci in Codebase Patterns sopra (gotcha `{!! svg() !!}` vs `{{ svg() }}` per Htmlable non stringabile, e `Infolists\Components\View::make()->viewData()` per un entry "vista pura" non legato a un attributo) — rilevanti per qualunque story futura che debba renderizzare un'icona Heroicon per nome dinamico in un Blade puro (non tramite `->icon()` di un componente Filament, che gestisce già da sé la risoluzione) o un blocco Infolist arbitrario non derivato da un singolo campo del modello.
+  - **Sempre tailare `storage/logs/laravel.log`** (`sail exec laravel.test tail -n 100 storage/logs/laravel.log`) quando una pagina renderizzata via `app()->handle($request)` in tinker ritorna status 500: il body della response in quel caso è solo una pagina di errore generica, non la vera eccezione — il log ha sempre lo stack trace completo.
 ---

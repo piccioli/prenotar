@@ -10,6 +10,7 @@ use App\Enums\ResponsabileTipo;
 use App\Enums\TipoMezzo;
 use App\Filament\Gr\Resources\PrenotazioneResource;
 use App\Models\Prenotazione;
+use App\Models\PrenotazioneHistory;
 use App\Models\Torre;
 use App\Services\PdfGenerator;
 use App\Services\PrenotazioneStateMachine;
@@ -20,10 +21,10 @@ use Filament\Infolists\Components\Actions\Action as InfolistAction;
 use Filament\Infolists\Components\Actions as InfolistActions;
 use Filament\Infolists\Components\Grid;
 use Filament\Infolists\Components\Group;
-use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\Tabs;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\View as ViewInfolist;
 use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
@@ -79,6 +80,65 @@ class ViewPrenotazione extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [];
+    }
+
+    /**
+     * Righe per la timeline "Storico" (US-022), più recenti in alto: icona/colore/titolo
+     * derivati da `status_to` con una mappatura dedicata (vedi {@see self::historyIcon()},
+     * {@see self::historyColor()}) invece di riusare `PrenotazioneStatus::color()` (che è
+     * pensato per il badge di stato corrente, dove "Inviata assicurazione" è verde brand
+     * come "Approvata" — qui invece la timeline deve distinguerle visivamente, come nel
+     * mockup "GR Dettaglio Storico").
+     *
+     * @return list<array{icon: string, color: string, title: string, author: string, date: string, note: ?string}>
+     */
+    private function historyTimelineItems(): array
+    {
+        return $this->prenotazione()->history()
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(fn (PrenotazioneHistory $entry): array => [
+                'icon' => self::historyIcon($entry->status_to),
+                'color' => self::historyColor($entry->status_to),
+                'title' => $entry->status_to->label(),
+                'author' => self::historyAuthor($entry),
+                'date' => $entry->created_at !== null ? Carbon::parse($entry->created_at)->translatedFormat('d F Y, H:i') : '—',
+                'note' => $entry->note,
+            ])
+            ->all();
+    }
+
+    /** Estratto in un helper con parametro esplicitamente nullable per il falso positivo Larastan `nullsafe.neverNull` su relazioni `BelongsTo` nullable (vedi Codebase Patterns in progress.txt). */
+    private static function historyAuthor(PrenotazioneHistory $entry): string
+    {
+        $user = $entry->user;
+
+        return $user === null ? '—' : $user->name;
+    }
+
+    private static function historyIcon(PrenotazioneStatus $status): string
+    {
+        return match ($status) {
+            PrenotazioneStatus::Bozza => 'heroicon-o-document-plus',
+            PrenotazioneStatus::Inviata => 'heroicon-o-envelope',
+            PrenotazioneStatus::Approvata => 'heroicon-o-check-circle',
+            PrenotazioneStatus::Annullata => 'heroicon-o-x-circle',
+            PrenotazioneStatus::InviatoPdfFirmato => 'heroicon-o-document-check',
+            PrenotazioneStatus::InviatoAssicurazione => 'heroicon-o-paper-airplane',
+            PrenotazioneStatus::Concluso => 'heroicon-o-check-badge',
+        };
+    }
+
+    /** Prefisso della scala colore CSS (`tokens/colors.css`) da usare per icona/sfondo del pallino. */
+    private static function historyColor(PrenotazioneStatus $status): string
+    {
+        return match ($status) {
+            PrenotazioneStatus::Bozza, PrenotazioneStatus::Concluso => 'stone',
+            PrenotazioneStatus::Inviata => 'warning',
+            PrenotazioneStatus::Approvata => 'success',
+            PrenotazioneStatus::Annullata => 'danger',
+            PrenotazioneStatus::InviatoPdfFirmato, PrenotazioneStatus::InviatoAssicurazione => 'info',
+        };
     }
 
     /**
@@ -456,20 +516,8 @@ class ViewPrenotazione extends ViewRecord
 
                     Tabs\Tab::make('Storico')
                         ->schema([
-                            RepeatableEntry::make('history')
-                                ->label('')
-                                ->getStateUsing(fn (Prenotazione $record) => $record->history()->orderBy('created_at', 'desc')->get())
-                                ->schema([
-                                    TextEntry::make('status_from')
-                                        ->label('Da')
-                                        ->formatStateUsing(fn (mixed $state): string => $state instanceof PrenotazioneStatus ? $state->label() : '—'),
-                                    TextEntry::make('status_to')
-                                        ->label('A')
-                                        ->formatStateUsing(fn (PrenotazioneStatus $state): string => $state->label()),
-                                    TextEntry::make('user.name')->label('Operatore')->default('—'),
-                                    TextEntry::make('created_at')->label('Data')->dateTime('d/m/Y H:i'),
-                                    TextEntry::make('note')->label('Note')->default('—')->columnSpanFull(),
-                                ])->columns(4),
+                            ViewInfolist::make('filament.gr.resources.prenotazione-resource.pages.storico-timeline')
+                                ->viewData(['items' => $this->historyTimelineItems()]),
                         ]),
                 ])
                 ->columnSpanFull(),
