@@ -14,6 +14,8 @@ use Saade\FilamentFullCalendar\Widgets\FullCalendarWidget;
 
 class CalendarioPrenotazioniWidget extends FullCalendarWidget
 {
+    protected static string $view = 'filament.sezione.widgets.calendario-prenotazioni';
+
     protected int|string|array $columnSpan = 'full';
 
     public ?int $filtroTorreId = null;
@@ -102,6 +104,25 @@ class CalendarioPrenotazioniWidget extends FullCalendarWidget
             'selectable' => false,
             'editable' => false,
             'eventDisplay' => 'block',
+        ];
+    }
+
+    /**
+     * Override applicato solo sotto il breakpoint mobile (768px), vedi vista Blade
+     * `calendario-prenotazioni.blade.php`: FullCalendar mostra un'agenda/lista invece
+     * della griglia mensile, illeggibile a schermi stretti.
+     *
+     * @return array<string, mixed>
+     */
+    public function mobileConfig(): array
+    {
+        return [
+            'initialView' => 'listMonth',
+            'headerToolbar' => [
+                'left' => 'prev,next today',
+                'center' => 'title',
+                'right' => '',
+            ],
         ];
     }
 
