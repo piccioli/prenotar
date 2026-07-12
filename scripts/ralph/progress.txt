@@ -309,6 +309,29 @@ Started: 2026-07-12
   target panel explicitly (`getUrl('view', [...], panel: 'sezione')`) from any
   code that isn't 100% guaranteed to run only within its own panel's request
   context.
+- `Saade\FilamentFullCalendar\Widgets\FullCalendarWidget::config()` returns a
+  plain PHP array, serialized server-side via `@js()` into the `config:` key
+  of the vendor Blade's `x-data="fullcalendar({...})"` — it cannot carry a JS
+  callback or read `window.innerWidth` (only 4 unrelated per-event hooks,
+  `eventClassNames`/`eventContent`/`eventDidMount`/`eventWillUnmount`, accept
+  raw JS strings, and those are scoped to individual event rendering, not the
+  calendar's global config). To make a `FullCalendarWidget` responsive
+  (different `initialView`/`headerToolbar` under a CSS breakpoint) without
+  forking the package's JS: `FullCalendarWidget` extends `Widget`
+  (a plain Livewire component, not `ViewComponent`) but still honors
+  `protected static string $view` — override it, copy vendor's
+  `fullcalendar.blade.php` verbatim, and change only the `config:` line to a
+  **plain JS ternary** mixing `@js(...)` calls with real JS operators, e.g.
+  `config: (window.innerWidth < 768 ? { ...@js($this->getConfig()), ...@js($this->mobileConfig()) } : @js($this->getConfig()))`
+  — the whole `x-data="..."` attribute value is evaluated as a JS expression
+  by Alpine, so `window.innerWidth`/ternary/object-spread all work; each
+  `@js()` call still safely compiles to its own `JSON.parse('...')`, the
+  ternary/spread only combine the resulting objects. This check runs once at
+  Alpine mount (component init), not reactively on resize — the vendor JS
+  factory (`resources/js/filament-fullcalendar.js`) keeps its `Calendar`
+  instance as a local variable inside `init()`, never exposed on `this`, so
+  reacting to a live resize across the breakpoint would require forking that
+  JS file too, not just the Blade view.
 
 ## [2026-07-12] - US-001
 - Nuovo tema Filament compilato via Vite per i 3 pannelli, con i design token del progetto (`tasks/design-reference/prenotar-ui-ruoli/tokens/*.css`) copiati 1:1 in `resources/css/filament/tokens/{colors,typography,spacing,effects,base}.css` + `fonts.css` (Manrope self-hosted via `@fontsource/manrope`, subset `latin` per weight 200-800) + `index.css` che li aggrega.
@@ -507,4 +530,18 @@ Started: 2026-07-12
 - **Learnings for future iterations:**
   - Vedi il nuovo bullet in Codebase Patterns sopra su `Resource::getUrl()` e `Filament::getCurrentPanel()` per widget condivisi tra pannelli — rilevante anche per US-023 (Calendario GR) che riusa lo stesso widget.
   - Quando un widget/pagina è condiviso da più pannelli Filament (stesso namespace di classe usato via `@livewire()` da entrambi), qualunque nuova funzionalità che dipende dall'utente autenticato va progettata per degradare in modo sicuro nel pannello "non previsto" (qui: nessun url generato se l'utente non può possedere il record), invece di assumere che venga sempre invocata dal proprio pannello di appartenenza.
+---
+
+## 2026-07-12 - US-015
+- Restyle mobile di `CalendarioPage`/`CalendarioPrenotazioniWidget` (Sezione) secondo l'AC "FullCalendar in modalità listWeek/listMonth sotto il breakpoint mobile": nessuno screen dedicato nel mockup `mobile-3-ruoli.dc.html` (solo 1a/1b/1c = Dashboard/Wizard step1/Lista per il ruolo Sezione, nessun id di calendario) — coerente col precedente di US-010, la verifica visiva richiesta dall'AC resta quindi "shell/stile coerenti", non un confronto pixel su uno screen specifico che non esiste.
+- Il pacchetto `saade/filament-fullcalendar` non espone alcun hook per un `initialView`/`headerToolbar` condizionale a runtime: `FullCalendarWidget::config()` restituisce un array PHP puro, serializzato via `@js()` (JSON), quindi non può contenere né una closure JS né leggere `window.innerWidth` lato server. Gli unici 4 metodi che accettano JS raw (`eventClassNames/eventContent/eventDidMount/eventWillUnmount`, trait `InteractsWithRawJS`) sono scoped ai render-hook per-evento, non alla config globale del calendario.
+- Soluzione: **fork della vista Blade vendor**, stesso pattern già consolidato per `Wizard`/`FileUpload` (`->view()`/override `$view`) — qui applicato per la prima volta a un **Widget** Livewire puro (non un `Forms\Components\*`/`ViewComponent`), che comunque supporta la stessa property `protected static string $view` (ereditata da `Filament\Widgets\Widget`, un Livewire component). Copiato `vendor/saade/filament-fullcalendar/resources/views/fullcalendar.blade.php` verbatim in `resources/views/filament/sezione/widgets/calendario-prenotazioni.blade.php`, con la sola riga `config:` resa condizionale: `window.innerWidth < 768 ? { ...@js($this->getConfig()), ...@js($this->mobileConfig()) } : @js($this->getConfig())` — è **plain JS dentro l'attributo Alpine `x-data`**, non serializzazione PHP, quindi `window.innerWidth`/l'operatore ternario/lo spread `...` funzionano normalmente; ogni `@js(...)` compila comunque a un `JSON.parse('...')` sicuro (nessuna injection), lo spread si limita a fondere 2 oggetti JS già validi.
+- Nuovo metodo pubblico `CalendarioPrenotazioniWidget::mobileConfig(): array` (`initialView => 'listMonth'`, `headerToolbar` ridotto a `prev,next today` / `title` / vuoto — il toolbar a 3 pulsanti di switch-vista del default vendor non ha senso su mobile dato che lì esiste una sola vista). Il plugin `list` (necessario per `listMonth`) è già nella lista default di `FilamentFullCalendarPlugin::$plugins`, nessuna configurazione aggiuntiva richiesta.
+- **Scelta consapevole**: il check `window.innerWidth < 768` viene valutato una sola volta, all'inizializzazione Alpine (dentro l'espressione `x-data="fullcalendar({...})"`, eseguita una volta sola al mount del componente) — **non reattivo** a un resize della finestra oltre quella soglia mentre la pagina è già aperta (nessun listener `window.addEventListener('resize', ...)` aggiunto, che avrebbe richiesto di intercettare l'istanza `Calendar` interna al vendor, non esposta su `this` dal loro `fullcalendar()` factory — solo una variabile locale dentro `init()`). Accettabile per l'uso reale (dispositivo mobile fisso o browser desktop, non ridimensionamento manuale attraverso il breakpoint durante la sessione).
+- Questo widget è **condiviso col pannello GR** (`resources/views/filament/gr/pages/calendario.blade.php`, invariato, vedi nota US-014): l'override di `$view` sul widget si applica quindi anche lì, dando gratuitamente lo stesso comportamento responsive al calendario GR (nessuna story dedicata "Calendario GR - mobile" nella roadmap, solo US-023 "Calendario GR - desktop" ancora da fare) — effetto collaterale positivo e a basso rischio, non richiesto esplicitamente da questa story ma coerente con "degradare in modo sicuro nel pannello non previsto" già annotato in US-014.
+- Files changed: `app/Filament/Sezione/Widgets/CalendarioPrenotazioniWidget.php` (override `$view`, nuovo `mobileConfig()`), `resources/views/filament/sezione/widgets/calendario-prenotazioni.blade.php` (nuovo, fork del vendor).
+- Verifica: `sail composer qa` verde (Pint OK, Larastan 0 errori/157 file, Pest 243 test/535 assertion — stesso numero di US-014, nessuna regressione, nessun nuovo test Pest: la story non introduce nuova logica di dominio testabile via Pest, solo un ramo JS lato browser non osservabile da PHPUnit/Pest). `sail npm run build` verde, nessun asset nuovo necessario (nessuna classe CSS custom, solo Blade+JS inline). Verifica end-to-end via `sail artisan tinker` (nessun tool MCP browser disponibile, confermato ancora): richiesta GET autenticata reale su `/sezione/calendario` con un utente sezione seedato reale → 200 OK, HTML contiene `window.innerWidth < 768`, `listMonth`, `class="filament-fullcalendar"` e "Sola consultazione" (testo di US-014 invariato). Confronto pixel reale del ramo mobile (branch JS `window.innerWidth < 768` non eseguibile lato server) resta da fare manualmente in un vero browser a viewport 390x844, nessun tool screenshot disponibile in questa sessione.
+- **Learnings for future iterations:**
+  - Nuovo pattern in Codebase Patterns sotto: come rendere un `Saade\FilamentFullCalendar\Widgets\FullCalendarWidget` responsive (vista diversa sotto breakpoint) senza toccare il vendor — fork della Blade view, `config:` reso un'espressione JS ternaria basata su `window.innerWidth` invece che un valore PHP statico.
+  - Se una futura story avesse bisogno di reattività reale al resize (non solo al mount), servirebbe forkare anche `resources/js/filament-fullcalendar.js` (non solo la Blade) per esporre l'istanza `Calendar` su `this` e aggiungere un listener — non necessario per gli AC attuali, ma da tenere presente se dovesse emergere un requisito simile.
 ---
