@@ -10,6 +10,7 @@ use App\Models\Prenotazione;
 use Filament\Actions;
 use Filament\Resources\Components\Tab;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Builder;
 
 class ListPrenotazioni extends ListRecords
@@ -23,6 +24,11 @@ class ListPrenotazioni extends ListRecords
                 ->label('Nuova prenotazione')
                 ->visible(fn (): bool => auth()->user()->can('create', Prenotazione::class)),
         ];
+    }
+
+    public function getSubheading(): string|Htmlable|null
+    {
+        return 'Ordinate dalla data più vicina (BUG-01). Le concluse e annullate sono in Archivio (BUG-02).';
     }
 
     public function getTabs(): array

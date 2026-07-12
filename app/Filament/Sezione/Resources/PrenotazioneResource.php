@@ -792,35 +792,33 @@ class PrenotazioneResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('nome_evento')
                     ->label('Evento')
+                    ->weight('bold')
                     ->searchable()
-                    ->limit(40),
+                    ->limit(40)
+                    ->description(fn (Prenotazione $record): string => collect([
+                        self::labelTipoEvento($record->tipo_evento),
+                        $record->indirizzo_evento,
+                    ])->filter()->implode(' · ')),
+
+                Tables\Columns\TextColumn::make('periodo')
+                    ->label('Periodo')
+                    ->getStateUsing(fn (Prenotazione $record): string => self::formattaPeriodo(
+                        $record->data_inizio_prenotazione->toDateString(),
+                        $record->data_fine_prenotazione->toDateString(),
+                    ))
+                    ->sortable(query: fn (Builder $query, string $direction): Builder => $query->orderBy('data_inizio_prenotazione', $direction)),
 
                 Tables\Columns\TextColumn::make('torre.nome')
                     ->label('Torre')
                     ->badge()
                     ->color(fn (Prenotazione $record): array => Color::hex(Torre::coloreHexPer($record->torre)))
-                    ->default('—'),
-
-                Tables\Columns\TextColumn::make('data_inizio_prenotazione')
-                    ->label('Da')
-                    ->date('d/m/Y')
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('data_fine_prenotazione')
-                    ->label('A')
-                    ->date('d/m/Y')
-                    ->sortable(),
+                    ->default('Da assegnare'),
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('Stato')
                     ->badge()
                     ->formatStateUsing(fn (PrenotazioneStatus $state): string => $state->label())
                     ->color(fn (PrenotazioneStatus $state): string => $state->color()),
-
-                Tables\Columns\IconColumn::make('has_delibera')
-                    ->label('Delibera')
-                    ->boolean()
-                    ->getStateUsing(fn (Prenotazione $record): bool => $record->hasMedia('delibera_consiglio')),
             ])
             ->filters([
                 SelectFilter::make('status')
