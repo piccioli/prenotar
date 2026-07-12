@@ -81,3 +81,13 @@ Started: Dom 12 Lug 2026 14:47:50 CEST
   - Le immagini `mariadb:10.11` espongono i binari come `mariadb-dump`/`mariadb` (non solo gli alias storici `mysqldump`/`mysql`): usare i nomi nativi nei nuovi script per restare allineati alla versione dell'immagine in uso.
   - Per i workflow CD che condividono struttura (build/up/migrate), riusare l'ordine già validato in `cd-develop.yml` e aggiungere solo gli step specifici della story (qui: backup + retention prima del deploy) invece di reinventare la sequenza.
 ---
+
+## [2026-07-12] - US-008
+- Aggiunta in `CLAUDE.md` una nuova sezione "Flusso di hotfix" (tra "Branching e workflow" e "Convenzioni codice", collegata dal rimando già presente in US-003) che descrive la procedura: branch `hotfix/<nome>` da `main` -> fix -> PR verso `main` (coperta dalla CI esistente, nessuna modifica a `ci.yml`) -> merge -> `cd-production.yml` (US-007) parte automaticamente.
+- Specificato esplicitamente che alla chiusura dell'hotfix va aperta anche una PR `hotfix/<nome>` -> `develop` per non perdere il fix nel flusso normale, e che il merge su `main` corrisponde sempre a un bump di patch version in `CHANGELOG.md` + nuovo tag git sul commit di merge.
+- Non è stato creato `CONTRIBUTING.md` (non esisteva nel repo): la sezione è stata aggiunta a `CLAUDE.md`, coerente con dove vivono già le altre sezioni di branching/workflow (US-003).
+- Files changed: `CLAUDE.md` (nuova sezione "Flusso di hotfix").
+- `sail composer qa` verde: Pint OK, Larastan 0 errori, Pest 235 test passati (495 assertion) — nessun test nuovo necessario, story è solo documentazione.
+- **Learnings for future iterations:**
+  - US-009 (versionamento su develop) va posizionata vicino a questa sezione "Flusso di hotfix" in `CLAUDE.md` e deve rimandarci esplicitamente per l'eccezione delle patch release taggate su `main` — evitare di duplicare la spiegazione del bump patch già scritta qui.
+---

@@ -96,6 +96,20 @@ git config core.hooksPath .githooks
 
 ---
 
+## Flusso di hotfix
+
+Per un bug urgente in produzione, senza aspettare il normale ciclo di release da `develop`:
+
+1. Branch `hotfix/<nome>` creato direttamente da `main` (non da `develop`).
+2. Fix implementato sul branch `hotfix/<nome>`.
+3. PR aperta verso `main` — coperta dalla CI esistente (`.github/workflows/ci.yml`, nessun filtro `branches` sul trigger `pull_request:`), deve risultare verde prima del merge.
+4. Merge della PR su `main` → il workflow `cd-production.yml` (vedi Fase 7 / US-007) parte automaticamente: backup del DB, build, migrazione, restart dello stack di produzione.
+5. Alla chiusura dell'hotfix va aperta **anche** una PR `hotfix/<nome>` → `develop`, per non perdere il fix nel flusso normale di sviluppo (altrimenti verrebbe sovrascritto dalla prossima release `develop` → `main`).
+
+Il merge di un hotfix su `main` corrisponde **sempre** a un bump di **patch version** (terzo numero, es. `1.2.3` → `1.2.4`) in `CHANGELOG.md` e alla creazione di un nuovo tag git sul commit di merge su `main`.
+
+---
+
 ## Convenzioni codice
 
 - `declare(strict_types=1)` in testa a ogni file PHP.
