@@ -128,7 +128,7 @@ class PrenotazioneResource extends Resource
             ->emptyStateIcon('heroicon-o-clipboard-document-list');
     }
 
-    private static function richiedenteLabel(Prenotazione $record): string
+    public static function richiedenteLabel(Prenotazione $record): string
     {
         if ($record->sottosezione !== null) {
             return view('filament.components.etichetta-sezione', ['sottosezione' => $record->sottosezione])->render();

@@ -333,6 +333,59 @@ Started: 2026-07-12
   reacting to a live resize across the breakpoint would require forking that
   JS file too, not just the Blade view.
 
+- Embedding a **real, fully-functional Filament Action** (with `->form()`,
+  `->requiresConfirmation()`, `->action()` closures identical to a header
+  action) directly inside an **Infolist** schema (not a form): use
+  `Filament\Infolists\Components\Actions::make([$action1, $action2])` (the
+  container, plural class name) wrapping one or more
+  `Filament\Infolists\Components\Actions\Action::make('name')` (the action
+  itself, in the `Actions\` sub-namespace — a **different** class from both
+  `Filament\Actions\Action` used by header/table actions and
+  `Filament\Forms\Components\Actions\Action` used inside forms, but all 3
+  extend the same `Filament\Actions\MountableAction` base, so the entire
+  fluent API — `->color()`, `->icon()`, `->form([...])`,
+  `->requiresConfirmation()`, `->modalHeading()`, `->action(closure)` — works
+  identically; closures resolve `?Model $record`/the action's own `Model`
+  type-hint automatically, exactly like header actions). Use
+  `->fullWidth()` on the `Actions` container for a single button spanning
+  its column (each `Actions::make([$action])` as its own schema entry stacks
+  vertically full-width; wrapping 2 actions in one `Actions::make([...])` +
+  `->fullWidth()` instead renders them as an `auto-fit` grid side-by-side,
+  not stacked — use separate `Actions::make([...])` calls per button for a
+  vertical stack). This lets a restyle move Approve/Reject/etc. buttons from
+  the page header into an arbitrary sidebar card position (matching a mockup
+  that shows a 2-column detail+decision-sidebar layout) without touching any
+  state-machine/domain logic — same technique already established for forms
+  (`Filament\Forms\Components\Actions`, see US-011 note) now confirmed to
+  have a Infolist-native equivalent.
+- Testing an Infolist-embedded action: `Filament\Infolists\Testing\TestsActions`
+  registers `assertInfolistActionVisible/Hidden/Exists/DoesNotExist` and
+  `callInfolistAction($componentKey, $actionName)` on the Livewire testable —
+  same `{statePath}.{actionName}Action` key convention as form actions (for
+  a plain view-only Infolist with no bound state, `statePath` is empty, so
+  the key is literally `.approvaAction`, confirmed via
+  `$infolist->getComponent($key)` walk in tinker, never guessed). **Gotcha**:
+  if the action's own `ActionContainer` lives inside a parent component
+  (e.g. a `Section`) that is itself `->visible(false)`, `getComponent($key)`
+  returns `null` for that action entirely (not just "hidden") — every
+  `assertInfolistAction*` helper's failure-message string unconditionally
+  calls `$component->getKey()` even on the successful branch (e.g.
+  `assertInfolistActionDoesNotExist`'s `Assert::assertNull($action, message:
+  "...{$component->getKey()}...")`), so a `null` `$component` crashes with
+  "Call to a member function getKey() on null" regardless of pass/fail. When
+  an entire action group is gated behind an outer `->visible()` (not just
+  the individual actions), test that case with a plain
+  `->assertDontSee($action->getLabel())` on the rendered HTML instead of any
+  `assertInfolistAction*` helper.
+- `Filament\Infolists\Components\Section` (and `TextEntry`, `Tabs\Tab`, etc.)
+  support `->icon()`/`->iconColor()` natively (via the shared `HasIcon`/
+  `HasIconColor` traits already used by Actions) — no `->view()` fork needed
+  to add a heading icon to an Infolist card, unlike some of the earlier
+  form-field restyles in this epic that did require forking a Blade view.
+  `Filament\Infolists\Components\Grid::make(['default' => 1, 'lg' => N])` +
+  `Group::make([...])->columnSpan(['lg' => N])` gives the same responsive
+  multi-column layout capability Forms already has, reusable for any
+  Infolist page that needs a "main content + sidebar" 2-column mockup layout.
 - A Blade view living under `resources/views/filament/components/*.blade.php`
   (the convention already used by `mobile-fab.blade.php`/`mobile-bottom-nav.blade.php`,
   registered under the plain Laravel `filament.components.*` view path, NOT a
@@ -620,4 +673,20 @@ Started: 2026-07-12
   - Un `TextColumn` con `->getStateUsing()` che ritorna HTML (via `view(...)->render()`) richiede esplicitamente `->html()` sulla colonna (`Filament\Tables\Columns\Concerns\CanFormatState::html()`), altrimenti il markup verrebbe escapato a runtime — non basta che la stringa contenga tag HTML.
   - Quando un `assertSee()` di test copre un testo che nel markup reale è spezzato da un tag HTML in mezzo (es. "Sezione di " + `<span>NOME</span>`, pattern "prefisso testuale + componente Blade" di US-017/018/019), va spezzato in due `assertSee()` separate (`assertSee('Sezione di')->assertSee('NOME')`) invece di una singola stringa concatenata: Livewire `assertSee()` cerca una sottostringa contigua nell'HTML renderizzato, che con un tag in mezzo non matcha mai.
   - `Filament\Support\Enums\IconPosition::After` su una qualunque `Action` (header/table/form) sposta l'icona dopo la label mantenendo intatta tutta la logica esistente dell'azione (nessun fork di vista necessario, a differenza di altri restyle precedenti che hanno richiesto `->view()`) — utile per qualunque prossimo mockup che disegna "Testo →" invece di "→ Testo".
+---
+
+## 2026-07-12 - US-020
+- Restyle di `ViewPrenotazione` (Gr, pagina "Dettaglio prenotazione") secondo il mockup `pannello-gr.dc.html` "GR Dettaglio prenotazione": header (titolo = nome evento via `getTitle()`, subheading = etichetta richiedente + badge stato + "richiesta il {data}" via `getSubheading()`), layout a 2 colonne (`Infolists\Components\Grid`/`Group`, `lg: 2` + `lg: 1`) dentro la tab "Dettagli": colonna sinistra = 3 card informative ("Quando e dove", "Evento", "Logistica e responsabile" — quest'ultima frutto della fusione delle precedenti 2 Section "Logistica trasporto"/"Responsabile in loco", nessun campo rimosso), colonna destra = 3 card azione ("Decisione", "Documenti", "Altre azioni").
+- **Le 8 azioni prima in `getHeaderActions()`** (approva/rifiuta/reassign_torre/change_dates/download_richiesta/download_modulo3/invia_assicurazione/concludi) sono state spostate **verbatim** (stessi `->form()`/`->action()`/`->requiresConfirmation()`/`->modalHeading()` — solo `use (...)` per catturare `$pren` invece di richiamare `$this->prenotazione()` dentro le closure, dato che ora vivono in un metodo diverso) dentro le 3 card di destra, usando la neo-scoperta `Filament\Infolists\Components\Actions` + `Actions\Action` (equivalente Infolist di `Forms\Components\Actions` già noto da US-011) — vedi le 3 nuove voci in Codebase Patterns sopra. `getHeaderActions()` ora ritorna `[]`.
+- Ogni card di destra ha un `->visible()` a livello di intera `Section` (non solo sulle singole action al suo interno) calcolato con le stesse condizioni di stato già esistenti (`Inviata` per Decisione, 4 stati per Documenti, OR delle 4 condizioni per Altre azioni) — così l'intera card scompare quando nessuna delle sue azioni è pertinente allo stato corrente, invece di restare vuota con solo l'intestazione. **Scostamento consapevole dal mockup**: il mockup mostra "Invia all'assicurazione"/"Segna come conclusa" sempre visibili ma in grigio/disabilitati con un testo esplicativo sotto; qui invece l'AC "azioni condizionate allo stato corrente (non tutte visibili sempre)" è stato interpretato letteralmente come nascondere l'azione non pertinente (stessa logica `->visible()` già esistente nell'header, solo spostata), non come mostrarla disabilitata — più semplice, zero rischio di azioni "fantasma" cliccabili per errore, coerente con "solo presentazione, nessuna modifica alla logica".
+- Il campo "Sezione / Sottosezione" (`proprietario_label`) è stato **rimosso** dalla card "Quando e dove" perché duplicato: l'informazione è ora nell'header (subheading), stessa fonte HTML (`PrenotazioneResource::richiedenteLabel()`, reso `public static` — prima `private static` — per essere richiamabile dalla page).
+- Nuovo `ViewPrenotazione::dataRichiesta(): ?Carbon` (namespace `Carbon\Carbon`, non `Illuminate\Support\Carbon` — Larastan infierisce quest'ultimo dal cast Eloquent come union `Carbon\Carbon|string|null`, quindi il tipo di ritorno dichiarato deve combaciare con quello effettivo, non con l'alias Laravel) legge la prima riga di `history` con `status_to = Inviata` (data di invio della richiesta al GR) con fallback a `created_at` se assente (dati seed/legacy senza history) — **non** un nuovo bug nullsafe.neverNull dei precedenti (quello era su nullsafe+`??`), qui il problema era un mismatch di tipo union: risolto con un controllo esplicito `!== null` + `Carbon::parse()` invece del nullsafe diretto.
+- Nuovo Blade partial `resources/views/filament/gr/resources/prenotazione-resource/pages/dettaglio-subheading.blade.php` (richiedente HTML + `<x-filament::badge>` stato + testo data), incluso via `view(...)->render()` avvolto in `HtmlString` (stesso pattern US-016/US-017 — mai `<x-...>` tag per una vista sotto `filament.components.*`/percorsi custom).
+- Tab "Allegati" ora ha `->badge(fn (Prenotazione $record): int => ...)` che conta quanti delle 4 collection documento hanno effettivamente un file caricato (`getFirstMedia() !== null`), invece di un numero statico — coerente col mockup "Allegati (3)".
+- Nuovo test Feature `tests/Feature/Gr/PrenotazioneDettaglioRestyleTest.php` (5 test): header con titolo/etichetta/badge, azione approva visibile in Inviata e assente in Approvata (`assertDontSee` sul testo del bottone, non `assertInfolistActionHidden` — vedi gotcha in Codebase Patterns sul `$component` null quando l'intera Section è nascosta), azione approva eseguita via `callInfolistAction('.approvaAction', 'approva', [])` transiziona davvero lo stato, card Documenti assente in Inviata/presente in Approvata, badge conteggio Allegati corretto con 2 file caricati.
+- Files changed: `app/Filament/Gr/Resources/PrenotazioneResource.php` (`richiedenteLabel()` da `private` a `public static`), `app/Filament/Gr/Resources/PrenotazioneResource/Pages/ViewPrenotazione.php` (riscrittura quasi completa), `resources/views/filament/gr/resources/prenotazione-resource/pages/dettaglio-subheading.blade.php` (nuovo), `tests/Feature/Gr/PrenotazioneDettaglioRestyleTest.php` (nuovo).
+- Verifica: `sail composer qa` verde (Pint OK, Larastan 0 errori/157 file, Pest 258 test passati/583 assertion — +5 rispetto a US-019, nessuna regressione). Verifica end-to-end via `sail artisan tinker` (nessun tool MCP browser disponibile, confermato ancora una volta): richiesta GET autenticata reale su `/gr/prenotaziones/{id}` per una prenotazione reale creata ad-hoc, ciclata su tutti e 6 gli stati (Inviata/Approvata/InviatoPdfFirmato/InviatoAssicurazione/Concluso) — confermato che "Decisione" appare solo in Inviata, "Documenti" da Approvata in poi, "Riassegna torre"/"Modifica date trasporto" in Approvata+InviatoPdfFirmato, "Invia all'assicurazione" solo in InviatoPdfFirmato, "Segna come conclusa" solo in InviatoAssicurazione — esattamente come da `->visible()` esistenti, nessuna regressione comportamentale. Confermato anche via `Livewire::test()` + `callInfolistAction()` che l'azione "approva" esegue realmente `PrenotazioneStateMachine::approva()` (stato passa a Approvata). Record di test ripuliti a fine verifica. Confronto pixel reale col mockup (in particolare l'esatto stile "greyed out" delle azioni non disponibili, qui sostituito da nascondimento completo) resta da fare manualmente, nessun tool screenshot/browser disponibile in questa sessione.
+- **Learnings for future iterations:**
+  - Vedi le 3 nuove voci in Codebase Patterns sopra (Infolist `Actions`/`Actions\Action` per incorporare azioni reali fuori dall'header, il gotcha di testing quando l'intera Section-contenitore è nascosta, `Section->icon()`/`Grid`+`Group` per layout responsive nativi senza fork) — rilevanti per US-021 (stesso dettaglio, mobile: barra azioni fissa in basso può riusare **le stesse** `Infolists\Components\Actions` già definite qui, non serve una seconda definizione delle azioni) e per qualunque pagina `ViewRecord`/Infolist futura che debba spostare azioni fuori dall'header (nessun'altra story in coda sembra averne bisogno, ma il pattern è ora consolidato).
+  - `PrenotazioneResource::richiedenteLabel()` (Gr) è ora `public static`: qualunque story futura nel pannello Gr che debba mostrare "chi ha fatto questa richiesta" (dashboard/lista già lo facevano con la propria logica locale in US-017/018/019, non con questo metodo) può riusarlo invece di duplicare la logica "Sezione di X" / "S.SEZ. ... (sez. rif. ...)".
 ---

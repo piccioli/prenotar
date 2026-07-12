@@ -14,8 +14,12 @@ use App\Models\Torre;
 use App\Services\PdfGenerator;
 use App\Services\PrenotazioneStateMachine;
 use App\Settings\GrSettings;
-use Filament\Actions;
+use Carbon\Carbon;
 use Filament\Forms;
+use Filament\Infolists\Components\Actions\Action as InfolistAction;
+use Filament\Infolists\Components\Actions as InfolistActions;
+use Filament\Infolists\Components\Grid;
+use Filament\Infolists\Components\Group;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\Tabs;
@@ -24,6 +28,8 @@ use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Support\Colors\Color;
+use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\HtmlString;
 
 class ViewPrenotazione extends ViewRecord
 {
@@ -39,288 +45,337 @@ class ViewPrenotazione extends ViewRecord
         return $record;
     }
 
+    public function getTitle(): string
+    {
+        return $this->prenotazione()->nome_evento;
+    }
+
+    /** Header: etichetta richiedente (BUG-05) + badge stato + data di invio, secondo il mockup "GR Dettaglio prenotazione". */
+    public function getSubheading(): string|Htmlable|null
+    {
+        $pren = $this->prenotazione();
+
+        return new HtmlString(view('filament.gr.resources.prenotazione-resource.pages.dettaglio-subheading', [
+            'richiedenteHtml' => PrenotazioneResource::richiedenteLabel($pren),
+            'status' => $pren->status,
+            'dataRichiesta' => $this->dataRichiesta(),
+        ])->render());
+    }
+
+    private function dataRichiesta(): ?Carbon
+    {
+        $pren = $this->prenotazione();
+
+        $invio = $pren->history()
+            ->where('status_to', PrenotazioneStatus::Inviata)
+            ->oldest('created_at')
+            ->first();
+
+        $value = $invio !== null ? $invio->created_at : $pren->created_at;
+
+        return $value !== null ? Carbon::parse($value) : null;
+    }
+
     protected function getHeaderActions(): array
     {
-        return [
-            Actions\Action::make('approva')
-                ->label('Approva')
-                ->icon('heroicon-o-check-circle')
-                ->color('success')
-                ->visible(fn (): bool => $this->prenotazione()->status === PrenotazioneStatus::Inviata
-                    && auth()->user()->can('approve', $this->prenotazione()))
-                ->form([
-                    Forms\Components\Select::make('torre_id_override')
-                        ->label('Torre da assegnare')
-                        ->helperText('Lascia vuoto per mantenere la torre scelta dalla sezione.')
-                        ->options(Torre::where('is_active', true)->pluck('nome', 'id'))
-                        ->nullable()
-                        ->searchable(),
-                ])
-                ->action(function (array $data): void {
-                    $pren = $this->prenotazione();
-                    $torreId = filled($data['torre_id_override'] ?? null)
-                        ? (int) $data['torre_id_override']
-                        : null;
-                    app(PrenotazioneStateMachine::class)->approva($pren, auth()->user(), $torreId);
-                    Notification::make()->title('Prenotazione approvata')->success()->send();
-                    $this->redirect(PrenotazioneResource::getUrl('index'));
-                }),
-
-            Actions\Action::make('rifiuta')
-                ->label('Rifiuta')
-                ->icon('heroicon-o-x-circle')
-                ->color('danger')
-                ->visible(fn (): bool => $this->prenotazione()->status === PrenotazioneStatus::Inviata
-                    && auth()->user()->can('reject', $this->prenotazione()))
-                ->form([
-                    Forms\Components\Textarea::make('motivo')
-                        ->label('Motivo del rifiuto')
-                        ->required()
-                        ->maxLength(1000)
-                        ->rows(4),
-                ])
-                ->action(function (array $data): void {
-                    app(PrenotazioneStateMachine::class)->rifiuta(
-                        $this->prenotazione(),
-                        auth()->user(),
-                        $data['motivo'],
-                    );
-                    Notification::make()->title('Prenotazione rifiutata')->warning()->send();
-                    $this->redirect(PrenotazioneResource::getUrl('index'));
-                }),
-
-            Actions\Action::make('reassign_torre')
-                ->label('Riassegna torre')
-                ->icon('heroicon-o-arrow-path')
-                ->color('warning')
-                ->visible(fn (): bool => in_array(
-                    $this->prenotazione()->status,
-                    [PrenotazioneStatus::Approvata, PrenotazioneStatus::InviatoPdfFirmato],
-                    strict: true,
-                ) && auth()->user()->can('reassignTorre', $this->prenotazione()))
-                ->form([
-                    Forms\Components\Select::make('torre_id')
-                        ->label('Nuova torre')
-                        ->options(Torre::where('is_active', true)->pluck('nome', 'id'))
-                        ->required()
-                        ->searchable(),
-                ])
-                ->action(function (array $data): void {
-                    app(PrenotazioneStateMachine::class)->reassignTorre(
-                        $this->prenotazione(),
-                        auth()->user(),
-                        (int) $data['torre_id'],
-                    );
-                    Notification::make()->title('Torre riassegnata')->success()->send();
-                    $this->refreshFormData(['torre_id']);
-                    $this->redirect(PrenotazioneResource::getUrl('view', ['record' => $this->prenotazione()]));
-                }),
-
-            Actions\Action::make('change_dates')
-                ->label('Modifica date trasporto')
-                ->icon('heroicon-o-calendar')
-                ->color('info')
-                ->visible(fn (): bool => in_array(
-                    $this->prenotazione()->status,
-                    [PrenotazioneStatus::Inviata, PrenotazioneStatus::Approvata, PrenotazioneStatus::InviatoPdfFirmato],
-                    strict: true,
-                ) && auth()->user()->can('changeDates', $this->prenotazione()))
-                ->form(function (): array {
-                    $p = $this->prenotazione();
-
-                    return [
-                        Forms\Components\DatePicker::make('data_ritiro')
-                            ->label('Data ritiro')
-                            ->default($p->data_ritiro?->toDateString())
-                            ->native(false)
-                            ->displayFormat('d/m/Y'),
-
-                        Forms\Components\DatePicker::make('data_riconsegna')
-                            ->label('Data riconsegna')
-                            ->default($p->data_riconsegna?->toDateString())
-                            ->native(false)
-                            ->displayFormat('d/m/Y')
-                            ->afterOrEqual('data_ritiro'),
-
-                        Forms\Components\Textarea::make('motivo')
-                            ->label('Motivo della modifica')
-                            ->required()
-                            ->maxLength(1000)
-                            ->rows(3),
-                    ];
-                })
-                ->action(function (array $data): void {
-                    app(PrenotazioneStateMachine::class)->changeDates(
-                        $this->prenotazione(),
-                        auth()->user(),
-                        filled($data['data_ritiro']) ? (string) $data['data_ritiro'] : null,
-                        filled($data['data_riconsegna']) ? (string) $data['data_riconsegna'] : null,
-                        $data['motivo'],
-                    );
-                    Notification::make()->title('Date trasporto aggiornate')->success()->send();
-                    $this->redirect(PrenotazioneResource::getUrl('view', ['record' => $this->prenotazione()]));
-                }),
-
-            Actions\Action::make('download_richiesta')
-                ->label('Scarica Richiesta parete')
-                ->icon('heroicon-o-document-arrow-down')
-                ->color('gray')
-                ->visible(fn (): bool => in_array(
-                    $this->prenotazione()->status,
-                    [
-                        PrenotazioneStatus::Approvata,
-                        PrenotazioneStatus::InviatoPdfFirmato,
-                        PrenotazioneStatus::InviatoAssicurazione,
-                        PrenotazioneStatus::Concluso,
-                    ],
-                    strict: true,
-                ) && auth()->user()->can('generatePdfRichiesta', $this->prenotazione()))
-                ->action(function () {
-                    $p = $this->prenotazione();
-
-                    return response()->streamDownload(
-                        fn () => print (app(PdfGenerator::class)->richiestaParete($p)->output()),
-                        "Richiesta_parete_{$p->id}.pdf",
-                        ['Content-Type' => 'application/pdf'],
-                    );
-                }),
-
-            Actions\Action::make('download_modulo3')
-                ->label('Scarica Modulo 3')
-                ->icon('heroicon-o-document-text')
-                ->color('gray')
-                ->visible(fn (): bool => in_array(
-                    $this->prenotazione()->status,
-                    [
-                        PrenotazioneStatus::Approvata,
-                        PrenotazioneStatus::InviatoPdfFirmato,
-                        PrenotazioneStatus::InviatoAssicurazione,
-                        PrenotazioneStatus::Concluso,
-                    ],
-                    strict: true,
-                ) && auth()->user()->can('generatePdfModulo3', $this->prenotazione()))
-                ->action(function () {
-                    $p = $this->prenotazione();
-                    $settings = app(GrSettings::class);
-
-                    return response()->streamDownload(
-                        fn () => print (app(PdfGenerator::class)->modulo3($p, $settings)->output()),
-                        "Modulo3_{$p->id}.pdf",
-                        ['Content-Type' => 'application/pdf'],
-                    );
-                }),
-
-            Actions\Action::make('invia_assicurazione')
-                ->label('Invia all\'assicurazione')
-                ->icon('heroicon-o-envelope')
-                ->color('warning')
-                ->visible(fn (): bool => $this->prenotazione()->status === PrenotazioneStatus::InviatoPdfFirmato
-                    && auth()->user()->can('sendInsurance', $this->prenotazione()))
-                ->requiresConfirmation()
-                ->modalHeading('Invia Modulo 3 all\'assicurazione')
-                ->modalDescription(function (): string {
-                    $emails = app(GrSettings::class)->emails_assicurazione;
-                    $lista = implode(', ', $emails ?: ['(nessun destinatario configurato)']);
-
-                    return "Verrà inviata un'email con il Modulo 3 allegato a: {$lista}. Questa azione cambia lo stato della prenotazione a INVIATO_ASSICURAZIONE.";
-                })
-                ->action(function (): void {
-                    app(PrenotazioneStateMachine::class)->inviaAssicurazione(
-                        $this->prenotazione(),
-                        auth()->user(),
-                    );
-                    Notification::make()->title('Modulo 3 inviato all\'assicurazione')->success()->send();
-                    $this->redirect(PrenotazioneResource::getUrl('view', ['record' => $this->prenotazione()]));
-                }),
-
-            Actions\Action::make('concludi')
-                ->label('Segna come conclusa')
-                ->icon('heroicon-o-check-badge')
-                ->color('gray')
-                ->visible(fn (): bool => $this->prenotazione()->status === PrenotazioneStatus::InviatoAssicurazione
-                    && auth()->user()->can('markConcluso', $this->prenotazione()))
-                ->requiresConfirmation()
-                ->modalHeading('Concludi prenotazione')
-                ->modalDescription('Marca la prenotazione come CONCLUSA. Questa operazione è normalmente eseguita automaticamente dal sistema il giorno dopo la fine dell\'evento.')
-                ->action(function (): void {
-                    app(PrenotazioneStateMachine::class)->concludi(
-                        $this->prenotazione(),
-                        auth()->user(),
-                    );
-                    Notification::make()->title('Prenotazione conclusa')->success()->send();
-                    $this->redirect(PrenotazioneResource::getUrl('index'));
-                }),
-        ];
+        return [];
     }
 
     public function infolist(Infolist $infolist): Infolist
     {
+        $pren = $this->prenotazione();
+
+        $puoDecidere = fn (): bool => $pren->status === PrenotazioneStatus::Inviata;
+        $puoRiassegnare = fn (): bool => in_array(
+            $pren->status,
+            [PrenotazioneStatus::Approvata, PrenotazioneStatus::InviatoPdfFirmato],
+            strict: true,
+        );
+        $puoModificareDate = fn (): bool => in_array(
+            $pren->status,
+            [PrenotazioneStatus::Inviata, PrenotazioneStatus::Approvata, PrenotazioneStatus::InviatoPdfFirmato],
+            strict: true,
+        );
+        $puoScaricarePdf = fn (): bool => in_array(
+            $pren->status,
+            [
+                PrenotazioneStatus::Approvata,
+                PrenotazioneStatus::InviatoPdfFirmato,
+                PrenotazioneStatus::InviatoAssicurazione,
+                PrenotazioneStatus::Concluso,
+            ],
+            strict: true,
+        );
+        $puoInviareAssicurazione = fn (): bool => $pren->status === PrenotazioneStatus::InviatoPdfFirmato;
+        $puoConcludere = fn (): bool => $pren->status === PrenotazioneStatus::InviatoAssicurazione;
+
         return $infolist->schema([
             Tabs::make('tabs')
                 ->tabs([
                     Tabs\Tab::make('Dettagli')
                         ->schema([
-                            Section::make('Prenotazione torre')
+                            Grid::make(['default' => 1, 'lg' => 3])
                                 ->schema([
-                                    TextEntry::make('proprietario_label')
-                                        ->label('Sezione / Sottosezione')
-                                        ->getStateUsing(fn (Prenotazione $record): string => $record->proprietario_label),
-                                    TextEntry::make('status')
-                                        ->label('Stato')
-                                        ->badge()
-                                        ->formatStateUsing(fn (PrenotazioneStatus $state): string => $state->label())
-                                        ->color(fn (PrenotazioneStatus $state): string => $state->color()),
-                                    TextEntry::make('torre.nome')
-                                        ->label('Torre')
-                                        ->badge()
-                                        ->color(fn (Prenotazione $record): array => Color::hex(Torre::coloreHexPer($record->torre)))
-                                        ->default('—'),
-                                    TextEntry::make('torre.indirizzo_deposito')->label('Indirizzo deposito torre')->default('—'),
-                                    TextEntry::make('data_inizio_prenotazione')->label('Da')->date('d/m/Y'),
-                                    TextEntry::make('data_fine_prenotazione')->label('A')->date('d/m/Y'),
-                                    TextEntry::make('motivo_rifiuto')->label('Motivo rifiuto')->default('—')->columnSpanFull(),
-                                ])->columns(3),
+                                    Group::make([
+                                        Section::make('Quando e dove')
+                                            ->icon('heroicon-o-calendar-days')
+                                            ->iconColor('primary')
+                                            ->schema([
+                                                TextEntry::make('data_inizio_prenotazione')->label('Da')->date('d/m/Y'),
+                                                TextEntry::make('data_fine_prenotazione')->label('A')->date('d/m/Y'),
+                                                TextEntry::make('torre.nome')
+                                                    ->label('Torre richiesta')
+                                                    ->badge()
+                                                    ->color(fn (Prenotazione $record): array => Color::hex(Torre::coloreHexPer($record->torre)))
+                                                    ->default('Nessuna preferenza'),
+                                                TextEntry::make('torre.indirizzo_deposito')->label('Deposito torre')->default('—'),
+                                                TextEntry::make('motivo_rifiuto')
+                                                    ->label('Motivo rifiuto')
+                                                    ->visible(fn (Prenotazione $record): bool => filled($record->motivo_rifiuto))
+                                                    ->columnSpanFull(),
+                                            ])->columns(3),
 
-                            Section::make('Evento')
-                                ->schema([
-                                    TextEntry::make('nome_evento')->label('Nome evento'),
-                                    TextEntry::make('tipo_evento')->label('Tipo'),
-                                    TextEntry::make('indirizzo_evento')->label('Indirizzo'),
-                                    TextEntry::make('data_inizio_evento')->label('Inizio evento')->date('d/m/Y'),
-                                    TextEntry::make('data_fine_evento')->label('Fine evento')->date('d/m/Y'),
-                                    TextEntry::make('descrizione_evento')->label('Descrizione')->columnSpanFull(),
-                                ])->columns(3),
+                                        Section::make('Evento')
+                                            ->icon('heroicon-o-flag')
+                                            ->iconColor('primary')
+                                            ->schema([
+                                                TextEntry::make('nome_evento')->label('Nome evento'),
+                                                TextEntry::make('tipo_evento')->label('Tipo'),
+                                                TextEntry::make('indirizzo_evento')->label('Indirizzo'),
+                                                TextEntry::make('data_inizio_evento')->label('Inizio evento')->date('d/m/Y'),
+                                                TextEntry::make('data_fine_evento')->label('Fine evento')->date('d/m/Y'),
+                                                TextEntry::make('descrizione_evento')->label('Descrizione')->columnSpanFull(),
+                                            ])->columns(3),
 
-                            Section::make('Logistica trasporto')
-                                ->schema([
-                                    TextEntry::make('tipo_mezzo')
-                                        ->label('Tipo mezzo')
-                                        ->formatStateUsing(fn (mixed $state): string => $state instanceof TipoMezzo ? $state->label() : (string) $state),
-                                    TextEntry::make('categoria_patente_privato')
-                                        ->label('Categoria patente')
-                                        ->visible(fn (Prenotazione $record): bool => $record->tipo_mezzo === TipoMezzo::Privato)
-                                        ->formatStateUsing(fn (mixed $state): string => $state instanceof CategoriaPatente ? $state->label() : (string) $state),
-                                    TextEntry::make('azienda_trasporto')->label('Azienda trasporto'),
-                                    TextEntry::make('targa_autoveicolo')->label('Targa')->default('—'),
-                                    TextEntry::make('data_ritiro')->label('Data ritiro')->date('d/m/Y')->placeholder('—'),
-                                    TextEntry::make('luogo_ritiro')->label('Luogo ritiro')->default('—'),
-                                    TextEntry::make('data_riconsegna')->label('Data riconsegna')->date('d/m/Y')->placeholder('—'),
-                                    TextEntry::make('luogo_riconsegna')->label('Luogo riconsegna')->default('—'),
-                                ])->columns(3),
+                                        Section::make('Logistica e responsabile')
+                                            ->icon('heroicon-o-truck')
+                                            ->iconColor('primary')
+                                            ->schema([
+                                                TextEntry::make('tipo_mezzo')
+                                                    ->label('Tipo mezzo')
+                                                    ->formatStateUsing(fn (mixed $state): string => $state instanceof TipoMezzo ? $state->label() : (string) $state),
+                                                TextEntry::make('categoria_patente_privato')
+                                                    ->label('Categoria patente')
+                                                    ->visible(fn (Prenotazione $record): bool => $record->tipo_mezzo === TipoMezzo::Privato)
+                                                    ->formatStateUsing(fn (mixed $state): string => $state instanceof CategoriaPatente ? $state->label() : (string) $state),
+                                                TextEntry::make('azienda_trasporto')->label('Azienda trasporto'),
+                                                TextEntry::make('targa_autoveicolo')->label('Targa')->default('—'),
+                                                TextEntry::make('data_ritiro')->label('Data ritiro')->date('d/m/Y')->placeholder('—'),
+                                                TextEntry::make('luogo_ritiro')->label('Luogo ritiro')->default('—'),
+                                                TextEntry::make('data_riconsegna')->label('Data riconsegna')->date('d/m/Y')->placeholder('—'),
+                                                TextEntry::make('luogo_riconsegna')->label('Luogo riconsegna')->default('—'),
+                                                TextEntry::make('responsabile_nome')->label('Responsabile')->columnSpanFull(),
+                                                TextEntry::make('responsabile_tipo')
+                                                    ->label('Qualifica')
+                                                    ->formatStateUsing(fn (mixed $state): string => $state instanceof ResponsabileTipo ? $state->label() : (string) $state),
+                                                TextEntry::make('responsabile_titolo_cai')->label('Titolo CAI')->default('—'),
+                                                TextEntry::make('responsabile_telefono')->label('Telefono'),
+                                                TextEntry::make('responsabile_email')->label('Email'),
+                                            ])->columns(3),
+                                    ])->columnSpan(['lg' => 2]),
 
-                            Section::make('Responsabile in loco')
-                                ->schema([
-                                    TextEntry::make('responsabile_nome')->label('Nome'),
-                                    TextEntry::make('responsabile_tipo')
-                                        ->label('Qualifica')
-                                        ->formatStateUsing(fn (mixed $state): string => $state instanceof ResponsabileTipo ? $state->label() : (string) $state),
-                                    TextEntry::make('responsabile_titolo_cai')->label('Titolo CAI')->default('—'),
-                                    TextEntry::make('responsabile_telefono')->label('Telefono'),
-                                    TextEntry::make('responsabile_email')->label('Email'),
-                                ])->columns(3),
+                                    Group::make([
+                                        Section::make('Decisione')
+                                            ->icon('heroicon-o-scale')
+                                            ->iconColor('success')
+                                            ->visible($puoDecidere)
+                                            ->schema([
+                                                InfolistActions::make([
+                                                    InfolistAction::make('approva')
+                                                        ->label('Approva richiesta')
+                                                        ->icon('heroicon-o-check-circle')
+                                                        ->color('success')
+                                                        ->visible(fn (): bool => $puoDecidere() && auth()->user()->can('approve', $pren))
+                                                        ->form([
+                                                            Forms\Components\Select::make('torre_id_override')
+                                                                ->label('Torre da assegnare')
+                                                                ->helperText('Lascia vuoto per mantenere la torre scelta dalla sezione.')
+                                                                ->options(Torre::where('is_active', true)->pluck('nome', 'id'))
+                                                                ->nullable()
+                                                                ->searchable(),
+                                                        ])
+                                                        ->action(function (array $data) use ($pren): void {
+                                                            $torreId = filled($data['torre_id_override'] ?? null)
+                                                                ? (int) $data['torre_id_override']
+                                                                : null;
+                                                            app(PrenotazioneStateMachine::class)->approva($pren, auth()->user(), $torreId);
+                                                            Notification::make()->title('Prenotazione approvata')->success()->send();
+                                                            $this->redirect(PrenotazioneResource::getUrl('index'));
+                                                        }),
+                                                ])->fullWidth(),
+
+                                                InfolistActions::make([
+                                                    InfolistAction::make('rifiuta')
+                                                        ->label('Rifiuta — motivo obbligatorio')
+                                                        ->icon('heroicon-o-x-circle')
+                                                        ->color('danger')
+                                                        ->outlined()
+                                                        ->visible(fn (): bool => $puoDecidere() && auth()->user()->can('reject', $pren))
+                                                        ->form([
+                                                            Forms\Components\Textarea::make('motivo')
+                                                                ->label('Motivo del rifiuto')
+                                                                ->required()
+                                                                ->maxLength(1000)
+                                                                ->rows(4),
+                                                        ])
+                                                        ->action(function (array $data) use ($pren): void {
+                                                            app(PrenotazioneStateMachine::class)->rifiuta($pren, auth()->user(), $data['motivo']);
+                                                            Notification::make()->title('Prenotazione rifiutata')->warning()->send();
+                                                            $this->redirect(PrenotazioneResource::getUrl('index'));
+                                                        }),
+                                                ])->fullWidth(),
+                                            ]),
+
+                                        Section::make('Documenti')
+                                            ->icon('heroicon-o-document-arrow-down')
+                                            ->iconColor('primary')
+                                            ->visible($puoScaricarePdf)
+                                            ->schema([
+                                                InfolistActions::make([
+                                                    InfolistAction::make('download_richiesta')
+                                                        ->label('Scarica Richiesta parete')
+                                                        ->icon('heroicon-o-document-arrow-down')
+                                                        ->color('gray')
+                                                        ->visible(fn (): bool => $puoScaricarePdf() && auth()->user()->can('generatePdfRichiesta', $pren))
+                                                        ->action(fn () => response()->streamDownload(
+                                                            fn () => print (app(PdfGenerator::class)->richiestaParete($pren)->output()),
+                                                            "Richiesta_parete_{$pren->id}.pdf",
+                                                            ['Content-Type' => 'application/pdf'],
+                                                        )),
+                                                ])->fullWidth(),
+
+                                                InfolistActions::make([
+                                                    InfolistAction::make('download_modulo3')
+                                                        ->label('Scarica Modulo 3')
+                                                        ->icon('heroicon-o-document-text')
+                                                        ->color('gray')
+                                                        ->visible(fn (): bool => $puoScaricarePdf() && auth()->user()->can('generatePdfModulo3', $pren))
+                                                        ->action(fn () => response()->streamDownload(
+                                                            fn () => print (app(PdfGenerator::class)->modulo3($pren, app(GrSettings::class))->output()),
+                                                            "Modulo3_{$pren->id}.pdf",
+                                                            ['Content-Type' => 'application/pdf'],
+                                                        )),
+                                                ])->fullWidth(),
+                                            ]),
+
+                                        Section::make('Altre azioni')
+                                            ->icon('heroicon-o-ellipsis-horizontal-circle')
+                                            ->iconColor('primary')
+                                            ->visible(fn (): bool => $puoRiassegnare() || $puoModificareDate() || $puoInviareAssicurazione() || $puoConcludere())
+                                            ->schema([
+                                                InfolistActions::make([
+                                                    InfolistAction::make('reassign_torre')
+                                                        ->label('Riassegna torre')
+                                                        ->icon('heroicon-o-arrow-path')
+                                                        ->color('warning')
+                                                        ->visible(fn (): bool => $puoRiassegnare() && auth()->user()->can('reassignTorre', $pren))
+                                                        ->form([
+                                                            Forms\Components\Select::make('torre_id')
+                                                                ->label('Nuova torre')
+                                                                ->options(Torre::where('is_active', true)->pluck('nome', 'id'))
+                                                                ->required()
+                                                                ->searchable(),
+                                                        ])
+                                                        ->action(function (array $data) use ($pren): void {
+                                                            app(PrenotazioneStateMachine::class)->reassignTorre($pren, auth()->user(), (int) $data['torre_id']);
+                                                            Notification::make()->title('Torre riassegnata')->success()->send();
+                                                            $this->redirect(PrenotazioneResource::getUrl('view', ['record' => $pren]));
+                                                        }),
+                                                ])->fullWidth(),
+
+                                                InfolistActions::make([
+                                                    InfolistAction::make('change_dates')
+                                                        ->label('Modifica date trasporto')
+                                                        ->icon('heroicon-o-calendar')
+                                                        ->color('info')
+                                                        ->visible(fn (): bool => $puoModificareDate() && auth()->user()->can('changeDates', $pren))
+                                                        ->form([
+                                                            Forms\Components\DatePicker::make('data_ritiro')
+                                                                ->label('Data ritiro')
+                                                                ->default($pren->data_ritiro?->toDateString())
+                                                                ->native(false)
+                                                                ->displayFormat('d/m/Y'),
+
+                                                            Forms\Components\DatePicker::make('data_riconsegna')
+                                                                ->label('Data riconsegna')
+                                                                ->default($pren->data_riconsegna?->toDateString())
+                                                                ->native(false)
+                                                                ->displayFormat('d/m/Y')
+                                                                ->afterOrEqual('data_ritiro'),
+
+                                                            Forms\Components\Textarea::make('motivo')
+                                                                ->label('Motivo della modifica')
+                                                                ->required()
+                                                                ->maxLength(1000)
+                                                                ->rows(3),
+                                                        ])
+                                                        ->action(function (array $data) use ($pren): void {
+                                                            app(PrenotazioneStateMachine::class)->changeDates(
+                                                                $pren,
+                                                                auth()->user(),
+                                                                filled($data['data_ritiro']) ? (string) $data['data_ritiro'] : null,
+                                                                filled($data['data_riconsegna']) ? (string) $data['data_riconsegna'] : null,
+                                                                $data['motivo'],
+                                                            );
+                                                            Notification::make()->title('Date trasporto aggiornate')->success()->send();
+                                                            $this->redirect(PrenotazioneResource::getUrl('view', ['record' => $pren]));
+                                                        }),
+                                                ])->fullWidth(),
+
+                                                InfolistActions::make([
+                                                    InfolistAction::make('invia_assicurazione')
+                                                        ->label('Invia all\'assicurazione')
+                                                        ->icon('heroicon-o-envelope')
+                                                        ->color('warning')
+                                                        ->visible(fn (): bool => $puoInviareAssicurazione() && auth()->user()->can('sendInsurance', $pren))
+                                                        ->requiresConfirmation()
+                                                        ->modalHeading('Invia Modulo 3 all\'assicurazione')
+                                                        ->modalDescription(function (): string {
+                                                            $emails = app(GrSettings::class)->emails_assicurazione;
+                                                            $lista = implode(', ', $emails ?: ['(nessun destinatario configurato)']);
+
+                                                            return "Verrà inviata un'email con il Modulo 3 allegato a: {$lista}. Questa azione cambia lo stato della prenotazione a INVIATO_ASSICURAZIONE.";
+                                                        })
+                                                        ->action(function () use ($pren): void {
+                                                            app(PrenotazioneStateMachine::class)->inviaAssicurazione($pren, auth()->user());
+                                                            Notification::make()->title('Modulo 3 inviato all\'assicurazione')->success()->send();
+                                                            $this->redirect(PrenotazioneResource::getUrl('view', ['record' => $pren]));
+                                                        }),
+                                                ])->fullWidth(),
+
+                                                InfolistActions::make([
+                                                    InfolistAction::make('concludi')
+                                                        ->label('Segna come conclusa')
+                                                        ->icon('heroicon-o-check-badge')
+                                                        ->color('gray')
+                                                        ->visible(fn (): bool => $puoConcludere() && auth()->user()->can('markConcluso', $pren))
+                                                        ->requiresConfirmation()
+                                                        ->modalHeading('Concludi prenotazione')
+                                                        ->modalDescription('Marca la prenotazione come CONCLUSA. Questa operazione è normalmente eseguita automaticamente dal sistema il giorno dopo la fine dell\'evento.')
+                                                        ->action(function () use ($pren): void {
+                                                            app(PrenotazioneStateMachine::class)->concludi($pren, auth()->user());
+                                                            Notification::make()->title('Prenotazione conclusa')->success()->send();
+                                                            $this->redirect(PrenotazioneResource::getUrl('index'));
+                                                        }),
+                                                ])->fullWidth(),
+
+                                                TextEntry::make('altre_azioni_hint')
+                                                    ->hiddenLabel()
+                                                    ->getStateUsing('Disponibili dopo l\'approvazione e il caricamento del PDF firmato da parte della Sezione.')
+                                                    ->color('gray')
+                                                    ->size('sm'),
+                                            ]),
+                                    ])->columnSpan(['lg' => 1]),
+                                ]),
                         ]),
 
                     Tabs\Tab::make('Allegati')
+                        ->badge(fn (Prenotazione $record): int => collect([
+                            'delibera_consiglio',
+                            'autorizzazione_suolo_pubblico',
+                            'autorizzazione_ztl',
+                            'patente_responsabile',
+                        ])->filter(fn (string $collection): bool => $record->getFirstMedia($collection) !== null)->count())
                         ->schema([
                             Section::make('Documenti caricati')
                                 ->schema([
