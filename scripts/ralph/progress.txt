@@ -1,102 +1,112 @@
 # Ralph Progress Log
-Started: Mer  8 Lug 2026 16:40:51 CEST
+Started: Dom 12 Lug 2026 14:47:50 CEST
 ---
 
 ## Codebase Patterns
-- Per bloccare l'accesso a una pagina Filament CreateRecord/EditRecord prima che il form venga renderizzato (early guard), overridare `protected static string $view` con una blade custom in `resources/views/filament/<panel>/resources/<resource>/pages/<page>.blade.php`, poi overridare `mount()`: chiamare `$this->authorizeAccess()`, valorizzare una proprietà pubblica (es. `?Model $xxx`), e chiamare `$this->fillForm()`/`$this->previousUrl = url()->previous()` SOLO se la condizione di blocco non scatta. La blade custom copia il markup originale del vendor (`vendor/filament/filament/resources/views/resources/pages/create-record.blade.php`) e aggiunge un `@if` per mostrare un banner `<x-filament::section>` + `<x-filament::link>` al posto del form.
-- Nessun dev-browser/browser-tool MCP disponibile in questo ambiente Ralph: la "Verify in browser" delle acceptance criteria va soddisfatta con Feature test HTTP (`->get(...)->assertSuccessful()->assertSee(...)`), che renderizzano il markup Blade/Livewire reale end-to-end. Documentare esplicitamente nel progress log quando questo sostituto viene usato.
-- Il modello `Prenotazione` ha già uno scope `scopeAttive()` (esclude solo Concluso/Annullata) usato per liste/archivio; è diverso dalla regola di validazione `UnicaPrenotazioneAttivaPerUser` (usata al submit finale) che esclude anche Bozza e InviatoAssicurazione oltre a Concluso/Annullata. Non confondere le due definizioni di "attiva" quando si leggono le acceptance criteria.
+- `./vendor/bin/sail ps --status running --services` restituisce l'elenco dei servizi Sail attivi (vuoto se lo stack è down) — utile per script che devono verificare se Sail è in esecuzione prima di lanciare comandi.
+- Pint config in `pint.json` è preset "laravel" + `declare_strict_types` + `no_unused_imports` + `ordered_imports` — qualsiasi file PHP nuovo deve rispettare `declare(strict_types=1)` in testa.
 
-## [2026-07-08] - US-001
-- Implementato il blocco anticipato del wizard di creazione prenotazione: se l'utente loggato (sezione o sottosezione) ha già una prenotazione con stato diverso da Annullata/Concluso, la pagina di creazione mostra un banner Filament con nome evento, date e link al dettaglio, senza renderizzare alcun campo del form.
-- File modificati:
-  - app/Filament/Sezione/Resources/PrenotazioneResource/Pages/CreatePrenotazione.php (override `mount()` + `$view`, nuovo metodo privato `trovaPrenotazioneAttivaEsistente()` basato su `Prenotazione::query()->attive()` filtrato per sezione_id/sottosezione_id dell'utente)
-  - resources/views/filament/sezione/resources/prenotazione-resource/pages/create-prenotazione.blade.php (nuova vista, copia del vendor con banner condizionale)
-  - tests/Feature/Sezione/PrenotazioneBloccoWizardAttivaTest.php (nuovo, 3 test: blocco per sezione, blocco per sottosezione, nessun blocco se solo Annullata)
-- Verifiche eseguite: `sail composer test` (228 passed), `sail composer phpstan` (0 errori), `sail composer pint` (passed).
+## [2026-07-12] - US-001
+- Implementato hook di pre-commit locale che lancia `./vendor/bin/sail composer qa` (Pint + Larastan + Pest) e blocca il commit se fallisce.
+- Files changed: `.githooks/pre-commit` (nuovo, eseguibile), `CLAUDE.md` (nuova sezione "Hook di pre-commit (QA obbligatoria)" con istruzione di attivazione `git config core.hooksPath .githooks`).
+- Verifica manuale eseguita: `git config core.hooksPath .githooks` + commit di prova con un file PHP che violava Pint → commit bloccato (nessun nuovo commit in `git log`, hook ha stampato l'errore Pint e restituito exit non-zero). File di scratch rimosso subito dopo la verifica, non incluso nel commit reale.
 - **Learnings for future iterations:**
-  - Vedi sezione "Codebase Patterns" sopra per il pattern di override `$view`/`mount()` su pagine Filament CreateRecord, riusabile per altre story del wizard (US-005, US-007 toccano lo stesso file/step).
-  - Il controllo esistente lato submit (`UnicaPrenotazioneAttivaPerUser`, in `app/Filament/Sezione/Resources/PrenotazioneResource.php` e `PrenotazioneStateMachine`) NON è stato toccato, come richiesto dalle acceptance criteria — resta una rete di sicurezza aggiuntiva keyed su `user_id`, distinta dal nuovo controllo keyed su `sezione_id`/`sottosezione_id`.
-  - Nessun browser tool disponibile in questo ambiente: la verifica UI è stata fatta tramite Feature test HTTP reali (non solo unit/mock).
+  - Lo script pre-commit controlla lo stato Sail con `sail ps --status running --services`: se l'output è vuoto (nessun servizio attivo) stampa un messaggio chiaro invece di lasciare fallire `sail composer qa` con un errore Docker criptico.
+  - Larastan (`sail composer phpstan`) resta a 0 errori su 156 file dopo la modifica: nessun nuovo codice PHP applicativo introdotto da questa story, solo uno script bash e doc.
 ---
 
-## [2026-07-08] - US-003
-- Rimosso completamente il campo `responsabile_codice_cai` (segnalato come non verificabile) da database, modello, form Filament (Sezione create/edit), infolist di dettaglio (Sezione e Gr) e template PDF "Richiesta parete". Il campo `responsabile_titolo_cai` (diverso, non toccato) resta invariato.
-- File modificati:
-  - database/migrations/2026_07_08_170000_drop_responsabile_codice_cai_from_prenotazioni.php (nuova, dropColumn / down ripristina la colonna con `->after('responsabile_titolo_cai')`)
-  - app/Models/Prenotazione.php (rimosso da `$fillable`; non era presente nel docblock `@property`, quindi nessuna modifica lì)
-  - database/factories/PrenotazioneFactory.php (rimossa riga `'responsabile_codice_cai' => null`)
-  - app/Filament/Sezione/Resources/PrenotazioneResource.php (rimosso il TextInput in entrambe le definizioni di form — quella a step del wizard/create e quella a Section per l'edit — la Grid::make(2) che accoppiava titolo_cai+codice_cai è stata sciolta lasciando titolo_cai come campo singolo)
-  - app/Filament/Sezione/Resources/PrenotazioneResource/Pages/ViewPrenotazione.php e app/Filament/Gr/Resources/PrenotazioneResource/Pages/ViewPrenotazione.php (rimosso il TextEntry corrispondente nell'infolist "Responsabile in loco")
-  - resources/views/pdf/richiesta_parete.blade.php (rimossa la riga tabella "Codice CAI")
-  - Admin non referenziava il campo, nessuna modifica necessaria lì. Nessun test esistente referenziava il campo (verificato con grep su tests/), quindi nessun test da aggiornare.
-- Verifiche eseguite: `grep -r responsabile_codice_cai` su app/, resources/, database/factories/, tests/ (residuo solo nella nuova migrazione stessa e in documentazione/prd, come atteso), `sail artisan migrate` (nuova migrazione applicata senza errori), `sail composer qa` = pint passed + phpstan 0 errori + 228 test passed.
+## [2026-07-12] - US-002
+- Rinominato l'intero stack "staging" in "develop": `git mv docker-compose.staging.yml docker-compose.develop.yml`, `git mv .env.staging.example .env.develop.example`, con sostituzione di tutte le occorrenze `staging`→`develop` nei due file (nomi volumi, `env_file`, commenti, `APP_ENV`, `DB_DATABASE`/`DB_USERNAME`=`prenotar_develop`, `CACHE_PREFIX=prenotar_develop_`, `APP_URL`/`MAIL_FROM_ADDRESS`=`develop.prenotar.montagnaservizi.it`).
+- Aggiornati tutti i riferimenti attivi al vecchio nome: `DEPLOY.md` (sezione "Ambiente staging (UAT)" → "Ambiente develop", tutti i comandi e l'esempio Nginx), `CLAUDE.md` (roadmap Fase 8), `database/seeders/LocalDevSeeder.php` (whitelist ambienti `['local','testing','staging']` → `['local','testing','develop']`), `UAT_CHECKLIST.md`, `docs/COLLAUDO_wizard-prenotazione-miglioramenti.md`, `docs/ACCOUNT_TEST_LOCALE.md` (dominio da non usare in locale + link a DEPLOY.md).
+- Aggiunta voce in `CHANGELOG.md` sotto `## [Non rilasciato]` che documenta il rename.
+- Files changed: `docker-compose.develop.yml` (rinominato da `docker-compose.staging.yml`), `.env.develop.example` (rinominato da `.env.staging.example`), `DEPLOY.md`, `CLAUDE.md`, `CHANGELOG.md`, `UAT_CHECKLIST.md`, `docs/COLLAUDO_wizard-prenotazione-miglioramenti.md`, `docs/ACCOUNT_TEST_LOCALE.md`, `database/seeders/LocalDevSeeder.php`.
+- Verifica: `grep -rln 'staging'` su tutto il repo (esclusi `.git/`, `node_modules/`, `vendor/`) produce solo hit in `CHANGELOG.md` (voci storiche di release passate + la nuova voce che documenta il rename, entrambe intenzionalmente non riscritte), `tasks/*.md` (PRD storici, esplicitamente esentati dal criterio di accettazione) e `scripts/ralph/prd.json`/`scripts/ralph/archive/.../prd.json` (la spec stessa di questa story, materiale di pianificazione non stack). Nessun residuo su file di codice/config attivi.
+- `sail composer qa` verde: Pint OK, Larastan 0 errori su 156 file, Pest 235 test passati (495 assertion).
 - **Learnings for future iterations:**
-  - `PrenotazioneResource.php` definisce il form del "Responsabile in loco" in DUE punti distinti (uno per lo step del wizard di create, uno per la Section usata in edit/altre view) — quando si tocca un campo di quello step bisogna cercare e modificare entrambe le occorrenze, non solo la prima trovata.
-  - US-006 ("UI: rimozione campo codice CAI dal form responsabile") risulta già completamente soddisfatta da questa story: tutte le sue acceptance criteria (rimozione dal form Sezione, da infolist Gr/Admin, dal PDF, nessun test residuo) sono già verificate qui. La prossima iterazione su US-006 dovrebbe limitarsi a ri-verificare (grep + test) e marcarla passata, senza codice aggiuntivo previsto.
+  - Quando si rinomina un ambiente/stack, cercare "staging" non solo in docker-compose/.env ma anche in doc di collaudo/UAT (`UAT_CHECKLIST.md`, `docs/COLLAUDO_*.md`) e nella whitelist ambienti dei seeder (`app()->environment([...])`) — sono facili da dimenticare e non vengono presi da un grep mirato ai soli file di config.
+  - Nel CHANGELOG.md le voci storiche (release già taggate) NON vanno riscritte quando si rinomina qualcosa: si aggiunge solo una nuova voce in "## [Non rilasciato]" che documenta il rename. Stesso principio già applicato ai PRD in `tasks/` (riferimento storico, esplicitamente esentato dal grep di verifica).
 ---
 
-## [2026-07-08] - US-002
-- Implementati i due nuovi enum e le relative colonne per distinguere trasporto con mezzo aziendale vs privato (con categoria patente).
-- File modificati:
-  - app/Enums/TipoMezzo.php (nuovo, backed string enum: Aziendale='aziendale', Privato='privato', con label())
-  - app/Enums/CategoriaPatente.php (nuovo, backed string enum: B='B', BE='BE', label() restituisce "B+E" per BE)
-  - database/migrations/2026_07_08_164918_add_tipo_mezzo_to_prenotazioni.php (nuova, aggiunge tipo_mezzo string default 'aziendale' e categoria_patente_privato string nullable, dopo azienda_trasporto)
-  - app/Models/Prenotazione.php (aggiunti tipo_mezzo/categoria_patente_privato a $fillable, casts() e docblock @property)
-- Verifiche eseguite: `sail artisan migrate` (nuova migrazione applicata senza errori su schema esistente), `sail composer test` (228 passed, invariati — story è solo schema, nessun nuovo comportamento utente da testare in questa iterazione, la UI arriva in US-005), `sail composer phpstan` (0 errori), `sail composer pint` (passed).
+## [2026-07-12] - US-003
+- Creato branch locale `develop` a partire da `main` (`git branch develop main`, non pushato — non richiesto esplicitamente dall'utente).
+- Verificato `.github/workflows/ci.yml`: il trigger `pull_request:` non ha filtro `branches`, quindi copre già automaticamente le PR verso `develop` e verso `main` senza alcuna modifica al file.
+- Aggiunta nuova sezione "Branching e workflow" in `CLAUDE.md` (tra "Hook di pre-commit" e "Convenzioni codice"): documenta che tutto lo sviluppo parte da `develop`, che `main` riceve PR solo da `develop` o da `hotfix/*`, e richiama il comportamento del trigger CI.
+- Files changed: `CLAUDE.md` (nuova sezione), branch git `develop` (creato, nessun file modificato da questo).
+- `sail composer qa` verde: Pint OK, Larastan 0 errori su 156 file, Pest 235 test passati (495 assertion) — nessun test nuovo necessario, story è solo branching/documentazione.
 - **Learnings for future iterations:**
-  - Pattern enum di dominio confermato: enum PHP backed string in app/Enums/, con metodo label() a match esplicito per ogni case (vedi ResponsabileTipo.php come riferimento). Le option Filament si costruiscono con `collect(Enum::cases())->mapWithKeys(fn ($c) => [$c->value => $c->label()])` (vedi PrenotazioneResource.php righe ~203, ~379).
-  - Le migrazioni "aggiungi colonna" successive alla create_prenotazioni_table originale seguono il pattern: `Schema::table('prenotazioni', fn (Blueprint $table) => ...)` con `->after('colonna_precedente')` per mantenere l'ordine leggibile, e down() con dropColumn simmetrico (vedi add_reminder_flags_to_prenotazioni.php).
-  - US-005 (UI toggle mezzo privato) consumerà direttamente questi due enum e le due colonne appena introdotte nello stesso file toccato da US-001 (CreatePrenotazione.php) — nessun lavoro di schema aggiuntivo necessario per quella story.
+  - Il workflow CI esistente (`ci.yml`) già copre PR verso qualsiasi branch target grazie all'assenza di `branches:` sotto `pull_request:` — le prossime story su develop/CD (US-004..US-010) non devono toccare questo trigger, solo aggiungere nuovi workflow CD dedicati.
+  - Quando una story chiede di documentare workflow/branching in CLAUDE.md, la sezione va posizionata vicino alle altre sezioni operative (pre-commit hook, convenzioni codice) per restare coerente con la struttura esistente del file.
 ---
 
-## [2026-07-08] - US-004
-- Aggiunte le colonne di audit per la conferma di lettura del manuale d'istruzioni per-torre: `manuale_letto_confermato_at` (timestamp nullable) e `manuale_letto_torre_id` (FK nullable verso `torri.id`, nullOnDelete).
-- File modificati:
-  - database/migrations/2026_07_08_180000_add_manuale_letto_to_prenotazioni.php (nuova, `foreignId('manuale_letto_torre_id')->nullable()->constrained('torri')->nullOnDelete()`, down() con `dropConstrainedForeignId` + `dropColumn`)
-  - app/Models/Prenotazione.php (aggiunti i due campi a `$fillable`, cast `datetime` per `manuale_letto_confermato_at`, docblock @property aggiornato)
-- Verifiche eseguite: `sail artisan migrate` (nuova migrazione applicata senza errori sullo schema esistente), `sail composer qa` = pint passed + phpstan 0 errori + 228 test passed (nessun nuovo test necessario, story è solo schema come le acceptance criteria richiedono — nessun nuovo comportamento utente da testare, la UI arriva in US-007).
+## [2026-07-12] - US-004
+- Aggiunta in `DEPLOY.md`, dentro l'esempio Nginx della sezione "Ambiente develop (UAT)", una location `/mailpit/` con `proxy_pass http://127.0.0.1:${MAILPIT_UI_PORT:-8027}/` e `auth_basic` che referenzia `/etc/nginx/.htpasswd-mailpit-develop` (porta già pubblicata su host dal `docker-compose.develop.yml` esistente — nessuna modifica al compose necessaria).
+- Documentato subito sotto il blocco Nginx il comando per generare il file (`htpasswd -c /etc/nginx/.htpasswd-mailpit-develop <utente>`), con nota che il file non va committato e che la responsabilità di generazione/rotazione manuale è dell'admin tecnico (nessuna rotazione periodica automatica).
+- Aggiornata la riga "Mail interceptata da Mailpit" per menzionare il nuovo sotto-URL pubblico oltre all'accesso diretto sulla porta host.
+- Files changed: `DEPLOY.md` (solo doc, nessun codice/config eseguibile toccato).
+- `sail composer qa` verde: Pint OK, Larastan 0 errori, Pest 235 test passati (495 assertion) — nessun test nuovo necessario, story è solo documentazione.
 - **Learnings for future iterations:**
-  - Per una colonna FK nullable aggiunta in una migrazione successiva (non quella di creazione tabella), usare `$table->foreignId('col')->nullable()->after('precedente')->constrained('tabella')->nullOnDelete()`; nel down() usare `dropConstrainedForeignId('col')` (droppa sia la FK che la colonna) invece di `dropColumn` + drop manuale della foreign key.
-  - US-007 (UI flag lettura manuale) consumerà direttamente queste due colonne nello stesso file toccato da US-001/US-005 (CreatePrenotazione.php) — nessun lavoro di schema aggiuntivo necessario per quella story.
+  - Story di sola documentazione (nessun file di codice toccato) non richiedono nuovi test: basta che la suite esistente resti verde per rispettare il criterio "Typecheck/Larastan passa".
+  - Nginx non fa interpolazione shell-style `${VAR}` nativamente (serve `envsubst`/template `nginx:*-alpine`): l'acceptance criteria di questa story chiedeva letteralmente quella sintassi come esempio/placeholder in doc, quindi riportata così com'è — se in futuro l'esempio Nginx dovesse diventare eseguibile davvero, andrà sostituito con la porta letterale o con un meccanismo di template esplicito.
 ---
 
-## [2026-07-08] - US-005
-- Implementata la UI del wizard per dichiarare il tipo di mezzo (aziendale/privato) con categoria patente obbligatoria in caso di mezzo privato, usando gli enum e le colonne introdotti in US-002.
-- File modificati:
-  - app/Filament/Sezione/Resources/PrenotazioneResource.php (radio `tipo_mezzo` + select `categoria_patente_privato` condizionale/`required` via `Forms\Get`, aggiunti sia allo step wizard di create sia alla Section usata in edit; placeholder di riepilogo "Trasporto" nello step finale del wizard)
-  - app/Filament/Sezione/Resources/PrenotazioneResource/Pages/ViewPrenotazione.php e app/Filament/Gr/Resources/PrenotazioneResource/Pages/ViewPrenotazione.php (TextEntry `tipo_mezzo` e `categoria_patente_privato`, quest'ultimo visibile solo se il mezzo è privato)
-  - tests/Feature/Sezione/PrenotazioneTipoMezzoValidationTest.php (nuovo, 3 test: privato senza patente → errore di validazione; privato con patente → salva; aziendale default → nessuna patente richiesta)
-- Verifiche eseguite: `sail composer qa` = pint passed + phpstan 0 errori + 231 test passati (`sail composer test` isolato confermato in precedenza).
+## [2026-07-12] - US-005
+- Aggiornato `.env.production.example`: `MAIL_MAILER=smtp`, `MAIL_HOST=smtp.gmail.com`, `MAIL_PORT=587`, `MAIL_ENCRYPTION=tls`, `MAIL_USERNAME`/`MAIL_PASSWORD` lasciati vuoti con commento che spiega che servono un'app password Gmail dedicata (o relay SMTP Google Workspace); rimosso il commento sul vecchio `MAIL_HOST=mailpit`.
+- Rimosso il servizio `mailpit` da `docker-compose.production.yml` e ogni `condition: service_started` che lo referenziava come dependency di `app`, `horizon`, `scheduler` (produzione non cattura più le email).
+- Aggiornato `DEPLOY.md`: sezione "2. Variabili d'ambiente" ora descrive SMTP Gmail invece di Mailpit, con nota esplicita "BLOCCATO: credenziali SMTP Gmail non ancora disponibili, responsabile e data non assegnati"; rimossa la riga `mailpit` dalla tabella "5. Servizi inclusi"; annotato il passo "Mail di prova" in "9. Verifiche post-deploy" come bloccato in attesa di credenziali. Le occorrenze di Mailpit rimaste in `DEPLOY.md` riguardano tutte l'ambiente develop (US-004), non toccato da questa story.
+- Nessun invio di email reale eseguito: verifica end-to-end resta esplicitamente un passo manuale futuro, documentato come tale in `DEPLOY.md`.
+- Files changed: `.env.production.example`, `docker-compose.production.yml`, `DEPLOY.md`.
+- `sail composer qa` verde: Pint OK, Larastan 0 errori, Pest 235 test passati (495 assertion) — nessun test nuovo necessario, story è solo config/doc, nessun codice applicativo referenzia `MAIL_ENCRYPTION` (variabile presente solo come placeholder di config per quando le credenziali reali arriveranno).
 - **Learnings for future iterations:**
-  - Confermato il pattern "doppia occorrenza" già annotato in US-003: `PrenotazioneResource.php` definisce il form Logistica/Trasporto sia nello step del wizard (`wizardSteps()`) sia nella Section di `form()` per l'edit — ogni nuovo campo va aggiunto in entrambi i punti.
-  - Per campi condizionali Filament basati su un altro campo dello stesso step, usare `Forms\Get $get` sia in `visible()` che in `required()` (non serve `live()` sul campo dipendente, solo sul campo che lo controlla, qui `tipo_mezzo`).
-  - US-007 può riusare lo stesso step "torre" del wizard senza toccare questo file per la parte trasporto: nessuna interferenza prevista con questa story.
+  - Quando si rimuove un servizio da un compose file, cercare tutte le occorrenze del suo nome come `depends_on` key in OGNI altro servizio (non solo il primo trovato) — in questo caso `mailpit` era dependency di tre servizi diversi (`app`, `horizon`, `scheduler`).
+  - `config/mail.php` di Laravel 11 non referenzia `MAIL_ENCRYPTION` esplicitamente (Symfony Mailer inferisce TLS/STARTTLS da scheme/porta): la variabile va comunque nel `.env.production.example` come documentazione esplicita per chi valorizzerà le credenziali in futuro, anche se otiosa a livello di config Laravel.
 ---
 
-## [2026-07-08] - US-006
-- Story di sola verifica, nessun codice modificato: tutte le acceptance criteria erano già soddisfatte dall'implementazione di US-003 (rimozione completa di responsabile_codice_cai da DB/modello/form/infolist/PDF), come già annotato nei "Learnings" di quella iterazione.
-- Verifiche eseguite in questa iterazione:
-  - `grep -rn "responsabile_codice_cai" app/ resources/ database/factories/ tests/` → nessun risultato.
-  - Verifica mirata su Admin PrenotazioneResource (form + ViewPrenotazione infolist) → nessun riferimento al campo.
-  - Verifica su entrambi i template PDF (`resources/views/pdf/richiesta_parete.blade.php` e `modulo3.blade.php`) → nessun riferimento al campo.
-  - La colonna resta definita nella migrazione originale `create_prenotazioni_table` (non modificata, come da vincolo) ma viene droppata dalla migrazione successiva introdotta in US-003 — comportamento atteso.
-  - `sail composer qa` → pint passed, phpstan 0 errori, 231 test passati (nessuna regressione).
-- Nessun file modificato in questa iterazione (solo prd.json e progress.txt).
+## [2026-07-12] - US-006
+- Creato `.github/workflows/cd-develop.yml`: trigger `on: push: branches: [develop]`, job `runs-on: [self-hosted, develop]` (label dedicata, distinta da `production` usata in US-007). Step: checkout, `build`, `up -d`, `exec -T app php artisan migrate --force` sullo stack `docker-compose.develop.yml --env-file .env.develop` — nessuna connessione SSH nel workflow, il runner self-hosted è già posizionato sulla macchina develop. Commento esplicito che il seeder (`db:seed`) resta manuale.
+- Aggiunta in `DEPLOY.md` una nuova sottosezione "CD automatico verso develop" (tra "Aggiornamento develop" e "Reset completo develop") che descrive il workflow e come verificarne l'esito dalla tab Actions di GitHub.
+- Files changed: `.github/workflows/cd-develop.yml` (nuovo), `DEPLOY.md`.
+- `sail composer qa` verde: Pint OK, Larastan 0 errori, Pest 235 test passati (495 assertion) — nessun test nuovo necessario, story tocca solo workflow CI/CD e doc, nessun codice applicativo PHP.
 - **Learnings for future iterations:**
-  - Quando una story precedente segnala nei suoi "Learnings" che una story successiva è già soddisfatta, non fidarsi ciecamente: rieseguire comunque i grep/test mirati alle sue acceptance criteria specifiche (qui: anche Admin resource e template Modulo 3, non solo i punti esplicitamente citati in US-003) prima di marcarla passata.
+  - `exec -T` (non `exec` semplice) va usato nei comandi `docker compose exec` lanciati da un workflow non interattivo (niente TTY disponibile su un runner GitHub Actions self-hosted) — altrimenti il comando può bloccarsi o fallire silenziosamente in attesa di uno pseudo-terminale.
+  - US-007 dovrà usare la stessa struttura (`runs-on: [self-hosted, production]`, label distinta da `develop`) ma con step aggiuntivi di backup DB pre-deploy e retention — vedi acceptance criteria della story.
 ---
 
-## [2026-07-08] - US-007
-- Implementato il flag obbligatorio di conferma lettura manuale d'istruzioni nello step "Quando & dove" del wizard, usando le colonne introdotte in US-004 (`manuale_letto_confermato_at`, `manuale_letto_torre_id`).
-- File modificati:
-  - app/Filament/Sezione/Resources/PrenotazioneResource.php (`wizardSteps()`, step "Quando & dove"): aggiunto `afterStateUpdated` su `torre_id` che resetta la conferma quando la torre cambia; nuovo `Placeholder` `manuale_link` (visibile solo se `torre_id` è valorizzato) che mostra un link a `asset('storage/'.$torre->manuale_pdf_path)` o il messaggio "Manuale non ancora disponibile."; nuovo `Checkbox` `manuale_letto_confirm` (campo virtuale, `dehydrated(false)`, richiesto con regola `accepted` solo se `torre_id` è valorizzato) che alla spunta valorizza via `$set()` due `Hidden` field `manuale_letto_confermato_at` (timestamp `now()`) e `manuale_letto_torre_id` (id della torre corrente).
-  - app/Filament/Sezione/Resources/PrenotazioneResource/Pages/CreatePrenotazione.php: aggiunto `->nextAction(fn (WizardAction $action) => $action->disabled(fn (Get $get) => filled($get('torre_id')) && ! $get('manuale_letto_confirm')))` sul componente `Wizard` per disabilitare realmente (attributo HTML `disabled`) il pulsante "Successivo"/"Avanti" finché la checkbox non è spuntata, quando è stata scelta una torre.
-  - tests/Feature/Sezione/PrenotazioneManualeLettoTest.php (nuovo, 4 test): submit bloccato da validazione (`accepted`) se torre selezionata e checkbox non spuntata; submit riuscito con audit valorizzato se spuntata; nessun obbligo se `torre_id` è vuoto (torre non ancora assegnata); cambio torre dopo conferma resetta checkbox/audit e richiede nuova conferma.
-- Verifiche eseguite: `sail composer qa` = pint passed + phpstan 0 errori + 235 test passati (231 preesistenti + 4 nuovi). Nessun browser tool disponibile in questo ambiente Ralph: ho verificato che il pulsante "Successivo" riporti davvero l'attributo HTML `disabled="disabled"` ispezionando l'HTML renderizzato da `Livewire::test(...)->html()` (script temporaneo, poi rimosso) nei tre stati (nessuna torre / torre senza conferma / torre confermata) — conferma che l'implementazione produce un vero disabled HTML, non solo un errore di validazione post-click.
+## [2026-07-12] - US-007
+- Creato `.github/workflows/cd-production.yml`: trigger `on: push: branches: [main]`, job `runs-on: [self-hosted, production]` (label distinta da `develop`, US-006). Step in ordine: (1) backup pre-deploy con `mariadb-dump` dentro il container `mariadb` (credenziali lette dalle env var già presenti nel container stesso — `MARIADB_ROOT_PASSWORD`/`MARIADB_DATABASE`, nessun bisogno di leggere `.env` sul runner), salvato in `/var/backups/prenotar/prenotar-<timestamp>.sql`; (2) retention che mantiene solo gli ultimi 5 file (`ls -t | tail -n +6 | xargs -r rm --`); (3) `build`; (4) `up -d`; (5) `migrate --force` — stessa sequenza build/up/migrate di `cd-develop.yml` (US-006), con i due step di backup/retention aggiunti prima.
+- Aggiunta in `DEPLOY.md` (sezione "6. Aggiornamento a una nuova versione") una sottosezione "CD automatico verso produzione" che descrive il workflow, e una sottosezione "Rollback manuale da un backup" con il comando per ripristinare un dump salvato (`docker compose ... exec -T mariadb sh -c 'mariadb -u root -p"$MARIADB_ROOT_PASSWORD" "$MARIADB_DATABASE"' < backup.sql`) seguito dal restart dello stack applicativo.
+- Files changed: `.github/workflows/cd-production.yml` (nuovo), `DEPLOY.md`, `scripts/ralph/prd.json` (US-007 → `passes: true`).
+- `sail composer qa` verde: Pint OK, Larastan 0 errori su 156 file, Pest 235 test passati (495 assertion) — nessun test nuovo necessario, story tocca solo workflow CI/CD e doc, nessun codice applicativo PHP.
 - **Learnings for future iterations:**
-  - Per disabilitare realmente (HTML `disabled`, non solo validazione al submit) il pulsante "Successivo" di un `Filament\Forms\Components\Wizard` in base allo stato di altri campi del form, usare `Wizard::make(...)->nextAction(fn (\Filament\Forms\Components\Actions\Action $action) => $action->disabled(fn (\Filament\Forms\Get $get) => ...))`. Il `Get` iniettato nella closure di un'Action dentro un componente Form è risolto tramite `$action->getComponent()->getGetCallback()` (vedi `Filament\Forms\Components\Actions\Action::resolveDefaultClosureDependencyForEvaluationByName`), quindi funziona correttamente anche se l'Action non è essa stessa un campo — non serve nessun trucco Alpine/JS lato client. La rivalutazione avviene automaticamente ad ogni re-render Livewire, quindi basta che il campo controllato (qui la checkbox) abbia `->live()` perché il bottone si abiliti/disabiliti in tempo reale.
-  - Un campo Filament "virtuale" (non backed da colonna, usato solo come stato UI di conferma) va dichiarato con `->dehydrated(false)` per non finire nell'array `$data` passato a `mutateFormDataBeforeCreate`/al modello; i valori effettivi da persistere vanno scritti tramite `$set()` in `afterStateUpdated` su campi `Hidden` dedicati che invece sono dehydrated di default.
-  - Attenzione alle funzioni helper globali dichiarate nei file Pest (es. `datiPrenotazioneValidiBase()` in `PrenotazioneTipoMezzoValidationTest.php`): sono visibili solo quando l'intera suite viene caricata insieme; eseguendo un singolo file di test in isolamento (`sail test path/to/File.php`), la funzione dichiarata in un altro file non esiste ancora → `Call to undefined function`. Se un nuovo test file deve essere eseguibile anche da solo, meglio dichiarare un proprio helper con nome univoco piuttosto che riusare un helper "globale" di un altro file.
-  - `PrenotazioneResource.php` mantiene la doppia occorrenza già annotata in US-003/US-005: questa story ha toccato solo `wizardSteps()` (usato dal wizard di create), non la `Section` usata da `form()` per l'edit, perché la conferma di lettura manuale è un passaggio specifico della creazione, non richiesto dalle acceptance criteria per l'edit.
+  - Per leggere le credenziali DB dentro un comando `docker compose exec` su un servizio MariaDB, usare le env var che il container stesso già espone (`MARIADB_ROOT_PASSWORD`, `MARIADB_DATABASE`, definite nel compose file) invece di ricavarle dal `.env` host: evita di dover fare `source .env` o passare `--env-file` extra nel workflow, e resta valido anche se il runner non ha accesso diretto al file `.env` di produzione.
+  - Le immagini `mariadb:10.11` espongono i binari come `mariadb-dump`/`mariadb` (non solo gli alias storici `mysqldump`/`mysql`): usare i nomi nativi nei nuovi script per restare allineati alla versione dell'immagine in uso.
+  - Per i workflow CD che condividono struttura (build/up/migrate), riusare l'ordine già validato in `cd-develop.yml` e aggiungere solo gli step specifici della story (qui: backup + retention prima del deploy) invece di reinventare la sequenza.
+---
+
+## [2026-07-12] - US-008
+- Aggiunta in `CLAUDE.md` una nuova sezione "Flusso di hotfix" (tra "Branching e workflow" e "Convenzioni codice", collegata dal rimando già presente in US-003) che descrive la procedura: branch `hotfix/<nome>` da `main` -> fix -> PR verso `main` (coperta dalla CI esistente, nessuna modifica a `ci.yml`) -> merge -> `cd-production.yml` (US-007) parte automaticamente.
+- Specificato esplicitamente che alla chiusura dell'hotfix va aperta anche una PR `hotfix/<nome>` -> `develop` per non perdere il fix nel flusso normale, e che il merge su `main` corrisponde sempre a un bump di patch version in `CHANGELOG.md` + nuovo tag git sul commit di merge.
+- Non è stato creato `CONTRIBUTING.md` (non esisteva nel repo): la sezione è stata aggiunta a `CLAUDE.md`, coerente con dove vivono già le altre sezioni di branching/workflow (US-003).
+- Files changed: `CLAUDE.md` (nuova sezione "Flusso di hotfix").
+- `sail composer qa` verde: Pint OK, Larastan 0 errori, Pest 235 test passati (495 assertion) — nessun test nuovo necessario, story è solo documentazione.
+- **Learnings for future iterations:**
+  - US-009 (versionamento su develop) va posizionata vicino a questa sezione "Flusso di hotfix" in `CLAUDE.md` e deve rimandarci esplicitamente per l'eccezione delle patch release taggate su `main` — evitare di duplicare la spiegazione del bump patch già scritta qui.
+---
+
+## [2026-07-12] - US-009
+- Aggiunta in `CLAUDE.md` una nuova sezione "Versionamento" (tra "Flusso di hotfix" e "Convenzioni codice") che descrive: bump major/minor deciso sul branch `develop` (CHANGELOG.md aggiornato + tag git creato PRIMA di aprire la PR `develop` → `main`), la PR `develop` → `main` non deve modificare il numero di versione, e rimando esplicito alla sezione "Flusso di hotfix" per l'unica eccezione (patch release taggate direttamente su `main`).
+- Files changed: `CLAUDE.md` (nuova sezione "Versionamento"), `scripts/ralph/prd.json` (US-009 → `passes: true`).
+- `sail composer qa` verde: Pint OK, Larastan 0 errori, Pest 235 test passati (495 assertion) — nessun test nuovo necessario, story è solo documentazione.
+- **Learnings for future iterations:**
+  - US-010 (checklist setup macchina produzione) è l'ultima story del PRD: va in `DEPLOY.md`, sola documentazione, nessuna esecuzione reale su `root@116.203.88.140` — coerente con il pattern già seguito da US-004/US-005/US-006/US-007 (workflow/config descritti in doc, mai eseguiti realmente dall'agente).
+---
+
+## [2026-07-12] - US-010
+- Aggiunta in `DEPLOY.md` una nuova sezione "0. Setup iniziale macchina (root@116.203.88.140)", posizionata prima della sezione "1. Prerequisiti sul server" (checklist propedeutica a tutto il resto del deploy). Contiene: nota esplicita in testa che è una checklist manuale, nessuno script/agente automatico si connette a `root@116.203.88.140`; accesso via SSH a chiave già autorizzata; checklist ordinata 1) pulizia container/volumi vecchia installazione (con avviso ⚠️ distruttivo da confermare esplicitamente), 2) installazione stack develop (rimanda alla sezione "Ambiente develop (UAT)" più sotto nel file), 3) installazione stack produzione (rimanda alle sezioni 1-6 esistenti), 4) registrazione dei due self-hosted runner GitHub Actions con le label già usate dai workflow reali (`develop` e `production`, coerenti con `cd-develop.yml`/`cd-production.yml` di US-006/US-007, non le label placeholder `self-hosted-develop`/`self-hosted-production` del PRD originale in `tasks/`).
+- Elencate esplicitamente le operazioni manuali richieste all'utente: puntamento DNS per `develop.prenotar.montagnaservizi.it`, emissione/rinnovo certificati TLS, verifica che la chiave SSH sia già autorizzata (nessuno step di distribuzione chiave).
+- Nessuna azione reale eseguita su `root@116.203.88.140`: solo documentazione in `DEPLOY.md`.
+- Files changed: `DEPLOY.md` (nuova sezione "0. Setup iniziale macchina"), `scripts/ralph/prd.json` (US-010 → `passes: true`).
+- `sail composer qa` verde: Pint OK, Larastan 0 errori, Pest 235 test passati (495 assertion) — nessun test nuovo necessario, story è solo documentazione.
+- **Learnings for future iterations:**
+  - Quando un PRD in `tasks/` propone label/nomi placeholder per risorse esterne (qui i runner self-hosted), verificare prima cosa è stato effettivamente implementato nelle story precedenti (qui: label reali `develop`/`production` già usate in `cd-develop.yml`/`cd-production.yml` da US-006/US-007) e usare quelle nella documentazione, non il placeholder del PRD originale.
+  - Tutte le 10 user story del PRD `ralph/cicd-email-infra` sono ora `passes: true` — nessuna story rimanente in questo PRD.
 ---

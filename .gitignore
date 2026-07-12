@@ -28,3 +28,6 @@ yarn-error.log
 # Appunti e file locali (credenziali, promemoria) — non versionare
 /messages/
 .DS_Store
+
+# Backup locali pre-wipe server (dump DB, storage, config non committate) — non versionare
+/backup-pre-wipe/

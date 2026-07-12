@@ -5,7 +5,8 @@
 **Nome**: Prenotar (PRENO-tazione T-orri AR-rampicata)
 **Scopo**: Sistema di prenotazione delle 2 torri di arrampicata mobili CityWall (CST, €38.131,10 cad.) del CAI GR Lombardia.
 **Scope**: Solo CAI GR Lombardia — 152 sezioni + 77 sottosezioni, ~230 account totali.
-**URL produzione**: `https://prenotar.montagnaservizi.it`
+**URL produzione**: `https://prenotar.montagnaservizi.com`
+**URL develop**: `https://prenotar.develop.montagnaservizi.com`
 **Deploy**: checklist in [`DEPLOY.md`](./DEPLOY.md); template env [`.env.production.example`](./.env.production.example).
 **Repository**: `prenotar`
 **Documento di riferimento** (locale, non versionato): `./DOCUMENTI PER LA PROGETTAZIONE/PIANO_REALIZZAZIONE.md`
@@ -73,6 +74,48 @@
 - MariaDB: porta `3306` (host `127.0.0.1` da fuori container)
 
 > Usare SEMPRE Sail per eseguire comandi PHP/Composer. Non usare `php artisan` o `composer` da host — produce drift di estensioni PHP.
+
+---
+
+## Hook di pre-commit (QA obbligatoria)
+
+Il repository include `.githooks/pre-commit`, che lancia `./vendor/bin/sail composer qa` (Pint + Larastan + Pest) e blocca il commit se la QA fallisce o se i container Sail non sono in esecuzione.
+
+Attivazione **una tantum** su ogni macchina di sviluppo:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+---
+
+## Branching e workflow
+
+- Tutto lo sviluppo parte dal branch `develop`, non da `main`: i branch di feature si creano da `develop` e le PR vanno aperte verso `develop`.
+- `main` riceve PR **solo** da `develop` (release) o da branch `hotfix/*` (fix urgenti in produzione — vedi "Flusso di hotfix").
+- `.github/workflows/ci.yml` lancia Pint + Larastan + Pest su ogni `pull_request:` (nessun filtro `branches`), quindi copre automaticamente sia le PR verso `develop` sia quelle verso `main`.
+
+---
+
+## Flusso di hotfix
+
+Per un bug urgente in produzione, senza aspettare il normale ciclo di release da `develop`:
+
+1. Branch `hotfix/<nome>` creato direttamente da `main` (non da `develop`).
+2. Fix implementato sul branch `hotfix/<nome>`.
+3. PR aperta verso `main` — coperta dalla CI esistente (`.github/workflows/ci.yml`, nessun filtro `branches` sul trigger `pull_request:`), deve risultare verde prima del merge.
+4. Merge della PR su `main` → il workflow `cd-production.yml` (vedi Fase 7 / US-007) parte automaticamente: backup del DB, build, migrazione, restart dello stack di produzione.
+5. Alla chiusura dell'hotfix va aperta **anche** una PR `hotfix/<nome>` → `develop`, per non perdere il fix nel flusso normale di sviluppo (altrimenti verrebbe sovrascritto dalla prossima release `develop` → `main`).
+
+Il merge di un hotfix su `main` corrisponde **sempre** a un bump di **patch version** (terzo numero, es. `1.2.3` → `1.2.4`) in `CHANGELOG.md` e alla creazione di un nuovo tag git sul commit di merge su `main`.
+
+---
+
+## Versionamento
+
+- Il bump di versione (major/minor, primo o secondo numero, es. `1.2.3` → `1.3.0` o `2.0.0`) va deciso **sul branch `develop`**: aggiornare `CHANGELOG.md` (spostare le voci da `## [Non rilasciato]` alla nuova versione) e creare il tag git corrispondente **prima** di aprire la PR `develop` → `main`.
+- La PR `develop` → `main` **non deve modificare** il numero di versione: è già stato deciso e taggato su `develop`, il merge su `main` porta solo il codice già versionato.
+- L'unica eccezione è la **patch release da hotfix**, taggata direttamente su `main` invece che su `develop` — vedi "Flusso di hotfix" qui sopra.
 
 ---
 
@@ -161,7 +204,7 @@ Ogni transizione registra un record in `prenotazione_history` (autore + timestam
 | 5 | Template PDF (Richiesta parete + Modulo 3) | ✅ |
 | 6 | Pannello /admin + impersonate UI + audit log | ✅ |
 | 7 | Job archiviazione + reminder + Horizon | ✅ |
-| 8 | UAT + polish + deploy staging | ⏳ |
+| 8 | UAT + polish + deploy develop | ⏳ |
 
 ---
 

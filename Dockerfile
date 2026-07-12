@@ -85,8 +85,17 @@ FROM nginx:1.27-alpine AS nginx
 
 RUN apk add --no-cache wget
 
+COPY docker/nginx/docker-entrypoint-nginx.sh /docker-entrypoint-nginx.sh
+# Non usare /etc/nginx/templates/: l'entrypoint ufficiale Nginx esegue envsubst su *.template e romperebbe i path __DOMAIN__.
+COPY docker/nginx/ssl-redirect.conf.template /opt/prenotar-nginx/ssl-redirect.conf.template
+COPY docker/nginx/ssl-app.conf.template /opt/prenotar-nginx/ssl-app.conf.template
+RUN chmod +x /docker-entrypoint-nginx.sh
+
 COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=app /var/www/html/public /var/www/html/public
+
+ENTRYPOINT ["/docker-entrypoint-nginx.sh"]
+CMD ["nginx", "-g", "daemon off;"]
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD wget -qO- http://127.0.0.1/up || exit 1

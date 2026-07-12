@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(git rev-parse --show-toplevel)"
+
+if ! ./vendor/bin/sail ps --status running --services 2>/dev/null | grep -q .; then
+    echo "==> ERRORE: i container Sail non sono in esecuzione."
+    echo "    Avvia l'ambiente con: ./vendor/bin/sail up -d"
+    echo "    poi riprova il commit."
+    exit 1
+fi
+
+echo "==> Pre-commit: eseguo QA (Pint + Larastan + Pest) via Sail..."
+
+if ! ./vendor/bin/sail composer qa; then
+    echo "==> QA fallita: commit bloccato. Correggi gli errori sopra e riprova."
+    exit 1
+fi
+
+echo "==> QA superata, procedo con il commit."

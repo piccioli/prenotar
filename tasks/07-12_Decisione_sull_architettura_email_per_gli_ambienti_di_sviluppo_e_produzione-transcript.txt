@@ -1,0 +1,2 @@
+
+Note aggiuntive per quanto riguarda la gestione delle mail. Nella versione locale abbiamo detto che si usa Mail Pit. Nella versione di sviluppo raggiungibile con prenotar. Develop. Montainservizi. Com, è anche lì che deve esserci una versione di Mail Pit funzionante ed accessibile eventualmente con un url da decidere o con un sottourl. Mentre la versione di produzione richiede l'utilizzo di un SMTP gmail che viene utilizzato per l'invio delle email automatico.
