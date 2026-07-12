@@ -38,8 +38,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
-      mailpit:
-        condition: service_started
     restart: unless-stopped
 
   horizon:
@@ -61,8 +59,6 @@ services:
       mariadb:
         condition: service_healthy
       redis:
-        condition: service_started
-      mailpit:
         condition: service_started
       app:
         condition: service_started
@@ -88,17 +84,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
-      mailpit:
-        condition: service_started
       app:
         condition: service_started
-    restart: unless-stopped
-
-  mailpit:
-    image: axllent/mailpit:latest
-    # SMTP 1025 solo sulla rete Docker; UI su localhost host (tunnel SSH o browser sul server).
-    ports:
-      - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"
     restart: unless-stopped
 
   mariadb:

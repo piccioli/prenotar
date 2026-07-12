@@ -48,3 +48,15 @@ Started: Dom 12 Lug 2026 14:47:50 CEST
   - Story di sola documentazione (nessun file di codice toccato) non richiedono nuovi test: basta che la suite esistente resti verde per rispettare il criterio "Typecheck/Larastan passa".
   - Nginx non fa interpolazione shell-style `${VAR}` nativamente (serve `envsubst`/template `nginx:*-alpine`): l'acceptance criteria di questa story chiedeva letteralmente quella sintassi come esempio/placeholder in doc, quindi riportata così com'è — se in futuro l'esempio Nginx dovesse diventare eseguibile davvero, andrà sostituito con la porta letterale o con un meccanismo di template esplicito.
 ---
+
+## [2026-07-12] - US-005
+- Aggiornato `.env.production.example`: `MAIL_MAILER=smtp`, `MAIL_HOST=smtp.gmail.com`, `MAIL_PORT=587`, `MAIL_ENCRYPTION=tls`, `MAIL_USERNAME`/`MAIL_PASSWORD` lasciati vuoti con commento che spiega che servono un'app password Gmail dedicata (o relay SMTP Google Workspace); rimosso il commento sul vecchio `MAIL_HOST=mailpit`.
+- Rimosso il servizio `mailpit` da `docker-compose.production.yml` e ogni `condition: service_started` che lo referenziava come dependency di `app`, `horizon`, `scheduler` (produzione non cattura più le email).
+- Aggiornato `DEPLOY.md`: sezione "2. Variabili d'ambiente" ora descrive SMTP Gmail invece di Mailpit, con nota esplicita "BLOCCATO: credenziali SMTP Gmail non ancora disponibili, responsabile e data non assegnati"; rimossa la riga `mailpit` dalla tabella "5. Servizi inclusi"; annotato il passo "Mail di prova" in "9. Verifiche post-deploy" come bloccato in attesa di credenziali. Le occorrenze di Mailpit rimaste in `DEPLOY.md` riguardano tutte l'ambiente develop (US-004), non toccato da questa story.
+- Nessun invio di email reale eseguito: verifica end-to-end resta esplicitamente un passo manuale futuro, documentato come tale in `DEPLOY.md`.
+- Files changed: `.env.production.example`, `docker-compose.production.yml`, `DEPLOY.md`.
+- `sail composer qa` verde: Pint OK, Larastan 0 errori, Pest 235 test passati (495 assertion) — nessun test nuovo necessario, story è solo config/doc, nessun codice applicativo referenzia `MAIL_ENCRYPTION` (variabile presente solo come placeholder di config per quando le credenziali reali arriveranno).
+- **Learnings for future iterations:**
+  - Quando si rimuove un servizio da un compose file, cercare tutte le occorrenze del suo nome come `depends_on` key in OGNI altro servizio (non solo il primo trovato) — in questo caso `mailpit` era dependency di tre servizi diversi (`app`, `horizon`, `scheduler`).
+  - `config/mail.php` di Laravel 11 non referenzia `MAIL_ENCRYPTION` esplicitamente (Symfony Mailer inferisce TLS/STARTTLS da scheme/porta): la variabile va comunque nel `.env.production.example` come documentazione esplicita per chi valorizzerà le credenziali in futuro, anche se otiosa a livello di config Laravel.
+---

@@ -21,7 +21,8 @@ Health check HTTP: `GET /up` (Laravel 11).
    - `APP_DEBUG=false`, `APP_URL` con **https** se il TLS è davanti allo stack (reverse proxy o CDN).
    - `TRUSTED_PROXIES=*` se c’è un proxy esterno che termina TLS o inoltra header `X-Forwarded-*`.
    - `DB_PASSWORD`, `DB_ROOT_PASSWORD` (root solo per il container MariaDB), `DB_DATABASE`, `DB_USERNAME` (devono coincidere con `MARIADB_*` nel compose — stessi valori in `.env`).
-   - Posta: con `docker-compose.production.yml` è incluso **Mailpit** (cattura SMTP, nessun invio rete). Valori consigliati nel template: `MAIL_HOST=mailpit`, `MAIL_PORT=1025`, `MAIL_SCHEME=null`. Interfaccia web su `http://127.0.0.1:8025` sul server (porta sovrascrivibile con `MAILPIT_UI_PORT` nel compose); per SMTP reale in futuro sostituire `MAIL_*` e rimuovere il servizio `mailpit` dal compose se non serve più.
+   - Posta: `docker-compose.production.yml` non include più Mailpit — invio reale via **SMTP Gmail**. Valori nel template: `MAIL_HOST=smtp.gmail.com`, `MAIL_PORT=587`, `MAIL_ENCRYPTION=tls`, `MAIL_USERNAME`/`MAIL_PASSWORD` (app password Gmail dedicata, o relay SMTP Google Workspace).
+     **BLOCCATO**: credenziali SMTP Gmail non ancora disponibili, responsabile e data non assegnati — il mailer va lasciato configurato come sopra ma non è attivabile (invio fallirà) finché `MAIL_USERNAME`/`MAIL_PASSWORD` non vengono valorizzate. La verifica end-to-end dell'invio reale resta un passo manuale futuro, da eseguire solo dopo la consegna delle credenziali.
 3. Con **solo** Docker Compose i host DB/Redis sono già `mariadb` e `redis` (vedi `.env.production.example`).
 4. **Allegati**: `FILESYSTEM_DISK=local` persiste sotto `storage/app` nel volume `app_storage`. Per S3 valorizza `AWS_*` (vedi anche `config/filesystems.php`).
 
@@ -86,7 +87,6 @@ Opzionale: migrazioni automatiche ad ogni avvio del container `app` — imposta 
 | `scheduler`| `php artisan schedule:work` — cron notturno `prenotazioni:nightly` (archiviazione + reminder) alle 05:00 Europe/Rome |
 | `mariadb`  | Dati in volume `mariadb_data` |
 | `redis`    | Code, sessioni, cache; volume `redis_data` (AOF) |
-| `mailpit`  | SMTP di sviluppo/cattura (porta 1025 interna); UI su `127.0.0.1:8025` (host) |
 
 Allegati e file privati medialibrary: volume **`app_storage`** montato su `storage/app` per `app`, `horizon` e `scheduler`.
 
@@ -149,7 +149,7 @@ docker build --target nginx -t prenotar-nginx:0.4.0 .
 
 - `curl -fsS http://<host>/up` → 200.
 - Login `/admin`, `/gr`, `/sezione` con account reali (nessun account di sviluppo `*@local.test` in prod).
-- Mail di prova; job in coda processati dai log di `queue`.
+- Mail di prova (SMTP Gmail — **bloccato** finché le credenziali non sono disponibili, vedi §2); job in coda processati dai log di `queue`.
 
 ---
 
