@@ -45,8 +45,8 @@
         "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "torreManualeRiferimento() reso public static (era private) per essere richiamabile da CreatePrenotazione::mutateFormDataBeforeCreate(). Li' impostati manuale_letto_confermato_at = now() e manuale_letto_torre_id = torreManualeRiferimento()?->id incondizionatamente: e' sicuro perche' si arriva a mutateFormDataBeforeCreate solo dopo che la validazione 'accepted' su manuale_step_confermato (primo step) e' passata. Aggiornata l'unica assertion di PrenotazioneManualeLettoTest.php che diventava falsa (manuale_letto_confermato_at non e' piu' sempre null) - riscrittura completa del file resta scoped a US-004."
     },
     {
       "id": "US-004",
