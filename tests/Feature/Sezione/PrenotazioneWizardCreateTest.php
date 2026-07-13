@@ -53,7 +53,6 @@ test('la prenotazione di default ha status Bozza e i campi utente correttamente 
         'data_fine_evento' => today()->addDays(35),
         'data_inizio_prenotazione' => today()->addDays(30),
         'data_fine_prenotazione' => today()->addDays(35),
-        'azienda_trasporto' => 'Montagna Servizi',
         'responsabile_nome' => 'Mario Rossi',
         'responsabile_tipo' => 'istruttore',
         'responsabile_telefono' => '0123456789',
