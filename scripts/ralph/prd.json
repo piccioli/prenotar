@@ -64,8 +64,8 @@
         "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest) sull'intera suite"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Riorganizzati i test di login: nuovo tests/Feature/Auth/LegacyLoginUrlRedirectTest.php per i 3 redirect 302 delle vecchie URL (spostati da LoginBrandingTest.php, dove erano stati messi provvisoriamente in US-003). LoginBrandingTest.php riscritto per verificare il branding neutro di /login (assertSee 'CAI GR Lombardia' + assertDontSee dei 3 brandName per-pannello 'Prenotar — Admin/GR Lombardia/Sezione'), consolidando li' il test di branding che era duplicato in UnifiedLoginTest.php (rimosso da quest'ultimo, che ora copre solo il redirect mount() per utente gia' autenticato). PanelAccessTest.php e FirstAccessFlowTest.php verificati compatibili senza modifiche: nessuno dei due passa per le pagine di login, quindi non risentono della riorganizzazione."
     }
   ]
 }

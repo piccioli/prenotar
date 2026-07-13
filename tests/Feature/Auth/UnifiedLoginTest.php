@@ -9,12 +9,6 @@ beforeEach(function (): void {
     $this->seed(RolesAndPermissionsSeeder::class);
 });
 
-it('la pagina di login unica /login risponde 200 con branding CAI GR Lombardia', function (): void {
-    $this->get('/login')
-        ->assertOk()
-        ->assertSee('CAI GR Lombardia');
-});
-
 it('un admin gia autenticato che visita /login viene reindirizzato a /admin', function (): void {
     $user = User::factory()->admin()->create();
 
