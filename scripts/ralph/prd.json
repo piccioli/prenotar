@@ -61,8 +61,8 @@
         "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest) sull'intera suite"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Sostituito tests/Feature/Sezione/PrenotazioneTipoMezzoValidationTest.php (gia' eliminato in US-001) con il nuovo tests/Feature/Sezione/PrenotazioneLogisticaTrasportoTest.php: nome_conducente required, checkbox patente_be_confermata required (accepted), patente_be_dichiarata_at valorizzato al submit se confermata e azzerato live se la checkbox viene deselezionata, data_ritiro > data_inizio_prenotazione blocca il salvataggio (assertHasFormErrors con la FQCN della rule, pattern gia' visto per NoOverlapTorre), data_ritiro uguale o precedente passa e salva, piu' un test diretto sulla regola DataRitiroEntroInizioPrenotazione via Validator::make per il messaggio esplicativo. Aggiornato anche tests/Feature/Sezione/PrenotazioneWizardCreateTest.php: rimosso 'azienda_trasporto' dal Prenotazione::create() diretto (chiave gia' silenziosamente ignorata da Eloquent perche' non fillable, ma comunque un residuo del vecchio schema da ripulire). Verificato che PrenotazioneChangeDatesTest.php, PrenotazioneWorkflowFase4Test.php e SendReminderT2ggTest.php non referenziano alcun campo obsoleto (data_ritiro/data_riconsegna, invariati, sono gli unici campi trasporto toccati) e passano gia' cosi' come sono, nessuna modifica necessaria. composer qa verde: Pint ok, Larastan 162/162 no errors, Pest 280 passed (era 272 prima di questa story)."
     }
   ]
 }
