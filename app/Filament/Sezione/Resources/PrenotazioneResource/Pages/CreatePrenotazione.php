@@ -57,9 +57,7 @@ class CreatePrenotazione extends CreateRecord
 
     public function form(Form $form): Form
     {
-        $manualeStepNonConfermato = fn (Get $get): bool => ! (bool) $get('manuale_step_confermato');
-        $torreSenzaManualeConfermato = fn (Get $get): bool => filled($get('torre_id')) && ! $get('manuale_letto_confirm');
-        $bloccaAvanzamento = fn (Get $get): bool => $manualeStepNonConfermato($get) || $torreSenzaManualeConfermato($get);
+        $bloccaAvanzamento = fn (Get $get): bool => ! (bool) $get('manuale_step_confermato');
         $submitLabel = 'Salva come bozza';
 
         return $form->schema([

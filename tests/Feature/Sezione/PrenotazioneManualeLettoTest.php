@@ -50,22 +50,7 @@ test('senza confermare la checkbox del primo step il wizard non può essere invi
     expect(Prenotazione::count())->toBe(0);
 });
 
-test('con torre selezionata il wizard non può essere inviato senza spuntare la conferma di lettura del manuale', function (): void {
-    actingAs($this->user);
-    $torre = Torre::factory()->create(['is_active' => true]);
-
-    Livewire::test(CreatePrenotazione::class)
-        ->fillForm([
-            ...datiPrenotazioneManualeLettoBase(),
-            'torre_id' => $torre->id,
-        ])
-        ->call('create')
-        ->assertHasFormErrors(['manuale_letto_confirm' => 'accepted']);
-
-    expect(Prenotazione::count())->toBe(0);
-});
-
-test('con torre selezionata e conferma di lettura spuntata il wizard salva la prenotazione con audit del manuale', function (): void {
+test('con torre selezionata e conferma di lettura spuntata il wizard salva la prenotazione', function (): void {
     actingAs($this->user);
     $torre = Torre::factory()->create(['is_active' => true]);
 
@@ -75,14 +60,11 @@ test('con torre selezionata e conferma di lettura spuntata il wizard salva la pr
             'torre_id' => $torre->id,
         ])
         ->set('data.manuale_step_confermato', true)
-        ->set('data.manuale_letto_confirm', true)
         ->call('create')
         ->assertHasNoFormErrors();
 
     $prenotazione = Prenotazione::sole();
-    expect($prenotazione->torre_id)->toBe($torre->id)
-        ->and($prenotazione->manuale_letto_torre_id)->toBe($torre->id)
-        ->and($prenotazione->manuale_letto_confermato_at)->not->toBeNull();
+    expect($prenotazione->torre_id)->toBe($torre->id);
 });
 
 test('senza torre selezionata il wizard non richiede la conferma di lettura del manuale', function (): void {
@@ -98,27 +80,4 @@ test('senza torre selezionata il wizard non richiede la conferma di lettura del 
     expect($prenotazione->torre_id)->toBeNull()
         ->and($prenotazione->manuale_letto_torre_id)->toBeNull()
         ->and($prenotazione->manuale_letto_confermato_at)->toBeNull();
-});
-
-test('cambiare la torre selezionata dopo la conferma resetta il flag e richiede una nuova conferma', function (): void {
-    actingAs($this->user);
-    $torre1 = Torre::factory()->create(['is_active' => true]);
-    $torre2 = Torre::factory()->create(['is_active' => true]);
-
-    $component = Livewire::test(CreatePrenotazione::class)
-        ->fillForm([
-            ...datiPrenotazioneManualeLettoBase(),
-            'torre_id' => $torre1->id,
-        ])
-        ->set('data.manuale_letto_confirm', true)
-        ->assertSet('data.manuale_letto_torre_id', $torre1->id);
-
-    $component->set('data.torre_id', $torre2->id)
-        ->assertSet('data.manuale_letto_confirm', false)
-        ->assertSet('data.manuale_letto_confermato_at', null)
-        ->assertSet('data.manuale_letto_torre_id', null)
-        ->call('create')
-        ->assertHasFormErrors(['manuale_letto_confirm' => 'accepted']);
-
-    expect(Prenotazione::count())->toBe(0);
 });

@@ -31,8 +31,8 @@
         "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Rimossi Checkbox::make('manuale_letto_confirm'), i due Hidden manuale_letto_confermato_at/manuale_letto_torre_id e l'afterStateUpdated sul Radio torre_id nello step 'Quando e dove'. CreatePrenotazione::form() semplificato: $bloccaAvanzamento dipende solo da manuale_step_confermato. Riepilogo aggiornato per leggere 'confermato' da manuale_step_confermato invece del campo rimosso. Rimossa anche la blade manuale-checkbox.blade.php (non piu' referenziata). Adattati i test di PrenotazioneManualeLettoTest.php che coprivano il comportamento torre-scoped rimosso (rewrite completo atteso in US-004): la persistenza di manuale_letto_confermato_at/torre_id resta non wired fino a US-003, quindi per ora resta sempre null anche a wizard completato con successo."
     },
     {
       "id": "US-003",

@@ -124,11 +124,6 @@ class PrenotazioneResource extends Resource
                                 ->options(fn (): array => ['' => 'Nessuna preferenza']
                                     + Torre::where('is_active', true)->pluck('nome', 'id')->all())
                                 ->live()
-                                ->afterStateUpdated(function (Forms\Set $set): void {
-                                    $set('manuale_letto_confirm', false);
-                                    $set('manuale_letto_confermato_at', null);
-                                    $set('manuale_letto_torre_id', null);
-                                })
                                 ->dehydrateStateUsing(fn ($state) => filled($state) ? (int) $state : null)
                                 ->rules(fn (Forms\Get $get): array => [
                                     new NoOverlapTorre(
@@ -139,28 +134,6 @@ class PrenotazioneResource extends Resource
                                 ])
                                 ->view('filament.sezione.forms.components.torre-radio-cards')
                                 ->columnSpanFull(),
-
-                            Forms\Components\Checkbox::make('manuale_letto_confirm')
-                                ->label('Ho letto e compreso il manuale d\'istruzioni')
-                                ->hiddenLabel()
-                                ->live()
-                                ->dehydrated(false)
-                                ->default(false)
-                                ->visible(fn (Forms\Get $get): bool => filled($get('torre_id')))
-                                ->rules(fn (Forms\Get $get): array => filled($get('torre_id')) ? ['accepted'] : [])
-                                ->validationMessages([
-                                    'accepted' => 'Devi confermare di aver letto il manuale d\'istruzioni prima di proseguire.',
-                                ])
-                                ->afterStateUpdated(function (?bool $state, Forms\Set $set, Forms\Get $get): void {
-                                    $set('manuale_letto_confermato_at', $state ? now() : null);
-                                    $set('manuale_letto_torre_id', $state ? $get('torre_id') : null);
-                                })
-                                ->viewData(fn (Forms\Get $get): array => ['torre' => Torre::find($get('torre_id'))])
-                                ->view('filament.sezione.forms.components.manuale-checkbox')
-                                ->columnSpanFull(),
-
-                            Forms\Components\Hidden::make('manuale_letto_confermato_at'),
-                            Forms\Components\Hidden::make('manuale_letto_torre_id'),
                         ]),
 
                     Forms\Components\Section::make('Disponibilità')
@@ -398,7 +371,7 @@ class PrenotazioneResource extends Resource
                     ['tipo' => 'testo', 'label' => 'Periodo di utilizzo', 'valore' => self::formattaPeriodo($get('data_inizio_prenotazione'), $get('data_fine_prenotazione'))],
                     ['tipo' => 'torre', 'label' => 'Torre richiesta', 'torre' => $torre],
                     ['tipo' => 'testo', 'label' => 'Deposito torre', 'valore' => self::depositoTorre($torre)],
-                    ['tipo' => 'manuale', 'label' => 'Manuale d\'istruzioni', 'torre' => $torre, 'confermato' => (bool) $get('manuale_letto_confirm')],
+                    ['tipo' => 'manuale', 'label' => 'Manuale d\'istruzioni', 'torre' => $torre, 'confermato' => (bool) $get('manuale_step_confermato')],
                 ],
             ],
             [
