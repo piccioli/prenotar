@@ -1,3 +1,24 @@
 # Ralph Progress Log
 Started: 2026-07-13
 ---
+
+## Codebase Patterns
+- Wizard steps for the /sezione Prenotazione resource live in `PrenotazioneResource::wizardSteps()` (app/Filament/Sezione/Resources/PrenotazioneResource.php); the outer `Wizard::make(...)` + nextAction()/skippable() config lives separately in `CreatePrenotazione::form()`, and both must be kept in sync when a step gates progression (nextAction's `->disabled()` closure receives `Forms\Get $get` and is evaluated with the whole live form state, so a condition defined for one step's field also protects later steps for free).
+- Custom-styled Filament fields (checkbox with link/warning, radio cards, etc.) use `->view('filament.sezione.forms.components.<name>')` + `->viewData([...])` pointing at a blade partial under `resources/views/filament/sezione/forms/components/`; see `manuale-checkbox.blade.php` / `manuale-istruzioni-step.blade.php` for the pattern (uses `<x-dynamic-component :component="$getFieldWrapperView()" :field="$field">`, `$getState()`, `$getStatePath()`, `x-filament::input.checkbox`).
+- `Torre::manuale_pdf_path` sits on the default `public` disk; consumers build the URL manually with `asset('storage/'.$path)`, not `Storage::url()`.
+- Feature tests that fill the CreatePrenotazione wizard via `Livewire::test(CreatePrenotazione::class)->fillForm([...])->call('create')` must also `->set('data.manuale_step_confermato', true)` (added in US-001) or they'll fail with a new `accepted` validation error — this affected two test files (`PrenotazioneManualeLettoTest.php`, `PrenotazioneTipoMezzoValidationTest.php`) that had nothing to do with the manuale feature. Grep `CreatePrenotazione::class` across tests/ before adding any new mandatory wizard field.
+---
+
+## 2026-07-13 - US-001
+- Added a new, always-first Wizard step "Manuale d'istruzioni" to the /sezione Prenotazione creation wizard (`PrenotazioneResource::wizardSteps()`), independent from the `torre_id` chosen later in "Quando e dove". Shows a link to the manual PDF of the first active Torre (by id) that has `manuale_pdf_path` set (`PrenotazioneResource::torreManualeRiferimento()`), or a "non ancora disponibile" notice if none does — either way a new `manuale_step_confermato` checkbox (dehydrated(false), `rules(['accepted'])` unconditionally) must be checked before the wizard's "Continua" button unlocks (`CreatePrenotazione::form()`'s `$bloccaAvanzamento` now also checks this field, in addition to the pre-existing torre-scoped check).
+- Files changed:
+  - `app/Filament/Sezione/Resources/PrenotazioneResource.php` (new step + `torreManualeRiferimento()` helper)
+  - `app/Filament/Sezione/Resources/PrenotazioneResource/Pages/CreatePrenotazione.php` (nextAction/mobileNextHint gating)
+  - `resources/views/filament/sezione/forms/components/manuale-istruzioni-step.blade.php` (new)
+  - `tests/Feature/Sezione/PrenotazioneManualeLettoTest.php` (new test for the always-mandatory gate; `->set('data.manuale_step_confermato', true)` added to the two scenarios that call `create()` expecting no errors)
+  - `tests/Feature/Sezione/PrenotazioneTipoMezzoValidationTest.php` (same `->set(...)` fix, unrelated to manuale but broken by the new mandatory field)
+- Deliberately left untouched (scoped to US-002/US-003/US-004 per the PRD): the old torre-scoped `manuale_letto_confirm` checkbox + hidden fields + `afterStateUpdated` reset logic still in the "Quando e dove" step, and the full rewrite of `PrenotazioneManualeLettoTest.php`/`PrenotazioneWizardCreateTest.php`. The new step's checkbox is a separate, non-persisted field (`manuale_step_confermato`) for now — it does not yet write to `manuale_letto_confermato_at`/`manuale_letto_torre_id`; that persistence wiring is US-003's job.
+- **Learnings for future iterations:**
+  - No browser tool (Playwright/MCP) was available in this session — visual verification of the new step was NOT done in an actual browser. Manual browser check still needed: open `/sezione/prenotazioni/create`, confirm step 1 is "Manuale d'istruzioni", shows the PDF link (dev seeder's 2 torri both have `manuale_pdf_path` set), and "Continua" stays disabled until the checkbox is ticked.
+  - See Codebase Patterns above re: grepping for `CreatePrenotazione::class` in tests before adding any new mandatory field to this wizard.
+---

@@ -66,6 +66,7 @@ test('mezzo privato con categoria patente selezionata salva correttamente', func
             'tipo_mezzo' => TipoMezzo::Privato->value,
             'categoria_patente_privato' => CategoriaPatente::BE->value,
         ])
+        ->set('data.manuale_step_confermato', true)
         ->call('create')
         ->assertHasNoFormErrors();
 
@@ -79,6 +80,7 @@ test('mezzo aziendale (default) non richiede categoria patente', function (): vo
 
     Livewire::test(CreatePrenotazione::class)
         ->fillForm(datiPrenotazioneValidiBase())
+        ->set('data.manuale_step_confermato', true)
         ->call('create')
         ->assertHasNoFormErrors();
 

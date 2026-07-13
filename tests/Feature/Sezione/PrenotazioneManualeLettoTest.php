@@ -39,6 +39,17 @@ function datiPrenotazioneManualeLettoBase(): array
     ];
 }
 
+test('senza confermare la checkbox del primo step il wizard non può essere inviato, qualunque sia la torre scelta', function (): void {
+    actingAs($this->user);
+
+    Livewire::test(CreatePrenotazione::class)
+        ->fillForm(datiPrenotazioneManualeLettoBase())
+        ->call('create')
+        ->assertHasFormErrors(['manuale_step_confermato' => 'accepted']);
+
+    expect(Prenotazione::count())->toBe(0);
+});
+
 test('con torre selezionata il wizard non può essere inviato senza spuntare la conferma di lettura del manuale', function (): void {
     actingAs($this->user);
     $torre = Torre::factory()->create(['is_active' => true]);
@@ -63,6 +74,7 @@ test('con torre selezionata e conferma di lettura spuntata il wizard salva la pr
             ...datiPrenotazioneManualeLettoBase(),
             'torre_id' => $torre->id,
         ])
+        ->set('data.manuale_step_confermato', true)
         ->set('data.manuale_letto_confirm', true)
         ->call('create')
         ->assertHasNoFormErrors();
@@ -78,6 +90,7 @@ test('senza torre selezionata il wizard non richiede la conferma di lettura del 
 
     Livewire::test(CreatePrenotazione::class)
         ->fillForm(datiPrenotazioneManualeLettoBase())
+        ->set('data.manuale_step_confermato', true)
         ->call('create')
         ->assertHasNoFormErrors();
 

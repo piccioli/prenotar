@@ -56,6 +56,27 @@ class PrenotazioneResource extends Resource
     public static function wizardSteps(): array
     {
         return [
+            Forms\Components\Wizard\Step::make('Manuale d\'istruzioni')
+                ->icon('heroicon-o-book-open')
+                ->schema([
+                    Forms\Components\Section::make('Prima di iniziare, leggi il manuale d\'istruzioni')
+                        ->description('La conferma di lettura è obbligatoria per procedere, qualunque torre sceglierai nello step successivo.')
+                        ->schema([
+                            Forms\Components\Checkbox::make('manuale_step_confermato')
+                                ->hiddenLabel()
+                                ->live()
+                                ->dehydrated(false)
+                                ->default(false)
+                                ->rules(['accepted'])
+                                ->validationMessages([
+                                    'accepted' => 'Devi confermare di aver letto il manuale d\'istruzioni prima di proseguire.',
+                                ])
+                                ->viewData(['torre' => self::torreManualeRiferimento()])
+                                ->view('filament.sezione.forms.components.manuale-istruzioni-step')
+                                ->columnSpanFull(),
+                        ]),
+                ]),
+
             Forms\Components\Wizard\Step::make('Quando & dove')
                 ->icon('heroicon-o-calendar')
                 ->schema([
@@ -412,6 +433,14 @@ class PrenotazioneResource extends Resource
                 ],
             ],
         ];
+    }
+
+    private static function torreManualeRiferimento(): ?Torre
+    {
+        return Torre::where('is_active', true)
+            ->whereNotNull('manuale_pdf_path')
+            ->orderBy('id')
+            ->first();
     }
 
     private static function depositoTorre(?Torre $torre): string

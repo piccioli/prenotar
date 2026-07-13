@@ -57,7 +57,9 @@ class CreatePrenotazione extends CreateRecord
 
     public function form(Form $form): Form
     {
+        $manualeStepNonConfermato = fn (Get $get): bool => ! (bool) $get('manuale_step_confermato');
         $torreSenzaManualeConfermato = fn (Get $get): bool => filled($get('torre_id')) && ! $get('manuale_letto_confirm');
+        $bloccaAvanzamento = fn (Get $get): bool => $manualeStepNonConfermato($get) || $torreSenzaManualeConfermato($get);
         $submitLabel = 'Salva come bozza';
 
         return $form->schema([
@@ -65,14 +67,14 @@ class CreatePrenotazione extends CreateRecord
                 ->view('filament.sezione.forms.components.prenotazione-wizard')
                 ->viewData(fn (Get $get): array => [
                     'mobileSubmitLabel' => $submitLabel,
-                    'mobileNextHint' => $torreSenzaManualeConfermato($get)
+                    'mobileNextHint' => $bloccaAvanzamento($get)
                         ? 'Conferma la lettura del manuale per continuare'
                         : null,
                 ])
                 ->skippable(false)
                 ->nextAction(fn (WizardAction $action) => $action
                     ->label('Continua')
-                    ->disabled($torreSenzaManualeConfermato))
+                    ->disabled($bloccaAvanzamento))
                 ->submitAction(new HtmlString(
                     '<button type="submit" class="fi-btn fi-btn-size-md fi-btn-color-primary fi-color-custom fi-ac-btn-action px-3 py-2">'.$submitLabel.'</button>'
                 )),

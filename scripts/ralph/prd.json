@@ -17,8 +17,8 @@
         "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Nuovo step 'Manuale d'istruzioni' come primo step, campo temporaneo manuale_step_confermato (dehydrated(false), non persistito) che blocca 'Continua'. Non tocca ancora lo step 'Quando e dove' ne' la persistenza manuale_letto_* - vedi US-002/US-003. Verifica visiva in browser NON eseguita (nessun tool browser disponibile in questa sessione) - verificare manualmente."
     },
     {
       "id": "US-002",
