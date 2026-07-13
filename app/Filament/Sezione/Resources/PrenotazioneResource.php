@@ -408,7 +408,7 @@ class PrenotazioneResource extends Resource
         ];
     }
 
-    private static function torreManualeRiferimento(): ?Torre
+    public static function torreManualeRiferimento(): ?Torre
     {
         return Torre::where('is_active', true)
             ->whereNotNull('manuale_pdf_path')

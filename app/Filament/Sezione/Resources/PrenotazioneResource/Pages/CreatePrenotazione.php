@@ -87,6 +87,8 @@ class CreatePrenotazione extends CreateRecord
         $data['sezione_id'] = $user->sezione_id;
         $data['sottosezione_id'] = $user->sottosezione_id;
         $data['status'] = PrenotazioneStatus::Bozza;
+        $data['manuale_letto_confermato_at'] = now();
+        $data['manuale_letto_torre_id'] = PrenotazioneResource::torreManualeRiferimento()?->id;
 
         return $data;
     }

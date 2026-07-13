@@ -79,5 +79,5 @@ test('senza torre selezionata il wizard non richiede la conferma di lettura del 
     $prenotazione = Prenotazione::sole();
     expect($prenotazione->torre_id)->toBeNull()
         ->and($prenotazione->manuale_letto_torre_id)->toBeNull()
-        ->and($prenotazione->manuale_letto_confermato_at)->toBeNull();
+        ->and($prenotazione->manuale_letto_confermato_at)->not->toBeNull();
 });
