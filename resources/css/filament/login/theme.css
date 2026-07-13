@@ -1,0 +1,19 @@
+@import '/vendor/filament/filament/resources/css/theme.css';
+
+@import '../tokens/index.css';
+@import '../mobile-shell.css';
+
+@config '../tailwind.config.js';
+
+/* Login unico — nessun colore di pannello (niente ambra/pino/ardesia): solo
+   la scala stone neutra condivisa, per non associare visivamente la pagina
+   a nessuno dei 3 pannelli. */
+:root {
+  --text-brand: var(--stone-700);
+  --surface-subtle: var(--stone-100);
+  --surface-brand: var(--stone-600);
+  --surface-brand-strong: var(--stone-800);
+  --surface-inverse: var(--stone-900);
+  --border-strong: var(--stone-600);
+  --focus-ring: var(--stone-500);
+}

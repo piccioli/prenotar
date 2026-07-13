@@ -10,6 +10,7 @@ export default defineConfig({
                 'resources/css/filament/admin/theme.css',
                 'resources/css/filament/gr/theme.css',
                 'resources/css/filament/sezione/theme.css',
+                'resources/css/filament/login/theme.css',
             ],
             refresh: true,
         }),

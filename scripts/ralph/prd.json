@@ -16,8 +16,8 @@
         "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "LoginPanelProvider (id 'login', path '') + App\\Filament\\Pages\\Auth\\Login custom, tema stone in resources/css/filament/login/theme.css. Redirect post-login riuscito ancora da fare in US-002 (per ora va a /admin via routes/web.php per chiunque)."
     },
     {
       "id": "US-002",

@@ -1,3 +1,25 @@
 # Ralph Progress Log
 Started: 2026-07-13
 ---
+
+## Codebase Patterns
+- Filament `Pages\Auth\Login::authenticate()` checks `$user->canAccessPanel(Filament::getCurrentPanel())` for the CURRENT panel — a shared/neutral panel with no real resources needs its own Login subclass overriding `authenticate()` to check `canAccessPanel()` against the real panels instead (`admin`/`gr`/`sezione`), otherwise every login on that panel is rejected and immediately logged out.
+- `Panel::getUrl()` builds its result via a `NavigationManager` that reads `Filament::getCurrentPanel()` internally (global state), NOT the panel instance it's called on — calling `Filament::getPanel('admin')->getUrl()` from a *different* panel's request context does not reliably resolve `/admin`. Use `url($panel->getPath())` instead when you need another panel's base URL from outside its own context.
+- A panel can have `->path('')` (empty string) to serve routes at the domain root (e.g. a shared `/login` panel) without colliding with the other panels' non-empty path prefixes.
+- Every new Filament `viteTheme()` entry point must be added to `input` in `vite.config.js` AND rebuilt with `sail npm run build` before the page is requested — otherwise Filament throws a Vite-manifest-not-found error. `public/build/manifest.json` is gitignored, so this rebuild has to happen in every environment (dev machine, CI, deploy) that serves the new panel, not just once.
+---
+
+## 2026-07-13 - US-001
+- Implementato il login unico su `/login` con branding neutro CAI GR Lombardia, riusando il form stock di Filament (email/password/ricordami/errori/throttling).
+- Files changed:
+  - `app/Providers/Filament/LoginPanelProvider.php` (nuovo): 4° pannello Filament, id `login`, `path('')` (root → `/login`), nessuna risorsa/pagina propria, tema `login/theme.css`.
+  - `app/Filament/Pages/Auth/Login.php` (nuovo): estende `Filament\Pages\Auth\Login`; `mount()` reindirizza un utente già autenticato al proprio pannello (`isAdmin/isGrManager/isSezione`); `authenticate()` sostituisce il controllo `canAccessPanel(pannello corrente)` con un controllo su `admin`/`gr`/`sezione` (nessuna modifica a `User::canAccessPanel()`).
+  - `resources/css/filament/login/theme.css` (nuovo): alias brand mappati sulla scala `--stone-*` condivisa, nessun colore di pannello.
+  - `bootstrap/providers.php`, `vite.config.js`: registrazione del 4° pannello/tema.
+  - `tests/Feature/Auth/UnifiedLoginTest.php` (nuovo): `/login` risponde 200 con branding, e un utente già autenticato di ciascuno dei 3 ruoli visitando `/login` viene reindirizzato al proprio pannello.
+- Verifica visiva: screenshot via Chrome headless CLI (`google-chrome --headless=new --screenshot`) di `/login` — form scuro/neutro, bottone e focus ring grigio "stone", nessun ambra/pino/ardesia. Nessun tool MCP browser disponibile in questa sessione: verifica manuale in browser reale ancora raccomandata prima del merge.
+- Deliberatamente NON implementato in questa iterazione (spetta a US-002): il redirect post-login-riuscito (`LoginResponse` di default) reindirizza ancora a `Filament::getUrl()` del pannello `login` (→ `/` → `/admin` via `routes/web.php`), corretto solo per ruolo admin. US-002 dovrà sostituire questo redirect con la stessa logica di ruolo già usata in `Login::mount()`.
+- **Learnings for future iterations:**
+  - Vedi sezione "Codebase Patterns" in cima a questo file (canAccessPanel su pannello neutro, NavigationManager/getUrl(), path('') vuoto, rebuild Vite obbligatorio).
+  - `composer qa` (Pint + Larastan level 6 + Pest, 268 test) verde dopo l'implementazione.
+---
