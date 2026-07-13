@@ -24,6 +24,9 @@ class LoginResponse implements Responsable
 
         $panelUrl = ($user instanceof User) ? PanelRedirector::resolveUrlForUser($user) : null;
 
-        return redirect()->intended($panelUrl ?? Filament::getUrl());
+        // Redirect diretto, non ->intended(): il pannello per ruolo deve avere
+        // sempre priorita' su un eventuale 'url.intended' di sessione lasciato
+        // da un precedente tentativo (da ospite) di aprire un pannello diverso.
+        return redirect($panelUrl ?? Filament::getUrl());
     }
 }

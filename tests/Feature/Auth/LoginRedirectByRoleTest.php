@@ -40,3 +40,18 @@ it('una sezione viene reindirizzata a /sezione dopo il login su /login', functio
         ->call('authenticate')
         ->assertRedirect('/sezione');
 });
+
+it('una sezione che aveva prima visitato /admin da ospite viene comunque rediretta a /sezione', function (): void {
+    // Un tentativo da ospite di aprire un pannello diverso salva 'url.intended'
+    // in sessione (comportamento standard di Laravel): il redirect per ruolo
+    // deve avere sempre priorita' su quel valore residuo.
+    $user = User::factory()->sezione()->create();
+
+    $this->get('/admin');
+
+    Livewire::test(Login::class)
+        ->set('data.email', $user->email)
+        ->set('data.password', 'password')
+        ->call('authenticate')
+        ->assertRedirect('/sezione');
+});
