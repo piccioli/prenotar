@@ -66,10 +66,11 @@ test('la prenotazione di default ha status Bozza e i campi utente correttamente 
         ->and($prenotazione->sottosezione_id)->toBeNull();
 });
 
-test('la pagina crea ha il wizard con i 5 step', function (): void {
+test('la pagina crea ha il wizard con i 6 step', function (): void {
     actingAs(User::factory()->sezione()->create())
         ->get(PrenotazioneResource::getUrl('create', panel: 'sezione'))
         ->assertSuccessful()
+        ->assertSee('Manuale d\'istruzioni')
         ->assertSee('Quando & dove')
         ->assertSee('Evento');
 });

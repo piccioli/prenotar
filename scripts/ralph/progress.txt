@@ -45,3 +45,14 @@ Started: 2026-07-13
 - **Learnings for future iterations:**
   - No test in this repo yet exercises the case where the reference torre (step 1's manual) differs from the eventually-chosen `torre_id` — the only `Torre::factory()` used in the current manuale tests has `manuale_pdf_path === null` by default (see `database/factories/TorreFactory.php`), so `torreManualeRiferimento()` returns null in those scenarios too. US-004 should add a scenario with a torre that *has* `manuale_pdf_path` set to assert `manuale_letto_torre_id` gets populated correctly and stays independent from the chosen `torre_id`.
 ---
+
+## 2026-07-13 - US-004
+- Rewrote `tests/Feature/Sezione/PrenotazioneManualeLettoTest.php` to fully cover the always-mandatory, torre-independent manuale confirmation flow: (1) two "blocked without confirmation" tests (with a torre selected, and with "nessuna preferenza") replacing the single generic one; (2) two "confirmed + saved" tests (with torre, without torre) each now also asserting `manuale_letto_confermato_at` is set; (3) a new test creating a torre with `manuale_pdf_path` set alongside a *different* torre picked as `torre_id`, asserting `manuale_letto_torre_id` equals the manual-bearing torre and differs from the chosen `torre_id` — closes the coverage gap flagged in US-003's learnings; (4) a new test with no active torre having a manual, asserting the Livewire component `assertSee('Manuale non ancora disponibile.')` (the exact blade copy) and that submission still succeeds with `manuale_letto_torre_id` null. Also updated `tests/Feature/Sezione/PrenotazioneWizardCreateTest.php`: renamed the step-count test from "5 step" to "6 step" and added `assertSee('Manuale d\'istruzioni')` alongside the existing `assertSee('Quando & dove')`/`assertSee('Evento')`.
+- Files changed:
+  - `tests/Feature/Sezione/PrenotazioneManualeLettoTest.php` (full rewrite, 6 tests)
+  - `tests/Feature/Sezione/PrenotazioneWizardCreateTest.php` (1 test renamed + extended)
+- **Learnings for future iterations:**
+  - `Livewire::test(CreatePrenotazione::class)` (no `->fillForm()` yet) can be asserted against directly with `->assertSee(...)` to check the initial render of step 1 — useful for asserting blade-partial-only copy (like the "manuale non disponibile" notice) that isn't tied to any field's dehydrated state.
+  - No browser tool (Playwright/MCP) was available in this session either — visual verification of the finished 6-step wizard was NOT done in an actual browser across US-001→US-004. This remains an open manual QA item for the PRD as a whole (open `/sezione/prenotazioni/create`, confirm step 1 "Manuale d'istruzioni" gates "Continua", steps renumber correctly, Riepilogo shows the confirmation).
+  - All 4 user stories of this PRD are now `passes: true` — this was the last one.
+---

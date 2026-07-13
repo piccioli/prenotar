@@ -61,8 +61,8 @@
         "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest) sull'intera suite"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Riscritto tests/Feature/Sezione/PrenotazioneManualeLettoTest.php: 6 test totali - due varianti (con torre / senza torre-nessuna preferenza) per il blocco senza conferma, due varianti per il salvataggio con conferma, un test che verifica manuale_letto_torre_id (torre di riferimento con manuale) resta indipendente dal torre_id scelto, un test per lo scenario 'nessuna torre attiva ha il manuale' (assertSee dell'avviso + salvataggio comunque permesso). Rimosso il vecchio test unico 'senza torre selezionata la conferma non e richiesta' (gia' sostituito in US-002). Aggiornato tests/Feature/Sezione/PrenotazioneWizardCreateTest.php: rinominato il test '5 step' -> '6 step' e aggiunto assertSee('Manuale d'istruzioni'). qa (Pint + Larastan + Pest, 274 test) verde."
     }
   ]
 }
