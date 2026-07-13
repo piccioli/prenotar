@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace App\Filament\Sezione\Resources;
 
-use App\Enums\CategoriaPatente;
 use App\Enums\PrenotazioneStatus;
 use App\Enums\ResponsabileTipo;
-use App\Enums\TipoMezzo;
 use App\Filament\Sezione\Resources\PrenotazioneResource\Pages;
 use App\Filament\Sezione\Widgets\CalendarioPrenotazioniWidget;
 use App\Models\Prenotazione;
 use App\Models\Torre;
+use App\Rules\DataRitiroEntroInizioPrenotazione;
 use App\Rules\NoOverlapTorre;
 use App\Rules\UnicaPrenotazioneAttivaPerUser;
 use App\Services\PrenotazioneStateMachine;
@@ -200,93 +199,58 @@ class PrenotazioneResource extends Resource
 
             Forms\Components\Wizard\Step::make('Logistica trasporto')
                 ->icon('heroicon-o-truck')
-                ->schema(function (): array {
-                    $isMezzoPrivato = fn (Forms\Get $get): bool => $get('tipo_mezzo') === TipoMezzo::Privato->value;
-                    $isMezzoAziendale = fn (Forms\Get $get): bool => $get('tipo_mezzo') !== TipoMezzo::Privato->value;
-
-                    return [
-                        Forms\Components\Section::make('Come trasporterai la torre?')
-                            ->description('Date e luoghi di ritiro e riconsegna presso il deposito, e mezzo utilizzato.')
-                            ->schema([
-                                Forms\Components\Grid::make(2)->schema([
-                                    Forms\Components\DatePicker::make('data_ritiro')
-                                        ->label('Data ritiro torre')
-                                        ->native(false)
-                                        ->displayFormat('d/m/Y')
-                                        ->prefixIcon('heroicon-o-calendar'),
-
-                                    Forms\Components\TextInput::make('luogo_ritiro')
-                                        ->label('Luogo ritiro')
-                                        ->maxLength(255)
-                                        ->prefixIcon('heroicon-o-map-pin'),
-
-                                    Forms\Components\DatePicker::make('data_riconsegna')
-                                        ->label('Data riconsegna torre')
-                                        ->native(false)
-                                        ->displayFormat('d/m/Y')
-                                        ->prefixIcon('heroicon-o-calendar')
-                                        ->helperText('È la stessa data mostrata nel calendario delle torri.'),
-
-                                    Forms\Components\TextInput::make('luogo_riconsegna')
-                                        ->label('Luogo riconsegna')
-                                        ->maxLength(255)
-                                        ->prefixIcon('heroicon-o-map-pin'),
-
-                                    Forms\Components\TextInput::make('azienda_trasporto')
-                                        ->label('Azienda di trasporto')
-                                        ->default('Montagna Servizi')
-                                        ->maxLength(255)
-                                        ->prefixIcon('heroicon-o-building-office'),
-
-                                    Forms\Components\TextInput::make('targa_autoveicolo')
-                                        ->label('Targa autoveicolo')
-                                        ->maxLength(20)
-                                        ->prefixIcon('heroicon-o-identification'),
-                                ]),
-                            ]),
-
-                        Forms\Components\Section::make('Che mezzo userai per il traino?')
-                            ->schema([
-                                Forms\Components\ToggleButtons::make('tipo_mezzo')
-                                    ->hiddenLabel()
-                                    ->options(collect(TipoMezzo::cases())->mapWithKeys(
-                                        fn (TipoMezzo $t) => [$t->value => $t->label()]
-                                    ))
-                                    ->colors(collect(TipoMezzo::cases())->mapWithKeys(
-                                        fn (TipoMezzo $t) => [$t->value => 'primary']
-                                    )->all())
-                                    ->default(TipoMezzo::Aziendale->value)
-                                    ->required()
-                                    ->live()
-                                    ->grouped()
-                                    ->inline(),
-
-                                Forms\Components\Placeholder::make('mezzo_aziendale_hint')
-                                    ->hiddenLabel()
-                                    ->visible($isMezzoAziendale)
-                                    ->content('Il trasporto è affidato all\'azienda indicata: nessun altro dato richiesto.'),
-
-                                Forms\Components\Section::make('Categoria patente di chi guida')
-                                    ->description('Con mezzo privato serve la patente adeguata al peso del rimorchio. Dovrai allegarne copia prima dell\'invio.')
-                                    ->visible($isMezzoPrivato)
-                                    ->schema([
-                                        Forms\Components\Radio::make('categoria_patente_privato')
-                                            ->hiddenLabel()
-                                            ->options(collect(CategoriaPatente::cases())->mapWithKeys(
-                                                fn (CategoriaPatente $c) => [$c->value => 'Patente '.$c->label()]
-                                            ))
-                                            ->descriptions([
-                                                CategoriaPatente::B->value => 'Rimorchio fino a 750 kg',
-                                                CategoriaPatente::BE->value => 'Rimorchio oltre 750 kg',
-                                            ])
-                                            ->visible($isMezzoPrivato)
-                                            ->required($isMezzoPrivato)
-                                            ->inline()
-                                            ->view('filament.sezione.forms.components.radio-option-cards'),
+                ->schema([
+                    Forms\Components\Section::make('Come trasporterai la torre?')
+                        ->description('Date di ritiro e riconsegna presso il deposito, mezzo e conducente.')
+                        ->schema([
+                            Forms\Components\Grid::make(2)->schema([
+                                Forms\Components\DatePicker::make('data_ritiro')
+                                    ->label('Data ritiro torre')
+                                    ->native(false)
+                                    ->displayFormat('d/m/Y')
+                                    ->prefixIcon('heroicon-o-calendar')
+                                    ->rules(fn (Forms\Get $get): array => [
+                                        new DataRitiroEntroInizioPrenotazione(
+                                            dataInizioPrenotazione: (string) ($get('data_inizio_prenotazione') ?? ''),
+                                        ),
                                     ]),
+
+                                Forms\Components\DatePicker::make('data_riconsegna')
+                                    ->label('Data riconsegna torre')
+                                    ->native(false)
+                                    ->displayFormat('d/m/Y')
+                                    ->prefixIcon('heroicon-o-calendar')
+                                    ->helperText('È la stessa data mostrata nel calendario delle torri.'),
+
+                                Forms\Components\TextInput::make('targa_autoveicolo')
+                                    ->label('Targa autoveicolo')
+                                    ->maxLength(20)
+                                    ->prefixIcon('heroicon-o-identification'),
+
+                                Forms\Components\TextInput::make('nome_conducente')
+                                    ->label('Nome conducente')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->prefixIcon('heroicon-o-user'),
                             ]),
-                    ];
-                }),
+                        ]),
+
+                    Forms\Components\Section::make('Dichiarazione patente')
+                        ->schema([
+                            Forms\Components\Checkbox::make('patente_be_confermata')
+                                ->label('Dichiaro, sotto la mia responsabilità, di essere in possesso di patente di guida di categoria B+E (o superiore), idonea al traino del rimorchio della torre di arrampicata, e che quanto dichiarato corrisponde al vero.')
+                                ->live()
+                                ->dehydrated(false)
+                                ->default(false)
+                                ->rules(['accepted'])
+                                ->validationMessages([
+                                    'accepted' => 'Devi confermare il possesso della patente B+E per proseguire.',
+                                ])
+                                ->afterStateUpdated(fn (?bool $state, Forms\Set $set) => $set('patente_be_dichiarata_at', $state ? now() : null)),
+
+                            Forms\Components\Hidden::make('patente_be_dichiarata_at'),
+                        ]),
+                ]),
 
             Forms\Components\Wizard\Step::make('Responsabile in loco')
                 ->icon('heroicon-o-user')
@@ -360,7 +324,6 @@ class PrenotazioneResource extends Resource
     private static function gruppiRiepilogo(Forms\Get $get): array
     {
         $torre = Torre::find($get('torre_id'));
-        $tipoMezzo = TipoMezzo::tryFrom((string) $get('tipo_mezzo'));
 
         return [
             [
@@ -390,9 +353,11 @@ class PrenotazioneResource extends Resource
                 'titolo' => 'Logistica trasporto',
                 'stepId' => 'logistica-trasporto',
                 'righe' => [
-                    ['tipo' => 'testo', 'label' => 'Ritiro', 'valore' => self::formattaDataLuogo($get('data_ritiro'), $get('luogo_ritiro'))],
-                    ['tipo' => 'testo', 'label' => 'Riconsegna', 'valore' => self::formattaDataLuogo($get('data_riconsegna'), $get('luogo_riconsegna'))],
-                    ['tipo' => 'testo', 'label' => 'Mezzo', 'valore' => self::formattaMezzo($tipoMezzo, $get('azienda_trasporto'), $get('targa_autoveicolo'), $get('categoria_patente_privato'))],
+                    ['tipo' => 'testo', 'label' => 'Ritiro', 'valore' => self::formattaData($get('data_ritiro'))],
+                    ['tipo' => 'testo', 'label' => 'Riconsegna', 'valore' => self::formattaData($get('data_riconsegna'))],
+                    ['tipo' => 'testo', 'label' => 'Targa autoveicolo', 'valore' => $get('targa_autoveicolo') ?: '—'],
+                    ['tipo' => 'testo', 'label' => 'Conducente', 'valore' => $get('nome_conducente') ?: '—'],
+                    ['tipo' => 'testo', 'label' => 'Patente B+E', 'valore' => filled($get('patente_be_dichiarata_at')) ? 'Dichiarata' : 'Da confermare'],
                 ],
             ],
             [
@@ -429,31 +394,9 @@ class PrenotazioneResource extends Resource
         return $parti === [] ? '—' : implode(' → ', $parti);
     }
 
-    private static function formattaDataLuogo(?string $data, ?string $luogo): string
+    private static function formattaData(?string $data): string
     {
-        $dataFormattata = filled($data) ? Carbon::parse($data)->format('d/m/Y') : null;
-        $parti = array_filter([$dataFormattata, $luogo]);
-
-        return $parti === [] ? '—' : implode(' · ', $parti);
-    }
-
-    private static function formattaMezzo(?TipoMezzo $tipoMezzo, ?string $azienda, ?string $targa, ?string $categoriaPatente): string
-    {
-        if ($tipoMezzo === TipoMezzo::Privato) {
-            $categoria = CategoriaPatente::tryFrom((string) $categoriaPatente)?->label();
-
-            $parti = array_filter([
-                $tipoMezzo->label(),
-                filled($targa) ? 'targa '.$targa : null,
-                $categoria !== null ? 'patente '.$categoria : null,
-            ]);
-
-            return $parti === [] ? '—' : implode(' · ', $parti);
-        }
-
-        $parti = array_filter([$tipoMezzo?->label(), $azienda]);
-
-        return $parti === [] ? '—' : implode(' · ', $parti);
+        return filled($data) ? Carbon::parse($data)->format('d/m/Y') : '—';
     }
 
     private static function formattaResponsabileTipo(?string $tipo, ?string $titolo): string
@@ -555,50 +498,40 @@ class PrenotazioneResource extends Resource
                         Forms\Components\DatePicker::make('data_ritiro')
                             ->label('Data ritiro torre')
                             ->native(false)
-                            ->displayFormat('d/m/Y'),
-
-                        Forms\Components\TextInput::make('luogo_ritiro')
-                            ->label('Luogo ritiro')
-                            ->maxLength(255),
+                            ->displayFormat('d/m/Y')
+                            ->rules(fn (Forms\Get $get): array => [
+                                new DataRitiroEntroInizioPrenotazione(
+                                    dataInizioPrenotazione: (string) ($get('data_inizio_prenotazione') ?? ''),
+                                ),
+                            ]),
 
                         Forms\Components\DatePicker::make('data_riconsegna')
                             ->label('Data riconsegna torre')
                             ->native(false)
                             ->displayFormat('d/m/Y'),
 
-                        Forms\Components\TextInput::make('luogo_riconsegna')
-                            ->label('Luogo riconsegna')
-                            ->maxLength(255),
-                    ]),
-
-                    Forms\Components\Grid::make(2)->schema([
-                        Forms\Components\TextInput::make('azienda_trasporto')
-                            ->label('Azienda di trasporto')
-                            ->default('Montagna Servizi')
-                            ->maxLength(255),
-
                         Forms\Components\TextInput::make('targa_autoveicolo')
                             ->label('Targa autoveicolo')
                             ->maxLength(20),
+
+                        Forms\Components\TextInput::make('nome_conducente')
+                            ->label('Nome conducente')
+                            ->required()
+                            ->maxLength(255),
                     ]),
 
-                    Forms\Components\Radio::make('tipo_mezzo')
-                        ->label('Tipo mezzo')
-                        ->options(collect(TipoMezzo::cases())->mapWithKeys(
-                            fn (TipoMezzo $t) => [$t->value => $t->label()]
-                        ))
-                        ->default(TipoMezzo::Aziendale->value)
-                        ->required()
+                    Forms\Components\Checkbox::make('patente_be_confermata')
+                        ->label('Dichiaro, sotto la mia responsabilità, di essere in possesso di patente di guida di categoria B+E (o superiore), idonea al traino del rimorchio della torre di arrampicata, e che quanto dichiarato corrisponde al vero.')
                         ->live()
-                        ->inline(),
+                        ->dehydrated(false)
+                        ->rules(['accepted'])
+                        ->validationMessages([
+                            'accepted' => 'Devi confermare il possesso della patente B+E per proseguire.',
+                        ])
+                        ->afterStateHydrated(fn (Forms\Components\Checkbox $component, ?Prenotazione $record) => $component->state(filled($record?->patente_be_dichiarata_at)))
+                        ->afterStateUpdated(fn (?bool $state, Forms\Set $set) => $set('patente_be_dichiarata_at', $state ? now() : null)),
 
-                    Forms\Components\Select::make('categoria_patente_privato')
-                        ->label('Categoria patente')
-                        ->options(collect(CategoriaPatente::cases())->mapWithKeys(
-                            fn (CategoriaPatente $c) => [$c->value => $c->label()]
-                        ))
-                        ->visible(fn (Forms\Get $get): bool => $get('tipo_mezzo') === TipoMezzo::Privato->value)
-                        ->required(fn (Forms\Get $get): bool => $get('tipo_mezzo') === TipoMezzo::Privato->value),
+                    Forms\Components\Hidden::make('patente_be_dichiarata_at'),
                 ]),
 
             Forms\Components\Section::make('Responsabile in loco')

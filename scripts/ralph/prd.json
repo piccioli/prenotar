@@ -33,8 +33,8 @@
         "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Aggiornati sia wizardSteps() (create) sia form() (edit, usato da EditPrenotazione) in app/Filament/Sezione/Resources/PrenotazioneResource.php: rimossi luogo_ritiro/luogo_riconsegna/tipo_mezzo/azienda_trasporto/categoria_patente_privato da entrambi (form() non era esplicitamente citato dagli acceptance criteria ma conteneva la stessa sezione duplicata e referenziava gli stessi enum, quindi va aggiornato in questa story per poter rimuovere TipoMezzo/CategoriaPatente come previsto da US-001). Aggiunti nome_conducente (TextInput required) e checkbox patente_be_confermata (dehydrated(false), rules ['accepted'], afterStateUpdated valorizza/azzera patente_be_dichiarata_at via Hidden field); in form() aggiunto anche afterStateHydrated per pre-selezionare la checkbox quando il record ha gia' patente_be_dichiarata_at valorizzato (nel wizard di creazione non serve, CreatePrenotazione non parte mai da un record esistente). Nuova regola app/Rules/DataRitiroEntroInizioPrenotazione.php (pattern identico a NoOverlapTorre) applicata a data_ritiro in entrambi i form. Rimossi enum App\\Enums\\TipoMezzo e App\\Enums\\CategoriaPatente (non piu' referenziati da nessuna parte) e la view radio-option-cards.blade.php (usata solo dal Radio categoria_patente_privato ora rimosso). Aggiornato anche tests/Feature/Sezione/PrenotazioneManualeLettoTest.php: il suo helper datiPrenotazioneManualeLettoBase() non passava nome_conducente/patente_be_confermata e falliva sui nuovi campi required, pur non essendo uno dei 4 file esplicitamente elencati in US-004 (e' stata una regressione diretta di questa story, quindi corretta subito per mantenere QA verde). Verifica visiva in browser NON eseguita: nessun tool MCP/browser disponibile in questa sessione (nessun risultato da ToolSearch per playwright/screenshot) - verifica manuale ancora da fare."
     },
     {
       "id": "US-003",

@@ -36,6 +36,8 @@ function datiPrenotazioneManualeLettoBase(): array
         'responsabile_tipo' => 'istruttore',
         'responsabile_telefono' => '0123456789',
         'responsabile_email' => 'mario@example.com',
+        'nome_conducente' => 'Luigi Bianchi',
+        'patente_be_confermata' => true,
     ];
 }
 
