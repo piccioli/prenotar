@@ -35,3 +35,16 @@ Started: 2026-07-13
   - Per validazioni cross-field tra due `DatePicker` nello stesso multi-step form (anche across step diversi), il pattern consolidato e' una classe `ValidationRule` dedicata (vedi `NoOverlapTorre`, e ora `DataRitiroEntroInizioPrenotazione`) istanziata dentro `->rules(fn (Forms\Get $get): array => [...])`, leggendo l'altro campo con `$get('altro_campo')` — funziona anche se l'altro campo e' in uno step precedente del wizard, gia' visto altrove nel file (es. `minDate` di `data_inizio_evento` legge `data_inizio_prenotazione`).
   - Nessun tool MCP di browser/screenshot disponibile in questa sessione (ToolSearch non ha trovato playwright/browser tools) — la verifica visiva richiesta dall'acceptance criteria di questa story NON e' stata eseguita, resta manuale.
 ---
+
+## 2026-07-13 - US-003
+- `resources/views/pdf/richiesta_parete.blade.php` e `resources/views/pdf/modulo3.blade.php`: rimossi `azienda_trasporto`/`luogo_ritiro`/`luogo_riconsegna` dalle tabelle "Logistica trasporto"/"Viaggio e periodo"/"Veicolo"; aggiunte righe `nome_conducente` e "Patente B+E" (`Dichiarata il {data_ora}` se `patente_be_dichiarata_at` valorizzato, altrimenti "Non dichiarata").
+- `resources/views/emails/modulo3.blade.php`: stesso pattern, righe "Ritiro"/"Riconsegna" ora mostrano solo la data (niente piu' `luogo_ritiro`/`luogo_riconsegna`), aggiunta riga "Conducente".
+- `app/Filament/Gr/.../ViewPrenotazione.php` e `app/Filament/Sezione/.../ViewPrenotazione.php`: aggiunti `TextEntry::make('nome_conducente')` e `TextEntry::make('patente_be_dichiarata_at')` (stesso `formatStateUsing` "Dichiarata il .../Non dichiarata") nella sezione "Logistica (e responsabile)"; import `Carbon\Carbon` aggiunto in quello Sezione (mancava, quello Gr ce l'aveva gia').
+- Verificato che il modale "Modifica date trasporto" lato Gr (azione `change_dates` in `ViewPrenotazione.php`) non referenzia campi rimossi — nessuna modifica necessaria li'.
+- Files changed: `resources/views/pdf/richiesta_parete.blade.php`, `resources/views/pdf/modulo3.blade.php`, `resources/views/emails/modulo3.blade.php`, `app/Filament/Gr/Resources/PrenotazioneResource/Pages/ViewPrenotazione.php`, `app/Filament/Sezione/Resources/PrenotazioneResource/Pages/ViewPrenotazione.php`.
+- **Learnings for future iterations:**
+  - Per una coppia checkbox->timestamp gia' persistita (`patente_be_dichiarata_at`), il pattern di visualizzazione read-only e' `TextEntry::make('campo_at')->formatStateUsing(fn (?Carbon $state): string => ...)` — nessuna `Carbon` conversion manuale necessaria perche' il cast Eloquent `'campo_at' => 'datetime'` gia' consegna un `Carbon|null` al closure.
+  - I due `ViewPrenotazione.php` (Gr e Sezione) NON condividono un componente/trait per l'infolist, restano sincronizzati "a mano" come gia' notato per `PrenotazioneResource.php` in US-002 — ogni campo nuovo va aggiunto in entrambi.
+  - Nessun riferimento residuo a `luogo_ritiro`/`luogo_riconsegna`/`azienda_trasporto`/`tipo_mezzo`/`categoria_patente_privato` fuori da migration storiche dopo questa story, tranne `tests/Feature/Sezione/PrenotazioneWizardCreateTest.php` — quello resta assegnato a US-004.
+  - Nessun tool MCP di browser/screenshot disponibile anche in questa sessione — questa story non aveva comunque un acceptance criteria di verifica visiva esplicito.
+---

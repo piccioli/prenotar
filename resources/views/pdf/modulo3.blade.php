@@ -48,22 +48,16 @@
 <h2>Viaggio e periodo</h2>
 <table class="data">
     <tr>
-        <td class="label">Partenza (ritiro)</td>
-        <td class="value">
-            {{ $p->luogo_ritiro ?? '—' }}
-            @if($p->data_ritiro) — {{ $p->data_ritiro->format('d/m/Y') }} @endif
-        </td>
+        <td class="label">Data ritiro</td>
+        <td class="value">{{ $p->data_ritiro?->format('d/m/Y') ?? '—' }}</td>
     </tr>
     <tr>
         <td class="label">Destinazione (evento)</td>
         <td class="value">{{ $p->indirizzo_evento ?? '—' }}</td>
     </tr>
     <tr>
-        <td class="label">Rientro (riconsegna)</td>
-        <td class="value">
-            {{ $p->luogo_riconsegna ?? '—' }}
-            @if($p->data_riconsegna) — {{ $p->data_riconsegna->format('d/m/Y') }} @endif
-        </td>
+        <td class="label">Data riconsegna</td>
+        <td class="value">{{ $p->data_riconsegna?->format('d/m/Y') ?? '—' }}</td>
     </tr>
     <tr>
         <td class="label">Periodo (dal / al)</td>
@@ -77,12 +71,22 @@
 <h2>Veicolo</h2>
 <table class="data">
     <tr>
-        <td class="label">Azienda trasporto</td>
-        <td class="value">{{ $p->azienda_trasporto ?? '—' }}</td>
+        <td class="label">Conducente</td>
+        <td class="value">{{ $p->nome_conducente ?? '—' }}</td>
     </tr>
     <tr>
         <td class="label">Targa autoveicolo</td>
         <td class="value">{{ $p->targa_autoveicolo ?? '—' }}</td>
+    </tr>
+    <tr>
+        <td class="label">Patente B+E</td>
+        <td class="value">
+            @if($p->patente_be_dichiarata_at)
+                Dichiarata il {{ $p->patente_be_dichiarata_at->format('d/m/Y H:i') }}
+            @else
+                Non dichiarata
+            @endif
+        </td>
     </tr>
 </table>
 

@@ -47,8 +47,8 @@
         "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "resources/views/pdf/richiesta_parete.blade.php e modulo3.blade.php: sezione 'Logistica trasporto'/'Viaggio e periodo'/'Veicolo' aggiornate - rimossi azienda_trasporto/luogo_ritiro/luogo_riconsegna, aggiunti nome_conducente e una riga 'Patente B+E' che mostra 'Dichiarata il d/m/Y H:i' o 'Non dichiarata' da patente_be_dichiarata_at. Aggiornata anche resources/views/emails/modulo3.blade.php (stesso motivo, non era negli acceptance criteria espliciti ma referenziava gli stessi campi rimossi). Entrambi i ViewPrenotazione.php (Gr e Sezione) - i TextEntry per i campi droppati erano gia' stati rimossi in US-001, qui aggiunti i nuovi TextEntry nome_conducente e patente_be_dichiarata_at (stesso formatStateUsing 'Dichiarata il .../Non dichiarata'); import Carbon\\Carbon aggiunto in Sezione/.../ViewPrenotazione.php (Gr ce l'aveva gia'). Il modale 'Modifica date trasporto' lato Gr (InfolistAction change_dates) non referenziava campi rimossi, nessuna modifica necessaria. composer qa verde: Pint ok, Larastan 162/162 no errors, Pest 272 passed."
     },
     {
       "id": "US-004",

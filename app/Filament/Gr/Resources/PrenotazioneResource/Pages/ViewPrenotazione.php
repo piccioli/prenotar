@@ -264,8 +264,12 @@ class ViewPrenotazione extends ViewRecord
                                             ->iconColor('primary')
                                             ->schema([
                                                 TextEntry::make('targa_autoveicolo')->label('Targa')->default('—'),
+                                                TextEntry::make('nome_conducente')->label('Conducente')->default('—'),
                                                 TextEntry::make('data_ritiro')->label('Data ritiro')->date('d/m/Y')->placeholder('—'),
                                                 TextEntry::make('data_riconsegna')->label('Data riconsegna')->date('d/m/Y')->placeholder('—'),
+                                                TextEntry::make('patente_be_dichiarata_at')
+                                                    ->label('Patente B+E')
+                                                    ->formatStateUsing(fn (?Carbon $state): string => $state !== null ? "Dichiarata il {$state->format('d/m/Y H:i')}" : 'Non dichiarata'),
                                                 TextEntry::make('responsabile_nome')->label('Responsabile')->columnSpanFull(),
                                                 TextEntry::make('responsabile_tipo')
                                                     ->label('Qualifica')

@@ -10,6 +10,7 @@ use App\Filament\Sezione\Resources\PrenotazioneResource;
 use App\Models\Prenotazione;
 use App\Models\Torre;
 use App\Services\PrenotazioneStateMachine;
+use Carbon\Carbon;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Infolists\Components\RepeatableEntry;
@@ -144,8 +145,12 @@ class ViewPrenotazione extends ViewRecord
                             Section::make('Logistica trasporto')
                                 ->schema([
                                     TextEntry::make('targa_autoveicolo')->label('Targa')->default('—'),
+                                    TextEntry::make('nome_conducente')->label('Conducente')->default('—'),
                                     TextEntry::make('data_ritiro')->label('Data ritiro')->date('d/m/Y')->placeholder('—'),
                                     TextEntry::make('data_riconsegna')->label('Data riconsegna')->date('d/m/Y')->placeholder('—'),
+                                    TextEntry::make('patente_be_dichiarata_at')
+                                        ->label('Patente B+E')
+                                        ->formatStateUsing(fn (?Carbon $state): string => $state !== null ? "Dichiarata il {$state->format('d/m/Y H:i')}" : 'Non dichiarata'),
                                 ])->columns(3),
 
                             Section::make('Responsabile in loco')

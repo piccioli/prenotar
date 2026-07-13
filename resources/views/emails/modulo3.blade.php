@@ -6,8 +6,9 @@ Dettagli prenotazione:
 - Evento: {{ $prenotazione->nome_evento }}
 - Torre: {{ $prenotazione->torre?->nome ?? '—' }}
 - Periodo: {{ $prenotazione->data_inizio_prenotazione->format('d/m/Y') }} — {{ $prenotazione->data_fine_prenotazione->format('d/m/Y') }}
-- Ritiro: {{ $prenotazione->luogo_ritiro ?? '—' }} {{ $prenotazione->data_ritiro?->format('d/m/Y') ?? '' }}
-- Riconsegna: {{ $prenotazione->luogo_riconsegna ?? '—' }} {{ $prenotazione->data_riconsegna?->format('d/m/Y') ?? '' }}
+- Ritiro: {{ $prenotazione->data_ritiro?->format('d/m/Y') ?? '—' }}
+- Riconsegna: {{ $prenotazione->data_riconsegna?->format('d/m/Y') ?? '—' }}
+- Conducente: {{ $prenotazione->nome_conducente ?? '—' }}
 
 Allegati:
 - Modulo3_{{ $prenotazione->id }}.pdf (richiesta attivazione polizze)
