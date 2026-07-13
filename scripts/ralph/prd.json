@@ -15,8 +15,8 @@
         "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Migrazione 2026_07_13_090000: drop luogo_ritiro/luogo_riconsegna/tipo_mezzo/azienda_trasporto/categoria_patente_privato, add nome_conducente + patente_be_dichiarata_at. Enum App\\Enums\\TipoMezzo e App\\Enums\\CategoriaPatente NON rimossi: restano referenziati in app/Filament/Sezione/Resources/PrenotazioneResource.php (form wizard, ToggleButtons/Radio) - rimozione prevista in US-002. Rimosse dai due ViewPrenotazione.php (Gr e Sezione) le TextEntry per i campi droppati (causavano property.notFound in Larastan su $record->tipo_mezzo); non ancora aggiunti i nuovi TextEntry per nome_conducente/patente dichiarata, riservato a US-003. Eliminato tests/Feature/Sezione/PrenotazioneTipoMezzoValidationTest.php perche' le sue asserzioni su tipo_mezzo/categoria_patente_privato persistiti sono invalidate direttamente da questa migrazione; la sostituzione con test sui nuovi campi resta a carico di US-004 come da acceptance criteria. Aggiornata anche PrenotazioneFactory (usa Model::unguarded() quindi non e' protetta da fillable) per non referenziare piu' le colonne droppate."
     },
     {
       "id": "US-002",

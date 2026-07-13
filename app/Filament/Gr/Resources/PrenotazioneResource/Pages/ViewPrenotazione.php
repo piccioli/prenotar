@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace App\Filament\Gr\Resources\PrenotazioneResource\Pages;
 
-use App\Enums\CategoriaPatente;
 use App\Enums\PrenotazioneStatus;
 use App\Enums\ResponsabileTipo;
-use App\Enums\TipoMezzo;
 use App\Filament\Gr\Resources\PrenotazioneResource;
 use App\Models\Prenotazione;
 use App\Models\PrenotazioneHistory;
@@ -265,19 +263,9 @@ class ViewPrenotazione extends ViewRecord
                                             ->icon('heroicon-o-truck')
                                             ->iconColor('primary')
                                             ->schema([
-                                                TextEntry::make('tipo_mezzo')
-                                                    ->label('Tipo mezzo')
-                                                    ->formatStateUsing(fn (mixed $state): string => $state instanceof TipoMezzo ? $state->label() : (string) $state),
-                                                TextEntry::make('categoria_patente_privato')
-                                                    ->label('Categoria patente')
-                                                    ->visible(fn (Prenotazione $record): bool => $record->tipo_mezzo === TipoMezzo::Privato)
-                                                    ->formatStateUsing(fn (mixed $state): string => $state instanceof CategoriaPatente ? $state->label() : (string) $state),
-                                                TextEntry::make('azienda_trasporto')->label('Azienda trasporto'),
                                                 TextEntry::make('targa_autoveicolo')->label('Targa')->default('—'),
                                                 TextEntry::make('data_ritiro')->label('Data ritiro')->date('d/m/Y')->placeholder('—'),
-                                                TextEntry::make('luogo_ritiro')->label('Luogo ritiro')->default('—'),
                                                 TextEntry::make('data_riconsegna')->label('Data riconsegna')->date('d/m/Y')->placeholder('—'),
-                                                TextEntry::make('luogo_riconsegna')->label('Luogo riconsegna')->default('—'),
                                                 TextEntry::make('responsabile_nome')->label('Responsabile')->columnSpanFull(),
                                                 TextEntry::make('responsabile_tipo')
                                                     ->label('Qualifica')

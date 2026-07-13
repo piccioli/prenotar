@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Enums\CategoriaPatente;
 use App\Enums\PrenotazioneStatus;
 use App\Enums\ResponsabileTipo;
-use App\Enums\TipoMezzo;
 use Database\Factories\PrenotazioneFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -27,8 +25,6 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property int|null $torre_id
  * @property PrenotazioneStatus $status
  * @property ResponsabileTipo $responsabile_tipo
- * @property TipoMezzo $tipo_mezzo
- * @property CategoriaPatente|null $categoria_patente_privato
  * @property Carbon|null $manuale_letto_confermato_at
  * @property int|null $manuale_letto_torre_id
  * @property Carbon $data_inizio_prenotazione
@@ -37,6 +33,8 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property Carbon $data_fine_evento
  * @property Carbon|null $data_ritiro
  * @property Carbon|null $data_riconsegna
+ * @property string|null $nome_conducente
+ * @property Carbon|null $patente_be_dichiarata_at
  *
  * @method static Builder<Prenotazione> attive()
  * @method static Builder<Prenotazione> archiviate()
@@ -67,13 +65,10 @@ class Prenotazione extends Model implements HasMedia
         'data_inizio_prenotazione',
         'data_fine_prenotazione',
         'data_ritiro',
-        'luogo_ritiro',
         'data_riconsegna',
-        'luogo_riconsegna',
-        'azienda_trasporto',
         'targa_autoveicolo',
-        'tipo_mezzo',
-        'categoria_patente_privato',
+        'nome_conducente',
+        'patente_be_dichiarata_at',
         'manuale_letto_confermato_at',
         'manuale_letto_torre_id',
         'responsabile_nome',
@@ -98,8 +93,6 @@ class Prenotazione extends Model implements HasMedia
         return [
             'status' => PrenotazioneStatus::class,
             'responsabile_tipo' => ResponsabileTipo::class,
-            'tipo_mezzo' => TipoMezzo::class,
-            'categoria_patente_privato' => CategoriaPatente::class,
             'manuale_letto_confermato_at' => 'datetime',
             'data_inizio_evento' => 'date',
             'data_fine_evento' => 'date',
@@ -107,6 +100,7 @@ class Prenotazione extends Model implements HasMedia
             'data_fine_prenotazione' => 'date',
             'data_ritiro' => 'date',
             'data_riconsegna' => 'date',
+            'patente_be_dichiarata_at' => 'datetime',
             'approvato_at' => 'datetime',
             'pdf_firmato_at' => 'datetime',
             'inviato_assicurazione_at' => 'datetime',

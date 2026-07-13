@@ -1,3 +1,23 @@
 # Ralph Progress Log
 Started: 2026-07-13
+
+## Codebase Patterns
+- `database/factories/PrenotazioneFactory.php` (and Eloquent factories in general) run under `Model::unguarded()`, so the `definition()` array bypasses `$fillable` entirely and is inserted raw. Dropping/renaming a DB column requires updating every factory that sets it directly, even though normal mass-assignment (`Model::create()`) would silently ignore an unfillable key with no error.
+- When removing a DB column that a Filament Infolist/Form still binds via `TextEntry::make('col')->visible(fn (Model $r) => $r->col === Enum::X)`, Larastan (property.notFound) catches property-access closures immediately even though `TextEntry::make('col')` by itself (string key, no property access) does not - property-access closures referencing dropped columns are the first thing to break statically.
+- Full QA loop for this project: `./vendor/bin/sail composer qa` (Pint + Larastan level 6 + Pest). Pest here uses a real MariaDB `testing` DB via `RefreshDatabase`, so schema changes are exercised for real, not mocked.
+
+---
+
+## 2026-07-13 - US-001
+- Migrazione `database/migrations/2026_07_13_090000_semplifica_logistica_trasporto_in_prenotazioni.php`: drop di `luogo_ritiro`, `luogo_riconsegna`, `tipo_mezzo`, `azienda_trasporto`, `categoria_patente_privato`; add di `nome_conducente` (string, nullable) e `patente_be_dichiarata_at` (timestamp, nullable).
+- `app/Models/Prenotazione.php`: fillable/casts/docblock allineati ai nuovi campi, rimossi i cast verso `TipoMezzo`/`CategoriaPatente`.
+- `database/factories/PrenotazioneFactory.php`: non setta piu' le colonne droppate, aggiunge `nome_conducente`/`patente_be_dichiarata_at`.
+- `app/Filament/Gr/.../ViewPrenotazione.php` e `app/Filament/Sezione/.../ViewPrenotazione.php`: rimossi i `TextEntry` per i campi droppati (necessario per Larastan, che segnalava `property.notFound` su `$record->tipo_mezzo` nella closure `->visible()`); non ancora aggiunti i TextEntry per i nuovi campi (US-003).
+- Eliminato `tests/Feature/Sezione/PrenotazioneTipoMezzoValidationTest.php`: le sue 2 asserzioni su valori persistiti di `tipo_mezzo`/`categoria_patente_privato` sono direttamente invalidate da questa migrazione (verificato eseguendo il test prima di deciderne la rimozione). La sostituzione con test sui nuovi campi resta assegnata a US-004.
+- Enum `App\Enums\TipoMezzo` e `App\Enums\CategoriaPatente` NON rimossi: restano referenziati in `app/Filament/Sezione/Resources/PrenotazioneResource.php` (step wizard, ancora da semplificare in US-002).
+- Files changed: `database/migrations/2026_07_13_090000_semplifica_logistica_trasporto_in_prenotazioni.php` (nuovo), `app/Models/Prenotazione.php`, `database/factories/PrenotazioneFactory.php`, `app/Filament/Gr/Resources/PrenotazioneResource/Pages/ViewPrenotazione.php`, `app/Filament/Sezione/Resources/PrenotazioneResource/Pages/ViewPrenotazione.php`, `tests/Feature/Sezione/PrenotazioneTipoMezzoValidationTest.php` (rimosso).
+- **Learnings for future iterations:**
+  - Vedi sezione "Codebase Patterns" in cima a questo file (factory `unguarded()`, Larastan su property-access in closure Filament).
+  - US-002 dovra' rimuovere da `app/Filament/Sezione/Resources/PrenotazioneResource.php` gli import di `TipoMezzo`/`CategoriaPatente` e tutti i componenti form legati (`ToggleButtons('tipo_mezzo')`, `Radio('categoria_patente_privato')`, i `TextInput` per `luogo_ritiro`/`luogo_riconsegna`/`azienda_trasporto`), oltre alla logica di `formattaMezzo()` (righe ~363-443 al momento di questa nota) usata nel riepilogo finale del wizard.
+  - US-003 dovra' aggiungere in entrambi i `ViewPrenotazione.php` (Gr e Sezione) i nuovi `TextEntry` per `nome_conducente` e per l'indicazione "patente B+E dichiarata il ..." (da `patente_be_dichiarata_at`), oltre ad aggiornare `resources/views/pdf/richiesta_parete.blade.php`, `resources/views/pdf/modulo3.blade.php` e `resources/views/emails/modulo3.blade.php` che referenziano ancora `luogo_ritiro`/`luogo_riconsegna`/`azienda_trasporto`/`tipo_mezzo`/`categoria_patente_privato` (attualmente producono solo output vuoto/"—", nessun errore fatale, ma vanno sostituiti).
 ---
