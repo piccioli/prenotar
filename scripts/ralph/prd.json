@@ -34,8 +34,8 @@
         "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Estratta la logica di mapping ruolo->URL pannello in App\\Support\\Auth\\PanelRedirector (riusata sia da Login::mount() che dalla nuova App\\Filament\\Http\\Responses\\Auth\\LoginResponse). authenticate() ritorna la nuova LoginResponse invece di app(Filament\\LoginResponse::class)."
     },
     {
       "id": "US-003",

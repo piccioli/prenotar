@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages\Auth;
 
+use App\Filament\Http\Responses\Auth\LoginResponse;
 use App\Models\User;
+use App\Support\Auth\PanelRedirector;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use Filament\Facades\Filament;
-use Filament\Http\Responses\Auth\Contracts\LoginResponse;
+use Filament\Http\Responses\Auth\Contracts\LoginResponse as LoginResponseContract;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Pages\Auth\Login as BaseLogin;
 
@@ -24,7 +26,7 @@ class Login extends BaseLogin
         $user = Filament::auth()->user();
 
         if ($user instanceof User) {
-            $panelUrl = $this->resolvePanelUrlForUser($user);
+            $panelUrl = PanelRedirector::resolveUrlForUser($user);
 
             if ($panelUrl !== null) {
                 redirect()->intended($panelUrl);
@@ -36,7 +38,7 @@ class Login extends BaseLogin
         $this->form->fill();
     }
 
-    public function authenticate(): ?LoginResponse
+    public function authenticate(): ?LoginResponseContract
     {
         try {
             $this->rateLimit(5);
@@ -62,7 +64,7 @@ class Login extends BaseLogin
 
         session()->regenerate();
 
-        return app(LoginResponse::class);
+        return new LoginResponse;
     }
 
     private function userCanAccessAnyPanel(FilamentUser $user): bool
@@ -74,15 +76,5 @@ class Login extends BaseLogin
         }
 
         return false;
-    }
-
-    private function resolvePanelUrlForUser(User $user): ?string
-    {
-        return match (true) {
-            $user->isAdmin() => url(Filament::getPanel('admin')->getPath()),
-            $user->isGrManager() => url(Filament::getPanel('gr')->getPath()),
-            $user->isSezione() => url(Filament::getPanel('sezione')->getPath()),
-            default => null,
-        };
     }
 }

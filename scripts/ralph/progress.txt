@@ -7,6 +7,7 @@ Started: 2026-07-13
 - `Panel::getUrl()` builds its result via a `NavigationManager` that reads `Filament::getCurrentPanel()` internally (global state), NOT the panel instance it's called on — calling `Filament::getPanel('admin')->getUrl()` from a *different* panel's request context does not reliably resolve `/admin`. Use `url($panel->getPath())` instead when you need another panel's base URL from outside its own context.
 - A panel can have `->path('')` (empty string) to serve routes at the domain root (e.g. a shared `/login` panel) without colliding with the other panels' non-empty path prefixes.
 - Every new Filament `viteTheme()` entry point must be added to `input` in `vite.config.js` AND rebuilt with `sail npm run build` before the page is requested — otherwise Filament throws a Vite-manifest-not-found error. `public/build/manifest.json` is gitignored, so this rebuild has to happen in every environment (dev machine, CI, deploy) that serves the new panel, not just once.
+- To test a Filament page/Livewire component tied to a panel, `Livewire::test(PageClass::class)` works stand-alone after `actingAs($user)` — no need for a preceding `get()` on the panel URL to resolve `Filament::getCurrentPanel()`. The stock Filament Login page's form state lives under `data.*` (`data.email`, `data.password`, `data.remember`), not direct component properties.
 ---
 
 ## 2026-07-13 - US-001
@@ -22,4 +23,18 @@ Started: 2026-07-13
 - **Learnings for future iterations:**
   - Vedi sezione "Codebase Patterns" in cima a questo file (canAccessPanel su pannello neutro, NavigationManager/getUrl(), path('') vuoto, rebuild Vite obbligatorio).
   - `composer qa` (Pint + Larastan level 6 + Pest, 268 test) verde dopo l'implementazione.
+---
+
+## 2026-07-13 - US-002
+- Implementato il redirect post-login basato sul ruolo per l'utente che si autentica su `/login`.
+- Files changed:
+  - `app/Support/Auth/PanelRedirector.php` (nuovo): estrae in una classe condivisa la logica `match` che mappa `isAdmin()/isGrManager()/isSezione()` sull'URL del pannello corrispondente — prima duplicata solo in `Login::mount()` (US-001), ora riusata anche dal redirect post-login.
+  - `app/Filament/Http/Responses/Auth/LoginResponse.php` (nuovo): implementa `Filament\Http\Responses\Auth\Contracts\LoginResponse`; usa `PanelRedirector` per calcolare l'URL del pannello dell'utente appena autenticato, fallback su `Filament::getUrl()` se il match non produce nulla (caso teoricamente irraggiungibile perché `authenticate()` ha già verificato `canAccessPanel` su uno dei 3 pannelli prima di arrivare qui).
+  - `app/Filament/Pages/Auth/Login.php`: `mount()` ora chiama `PanelRedirector::resolveUrlForUser()` invece del metodo privato rimosso; `authenticate()` ritorna `new LoginResponse()` (la nostra) invece di `app(Filament\Http\Responses\Auth\Contracts\LoginResponse::class)` (che avrebbe risolto lo stock, redirect a `Filament::getUrl()` del pannello "login" corrente, sbagliato per tutti tranne l'admin).
+  - `tests/Feature/Auth/LoginRedirectByRoleTest.php` (nuovo): 3 test Feature (admin/gr_manager/sezione) che autenticano via `Livewire::test(Login::class)->set('data.email', ...)->set('data.password', ...)->call('authenticate')->assertRedirect(...)`.
+- Non serviva nessuna modifica a `EnsureContactEmail`/`FirstAccessPage`: quel middleware gira già su ogni request dei pannelli admin/gr/sezione e intercetta il redirect indipendentemente da dove arriva la request, quindi il flusso first-access scatta automaticamente anche dopo il nuovo redirect basato su ruolo.
+- **Learnings for future iterations:**
+  - Pattern di test per Filament `Livewire\Login`/pagine dei pannelli: `Livewire::test(PaginaClass::class)` NON richiede una `get()` preventiva sull'URL del pannello per popolare `Filament::getCurrentPanel()` — funziona anche stand-alone dopo `actingAs($user)` (visto anche in `ImpostazioniGrPageTest`/`FirstAccessFlowTest` preesistenti). Il form state della pagina di login stock è sotto la chiave `data.*` (`data.email`, `data.password`, `data.remember`), non proprietà dirette.
+  - Pint (preset Laravel) riscrive `new Classe()` senza argomenti in `new Classe` (senza parentesi) — non fissarsi sulla sintassi con parentesi per i costruttori senza argomenti, far girare `pint:fix` prima di considerare la QA fallita per questo.
+  - `composer qa` verde: Pint, Larastan level 6 (0 errori su 162 file), Pest 271 test (268 + 3 nuovi).
 ---
