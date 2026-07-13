@@ -10,6 +10,7 @@ use App\Filament\Sezione\Resources\PrenotazioneResource;
 use App\Filament\Sezione\Resources\PrenotazioneResource\Pages\ListPrenotazioni;
 use App\Filament\Sezione\Widgets\PrenotazioniDashboardWidget;
 use App\Http\Middleware\EnsureContactEmail;
+use App\Support\Auth\PanelRedirector;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -34,7 +35,7 @@ class SezionePanelProvider extends PanelProvider
         return $panel
             ->id('sezione')
             ->path('sezione')
-            ->login()
+            ->login(fn () => redirect(PanelRedirector::loginUrl()))
             ->passwordReset()
             ->colors([
                 'primary' => Color::hex('#2E5878'),

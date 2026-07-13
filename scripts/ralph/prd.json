@@ -49,8 +49,8 @@
         "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Le route /admin/login, /gr/login, /sezione/login restano registrate (->login() resta impostato su ciascun pannello, quindi Filament::getLoginUrl() e il redirect degli utenti non autenticati verso una pagina protetta continuano a funzionare), ma l'azione della route ora e' una closure che fa redirect verso PanelRedirector::loginUrl() invece di renderizzare il form Filament\\Pages\\Auth\\Login stock. Nuovo metodo App\\Support\\Auth\\PanelRedirector::loginUrl()."
     },
     {
       "id": "US-004",

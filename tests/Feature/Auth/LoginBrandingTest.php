@@ -2,18 +2,17 @@
 
 declare(strict_types=1);
 
-it('la pagina di login /admin/login risponde 200 e contiene Prenotar', function (): void {
+it('la vecchia pagina di login /admin/login reindirizza al login unico /login', function (): void {
     $this->get('/admin/login')
-        ->assertOk()
-        ->assertSee('Prenotar');
+        ->assertRedirect('/login');
 });
 
-it('la pagina di login /gr/login risponde 200', function (): void {
+it('la vecchia pagina di login /gr/login reindirizza al login unico /login', function (): void {
     $this->get('/gr/login')
-        ->assertOk();
+        ->assertRedirect('/login');
 });
 
-it('la pagina di login /sezione/login risponde 200', function (): void {
+it('la vecchia pagina di login /sezione/login reindirizza al login unico /login', function (): void {
     $this->get('/sezione/login')
-        ->assertOk();
+        ->assertRedirect('/login');
 });

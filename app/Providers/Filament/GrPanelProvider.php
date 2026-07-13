@@ -11,6 +11,7 @@ use App\Filament\Gr\Resources\PrenotazioneResource\Pages\ViewPrenotazione;
 use App\Filament\Gr\Widgets\PrenotazioniDaApprovareWidget;
 use App\Filament\Pages\FirstAccessPage;
 use App\Http\Middleware\EnsureContactEmail;
+use App\Support\Auth\PanelRedirector;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -35,7 +36,7 @@ class GrPanelProvider extends PanelProvider
         return $panel
             ->id('gr')
             ->path('gr')
-            ->login()
+            ->login(fn () => redirect(PanelRedirector::loginUrl()))
             ->passwordReset()
             ->colors([
                 'primary' => Color::hex('#1D574B'),

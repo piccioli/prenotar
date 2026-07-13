@@ -10,7 +10,8 @@ use Filament\Facades\Filament;
 /**
  * Mappa un utente autenticato al pannello di sua competenza (admin/gr/sezione),
  * riusando i metodi di ruolo gia' esistenti su User — nessuna logica di ruolo
- * duplicata rispetto a User::canAccessPanel().
+ * duplicata rispetto a User::canAccessPanel(). Espone anche l'URL del login
+ * unico, riusato dalle vecchie route di login per-pannello per reindirizzare.
  */
 class PanelRedirector
 {
@@ -22,5 +23,10 @@ class PanelRedirector
             $user->isSezione() => url(Filament::getPanel('sezione')->getPath()),
             default => null,
         };
+    }
+
+    public static function loginUrl(): string
+    {
+        return Filament::getPanel('login')->getLoginUrl() ?? url('/login');
     }
 }
