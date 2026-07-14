@@ -85,3 +85,9 @@ Started: 2026-07-13
   - Nessun tool MCP di browser/screenshot disponibile in questa sessione (nessun risultato ToolSearch per playwright/browser) - la verifica visiva in browser richiesta dall'acceptance criteria NON e' stata eseguita, resta manuale (APP_ENV=local e' gia' impostato in `.env` di sviluppo, quindi il bottone dovrebbe essere visibile aprendo il wizard di creazione prenotazione su `/sezione`).
   - `./vendor/bin/sail composer qa` verde: Pint ok (dopo un giro di `pint:fix` per l'ordinamento import del nuovo file di test), Larastan 163/163 "No errors", Pest 290 passed (era 287 prima di questa story, +3 nuovi test feature). Con questa story tutte le user story del PRD hanno `passes: true`.
 ---
+
+## 2026-07-15 - Verifica manuale US-005/US-006 (post-implementazione)
+- Verifica end-to-end in browser (Playwright headless, utente sezione reale su Sail locale, APP_ENV=local): tutti e 5 i bottoni "Compila con dati di test" (Manuale, Quando & dove, Evento, Logistica trasporto, Responsabile in loco) sono visibili, compilano correttamente i campi del proprio step nel formato atteso (date coerenti con data_inizio_prenotazione, targa nel formato italiano, checkbox+timestamp patente), nessun bottone compare nello step Riepilogo. Submit finale ("Salva come bozza") completato senza errori di validazione, redirect alla pagina di modifica con tutti i dati persistiti correttamente. Nessun errore in console del browser.
+- Nessuna modifica al codice necessaria: l'implementazione di US-005/US-006 risultava già perfettamente in linea con lo spec `docs/superpowers/specs/2026-07-14-wizard-autofill-test-design.md`.
+- Screenshot salvati fuori dal repo (scratchpad di sessione), non versionati.
+---
