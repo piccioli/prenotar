@@ -97,8 +97,8 @@
         "./vendor/bin/sail composer qa passa (Pint + Larastan + Pest) sull'intera suite"
       ],
       "priority": 6,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Nuovo helper privato PrenotazioneResource::autofillAction(string $name, callable $autofill) che costruisce Forms\\Components\\Actions::make([Action::make($name)->label('Compila con dati di test')->icon('heroicon-o-beaker')->color('gray')->visible(local)->action(abort_unless(local,404); $autofill($set,$get); Notification...)])->fullWidth(); usato in testa a ciascuno dei 5 step compilabili di wizardSteps() (non Riepilogo), passando i callable statici di PrenotazioneWizardAutofill (US-005). form()/EditPrenotazione non toccati. Nuovo test tests/Feature/Sezione/PrenotazioneWizardAutofillTest.php (3 test: happy path in ambiente local con submit finale valido; bottone assente e chiamata forzata senza effetto in ambiente di default; abort_unless verificato con NotFoundHttpException invocando il closure via reflection, unico modo per esercitarlo davvero dato che Filament esclude le action nascoste dall'albero dei componenti prima ancora che l'abort_unless possa girare). Verifica visiva in browser NON eseguita (nessun tool MCP disponibile in sessione), resta manuale. composer qa verde: Pint ok, Larastan 163/163 no errors, Pest 290 passed (era 287 prima di questa story)."
     }
   ]
 }

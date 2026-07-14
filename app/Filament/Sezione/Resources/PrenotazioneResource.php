@@ -15,6 +15,7 @@ use App\Rules\NoOverlapTorre;
 use App\Rules\UnicaPrenotazioneAttivaPerUser;
 use App\Services\PrenotazioneStateMachine;
 use App\Settings\GrSettings;
+use App\Support\Testing\PrenotazioneWizardAutofill;
 use Filament\Forms;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Form;
@@ -51,6 +52,25 @@ class PrenotazioneResource extends Resource
             ->orderBy('data_inizio_prenotazione', 'desc');
     }
 
+    /** @param callable(Forms\Set, Forms\Get): void $autofill */
+    private static function autofillAction(string $name, callable $autofill): Forms\Components\Actions
+    {
+        return Forms\Components\Actions::make([
+            Forms\Components\Actions\Action::make($name)
+                ->label('Compila con dati di test')
+                ->icon('heroicon-o-beaker')
+                ->color('gray')
+                ->visible(fn (): bool => app()->environment('local'))
+                ->action(function (Forms\Set $set, Forms\Get $get) use ($autofill): void {
+                    abort_unless(app()->environment('local'), 404);
+
+                    $autofill($set, $get);
+
+                    Notification::make()->title('Dati di test inseriti')->success()->send();
+                }),
+        ])->fullWidth();
+    }
+
     /** @return list<Forms\Components\Wizard\Step> */
     public static function wizardSteps(): array
     {
@@ -58,6 +78,8 @@ class PrenotazioneResource extends Resource
             Forms\Components\Wizard\Step::make('Manuale d\'istruzioni')
                 ->icon('heroicon-o-book-open')
                 ->schema([
+                    self::autofillAction('autofill_manuale', [PrenotazioneWizardAutofill::class, 'manuale']),
+
                     Forms\Components\Section::make('Prima di iniziare, leggi il manuale d\'istruzioni')
                         ->description('La conferma di lettura è obbligatoria per procedere, qualunque torre sceglierai nello step successivo.')
                         ->schema([
@@ -79,6 +101,8 @@ class PrenotazioneResource extends Resource
             Forms\Components\Wizard\Step::make('Quando & dove')
                 ->icon('heroicon-o-calendar')
                 ->schema([
+                    self::autofillAction('autofill_quando_dove', [PrenotazioneWizardAutofill::class, 'quandoDove']),
+
                     Forms\Components\Section::make('Quando ti serve la torre?')
                         ->description('Indica il periodo di utilizzo. La disponibilità qui sotto si aggiorna in base alle date.')
                         ->schema([
@@ -146,6 +170,8 @@ class PrenotazioneResource extends Resource
             Forms\Components\Wizard\Step::make('Evento')
                 ->icon('heroicon-o-map-pin')
                 ->schema([
+                    self::autofillAction('autofill_evento', [PrenotazioneWizardAutofill::class, 'evento']),
+
                     Forms\Components\Section::make('Racconta l\'evento')
                         ->description('Queste informazioni appariranno nella richiesta e sui documenti generati.')
                         ->schema([
@@ -200,6 +226,8 @@ class PrenotazioneResource extends Resource
             Forms\Components\Wizard\Step::make('Logistica trasporto')
                 ->icon('heroicon-o-truck')
                 ->schema([
+                    self::autofillAction('autofill_logistica_trasporto', [PrenotazioneWizardAutofill::class, 'logisticaTrasporto']),
+
                     Forms\Components\Section::make('Come trasporterai la torre?')
                         ->description('Date di ritiro e riconsegna presso il deposito, mezzo e conducente.')
                         ->schema([
@@ -255,6 +283,8 @@ class PrenotazioneResource extends Resource
             Forms\Components\Wizard\Step::make('Responsabile in loco')
                 ->icon('heroicon-o-user')
                 ->schema([
+                    self::autofillAction('autofill_responsabile_in_loco', [PrenotazioneWizardAutofill::class, 'responsabileInLoco']),
+
                     Forms\Components\Section::make('Chi è il responsabile in loco?')
                         ->description('La persona di riferimento per la torre durante l\'evento.')
                         ->schema([
