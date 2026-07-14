@@ -79,8 +79,8 @@
         "./vendor/bin/sail composer qa passa (Pint + Larastan + Pest)"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Nuova classe app/Support/Testing/PrenotazioneWizardAutofill.php con i 5 metodi statici richiesti (manuale, quandoDove, evento, logisticaTrasporto, responsabileInLoco), tutti conformi allo spec docs/superpowers/specs/2026-07-14-wizard-autofill-test-design.md. Helper privato condiviso dataInizioPrenotazioneOFallback(Get) per il fallback oggi+10gg usato sia da evento() che da logisticaTrasporto(). Nuovo test tests/Unit/Support/PrenotazioneWizardAutofillTest.php: nessun DB coinvolto, Set/Get simulati con Mockery::mock(Filament\\Forms\\Set/Get::class) su un array condiviso; per quandoDove() (unico metodo dipendente da app(GrSettings::class)) la settings class e' istanziata via ReflectionClass::newInstanceWithoutConstructor() e la property valorizzata a mano prima del binding app()->instance(), per evitare che il container provi a costruire la classe reale (repository 'database' di spatie/laravel-settings, che fallirebbe comunque perche' i tests/Unit non bootano l'app Laravel). composer qa verde: Pint ok, Larastan no errors, Pest 287 passed (era 280 prima di questa story)."
     },
     {
       "id": "US-006",
