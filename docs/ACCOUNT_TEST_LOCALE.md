@@ -23,12 +23,15 @@
 
 4. URL locali:
 
-   | Pannello | URL |
-   |----------|-----|
-   | Sezione/Sottosezione | http://localhost/sezione/login |
-   | GR Lombardia | http://localhost/gr/login |
-   | Admin | http://localhost/admin/login |
+   | Voce | URL |
+   |------|-----|
+   | **Login unico** (tutti i ruoli, redirect automatico al pannello corretto) | http://localhost/login |
+   | Sezione/Sottosezione (dopo login) | http://localhost/sezione |
+   | GR Lombardia (dopo login) | http://localhost/gr |
+   | Admin (dopo login) | http://localhost/admin |
    | MailPit (mail intercettate) | http://localhost:8026 |
+
+   > Le vecchie URL `/admin/login`, `/gr/login`, `/sezione/login` restano raggiungibili ma ora reindirizzano (302) a `/login` — non generano più un form di login separato.
 
 > `APP_URL` in `.env` locale è `http://localhost` — non usare domini `prenotar.develop.*`/`prenotar.montagnaservizi.com` in sviluppo: puntano (quando risolvono) all'ambiente remoto, non a questa istanza.
 

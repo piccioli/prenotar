@@ -1,0 +1,71 @@
+{
+  "project": "Prenotar",
+  "branchName": "ralph/login-unificato",
+  "description": "Login unico su /login con branding neutro CAI GR Lombardia e redirect automatico al pannello corretto (admin/gr/sezione) in base al ruolo dell'utente, riusando la logica di ruolo gia' esistente su User::canAccessPanel(). Le vecchie URL /admin/login, /gr/login, /sezione/login reindirizzano (302) al login unico. Nessuna modifica alla logica di autorizzazione o al guard condiviso esistente.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Pagina di login unica con branding neutro",
+      "description": "Come utente di uno qualsiasi dei 3 ruoli, voglio una pagina di login unica raggiungibile su /login, con branding istituzionale CAI GR Lombardia (non colorato come uno specifico pannello), cosi da non dover ricordare quale URL di pannello usare per accedere.",
+      "acceptanceCriteria": [
+        "Nuova pagina di login raggiungibile su /login, non associata visivamente a nessuno dei 3 pannelli (niente colore ambra/verde-pino/ardesia introdotto nel restyle Filament)",
+        "Branding: logo/nome CAI GR Lombardia, palette neutra 'stone' del design system condiviso (tasks/design-reference/prenotar-ui-ruoli/tokens/colors.css)",
+        "Il form (email, password, 'ricordami', messaggi di errore, throttling dei tentativi) mantiene tutte le funzionalita' del componente Filament Login stock, nessuna funzionalita' persa",
+        "Un utente gia' autenticato che visita /login viene reindirizzato al proprio pannello invece di rivedere il form",
+        "Verifica visiva in browser (screenshot) del branding neutro della pagina /login",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "LoginPanelProvider (id 'login', path '') + App\\Filament\\Pages\\Auth\\Login custom, tema stone in resources/css/filament/login/theme.css. Redirect post-login riuscito ancora da fare in US-002 (per ora va a /admin via routes/web.php per chiunque)."
+    },
+    {
+      "id": "US-002",
+      "title": "Redirect post-login basato sul ruolo",
+      "description": "Come utente autenticato su /login, voglio essere reindirizzato automaticamente al pannello corretto (Admin, GR Manager, Sezione/Sottosezione) in base al mio ruolo, cosi da atterrare subito sulla vista giusta senza dover scegliere manualmente.",
+      "acceptanceCriteria": [
+        "Dopo login riuscito: redirect a /admin se isAdmin(), a /gr se isGrManager(), a /sezione se isSezione()",
+        "La logica di mapping ruolo->pannello riusa gli stessi metodi gia' esistenti su User (isAdmin/isGrManager/isSezione), nessuna nuova logica di ruolo duplicata rispetto a canAccessPanel()",
+        "Se l'utente non ha nessuno dei 3 ruoli, o l'account ha is_active = false, il comportamento resta quello gia' esistente oggi in canAccessPanel() (messaggio di errore chiaro, nessun redirect a un pannello inaccessibile o a una pagina bianca)",
+        "Nessuna regressione alla sessione condivisa tra pannelli gia' verificata da PanelAccessTest: un utente autenticato puo' ancora navigare direttamente a un altro pannello per cui e' autorizzato, senza un nuovo login",
+        "Il flusso FirstAccessPage (completamento email di contatto al primo accesso) continua a scattare correttamente dopo il redirect, se applicabile all'utente",
+        "Test Feature per ciascuno dei 3 ruoli che verifica il redirect al pannello corretto dopo login su /login",
+        "Pest verde: nuovi test Feature per il redirect per ruolo",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Estratta la logica di mapping ruolo->URL pannello in App\\Support\\Auth\\PanelRedirector (riusata sia da Login::mount() che dalla nuova App\\Filament\\Http\\Responses\\Auth\\LoginResponse). authenticate() ritorna la nuova LoginResponse invece di app(Filament\\LoginResponse::class)."
+    },
+    {
+      "id": "US-003",
+      "title": "Redirect delle vecchie URL di login per-pannello",
+      "description": "Come utente con un bookmark o link salvato a /admin/login, /gr/login o /sezione/login, voglio essere reindirizzato automaticamente al nuovo login unico, cosi da non trovare un link rotto dopo l'introduzione del login unificato.",
+      "acceptanceCriteria": [
+        "Le 3 vecchie URL (/admin/login, /gr/login, /sezione/login) rispondono con un redirect (302) verso /login, non con un 404 ne' con un form di login duplicato",
+        "Nessuna funzionalita' di autenticazione resta raggiungibile/utilizzabile direttamente alle vecchie URL (niente doppio punto di ingresso)",
+        "Test Feature che verifica il redirect 302 per tutte e 3 le vecchie URL verso /login",
+        "Pest verde: nuovo test Feature per i redirect delle vecchie URL",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Le route /admin/login, /gr/login, /sezione/login restano registrate (->login() resta impostato su ciascun pannello, quindi Filament::getLoginUrl() e il redirect degli utenti non autenticati verso una pagina protetta continuano a funzionare), ma l'azione della route ora e' una closure che fa redirect verso PanelRedirector::loginUrl() invece di renderizzare il form Filament\\Pages\\Auth\\Login stock. Nuovo metodo App\\Support\\Auth\\PanelRedirector::loginUrl()."
+    },
+    {
+      "id": "US-004",
+      "title": "Aggiornamento test esistenti sull'architettura di login",
+      "description": "Come sviluppatore, voglio aggiornare i test che oggi assumono 3 pagine di login indipendenti, cosi da riflettere intenzionalmente la nuova architettura di login unico senza lasciare test falliti o silenziosamente obsoleti.",
+      "acceptanceCriteria": [
+        "tests/Feature/Auth/LoginBrandingTest.php aggiornato: verifica il branding neutro di /login invece delle 3 pagine colorate separate per pannello",
+        "tests/Feature/Auth/PanelAccessTest.php aggiornato/esteso: continua a verificare che la sessione condivisa tra pannelli funzioni, senza duplicare la copertura gia' aggiunta in US-002 per il redirect post-login",
+        "tests/Feature/Auth/FirstAccessFlowTest.php verificato compatibile con il nuovo flusso di login (aggiornato solo se necessario)",
+        "Nessun test esistente nella suite rimane rotto per riferimenti a comportamento di login ormai cambiato intenzionalmente",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest) sull'intera suite"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "Riorganizzati i test di login: nuovo tests/Feature/Auth/LegacyLoginUrlRedirectTest.php per i 3 redirect 302 delle vecchie URL (spostati da LoginBrandingTest.php, dove erano stati messi provvisoriamente in US-003). LoginBrandingTest.php riscritto per verificare il branding neutro di /login (assertSee 'CAI GR Lombardia' + assertDontSee dei 3 brandName per-pannello 'Prenotar — Admin/GR Lombardia/Sezione'), consolidando li' il test di branding che era duplicato in UnifiedLoginTest.php (rimosso da quest'ultimo, che ora copre solo il redirect mount() per utente gia' autenticato). PanelAccessTest.php e FirstAccessFlowTest.php verificati compatibili senza modifiche: nessuno dei due passa per le pagine di login, quindi non risentono della riorganizzazione."
+    }
+  ]
+}

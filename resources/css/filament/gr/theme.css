@@ -1,0 +1,7 @@
+@import '/vendor/filament/filament/resources/css/theme.css';
+
+/* Pannello GR — Pino (verde), colore brand di default già impostato in tokens/colors.css */
+@import '../tokens/index.css';
+@import '../mobile-shell.css';
+
+@config '../tailwind.config.js';

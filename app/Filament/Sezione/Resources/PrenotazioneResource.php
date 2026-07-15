@@ -4,27 +4,30 @@ declare(strict_types=1);
 
 namespace App\Filament\Sezione\Resources;
 
-use App\Enums\CategoriaPatente;
 use App\Enums\PrenotazioneStatus;
 use App\Enums\ResponsabileTipo;
-use App\Enums\TipoMezzo;
 use App\Filament\Sezione\Resources\PrenotazioneResource\Pages;
 use App\Filament\Sezione\Widgets\CalendarioPrenotazioniWidget;
 use App\Models\Prenotazione;
 use App\Models\Torre;
+use App\Rules\DataRitiroEntroInizioPrenotazione;
 use App\Rules\NoOverlapTorre;
 use App\Rules\UnicaPrenotazioneAttivaPerUser;
 use App\Services\PrenotazioneStateMachine;
 use App\Settings\GrSettings;
+use App\Support\Testing\PrenotazioneWizardAutofill;
 use Filament\Forms;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Support\Colors\Color;
 use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\HtmlString;
 
 class PrenotazioneResource extends Resource
@@ -49,285 +52,412 @@ class PrenotazioneResource extends Resource
             ->orderBy('data_inizio_prenotazione', 'desc');
     }
 
+    /** @param callable(Forms\Set, Forms\Get): void $autofill */
+    private static function autofillAction(string $name, callable $autofill): Forms\Components\Actions
+    {
+        return Forms\Components\Actions::make([
+            Forms\Components\Actions\Action::make($name)
+                ->label('Compila con dati di test')
+                ->icon('heroicon-o-beaker')
+                ->color('gray')
+                ->visible(fn (): bool => app()->environment('local'))
+                ->action(function (Forms\Set $set, Forms\Get $get) use ($autofill): void {
+                    abort_unless(app()->environment('local'), 404);
+
+                    $autofill($set, $get);
+
+                    Notification::make()->title('Dati di test inseriti')->success()->send();
+                }),
+        ])->fullWidth();
+    }
+
     /** @return list<Forms\Components\Wizard\Step> */
     public static function wizardSteps(): array
     {
         return [
+            Forms\Components\Wizard\Step::make('Manuale d\'istruzioni')
+                ->icon('heroicon-o-book-open')
+                ->schema([
+                    self::autofillAction('autofill_manuale', [PrenotazioneWizardAutofill::class, 'manuale']),
+
+                    Forms\Components\Section::make('Prima di iniziare, leggi il manuale d\'istruzioni')
+                        ->description('La conferma di lettura è obbligatoria per procedere, qualunque torre sceglierai nello step successivo.')
+                        ->schema([
+                            Forms\Components\Checkbox::make('manuale_step_confermato')
+                                ->hiddenLabel()
+                                ->live()
+                                ->dehydrated(false)
+                                ->default(false)
+                                ->rules(['accepted'])
+                                ->validationMessages([
+                                    'accepted' => 'Devi confermare di aver letto il manuale d\'istruzioni prima di proseguire.',
+                                ])
+                                ->viewData(['torre' => self::torreManualeRiferimento()])
+                                ->view('filament.sezione.forms.components.manuale-istruzioni-step')
+                                ->columnSpanFull(),
+                        ]),
+                ]),
+
             Forms\Components\Wizard\Step::make('Quando & dove')
                 ->icon('heroicon-o-calendar')
                 ->schema([
-                    Forms\Components\Grid::make(3)->schema([
-                        Forms\Components\DatePicker::make('data_inizio_prenotazione')
-                            ->label('Data inizio prenotazione')
-                            ->required()
-                            ->native(false)
-                            ->displayFormat('d/m/Y')
-                            ->minDate(fn () => today()->addDays(app(GrSettings::class)->giorni_minimi_caricamento_documenti))
-                            ->live(onBlur: true)
-                            ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get, $livewire): void {
-                                if ($state && $get('data_fine_prenotazione') && $get('data_fine_prenotazione') < $state) {
-                                    $set('data_fine_prenotazione', $state);
-                                }
-                                $livewire->dispatch('preview-range-changed',
-                                    inizio: $state,
-                                    fine: $get('data_fine_prenotazione'),
-                                );
-                            })
-                            ->rules([new UnicaPrenotazioneAttivaPerUser(auth()->user())])
-                            ->helperText(fn () => 'Deve essere almeno '.app(GrSettings::class)->giorni_minimi_caricamento_documenti.' giorni da oggi.'),
+                    self::autofillAction('autofill_quando_dove', [PrenotazioneWizardAutofill::class, 'quandoDove']),
 
-                        Forms\Components\DatePicker::make('data_fine_prenotazione')
-                            ->label('Data fine prenotazione')
-                            ->required()
-                            ->native(false)
-                            ->displayFormat('d/m/Y')
-                            ->minDate(fn (Forms\Get $get) => $get('data_inizio_prenotazione') ?? today())
-                            ->live(onBlur: true)
-                            ->afterStateUpdated(function ($state, Forms\Get $get, $livewire): void {
-                                $livewire->dispatch('preview-range-changed',
-                                    inizio: $get('data_inizio_prenotazione'),
-                                    fine: $state,
-                                );
-                            }),
+                    Forms\Components\Section::make('Quando ti serve la torre?')
+                        ->description('Indica il periodo di utilizzo. La disponibilità qui sotto si aggiorna in base alle date.')
+                        ->schema([
+                            Forms\Components\Grid::make(2)->schema([
+                                Forms\Components\DatePicker::make('data_inizio_prenotazione')
+                                    ->label('Data inizio utilizzo')
+                                    ->required()
+                                    ->native(false)
+                                    ->displayFormat('d/m/Y')
+                                    ->minDate(fn () => today()->addDays(app(GrSettings::class)->giorni_minimi_caricamento_documenti))
+                                    ->live(onBlur: true)
+                                    ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get, $livewire): void {
+                                        if ($state && $get('data_fine_prenotazione') && $get('data_fine_prenotazione') < $state) {
+                                            $set('data_fine_prenotazione', $state);
+                                        }
+                                        $livewire->dispatch('preview-range-changed',
+                                            inizio: $state,
+                                            fine: $get('data_fine_prenotazione'),
+                                        );
+                                    })
+                                    ->rules([new UnicaPrenotazioneAttivaPerUser(auth()->user())])
+                                    ->helperText(fn () => 'Deve essere almeno '.app(GrSettings::class)->giorni_minimi_caricamento_documenti.' giorni da oggi.'),
 
-                        Forms\Components\Select::make('torre_id')
-                            ->label('Torre (opzionale)')
-                            ->options(Torre::where('is_active', true)->pluck('nome', 'id'))
-                            ->placeholder('Nessuna preferenza — il GR assegnerà la torre disponibile')
-                            ->live()
-                            ->afterStateUpdated(function (Forms\Set $set): void {
-                                $set('manuale_letto_confirm', false);
-                                $set('manuale_letto_confermato_at', null);
-                                $set('manuale_letto_torre_id', null);
-                            })
-                            ->rules(fn (Forms\Get $get): array => [
-                                new NoOverlapTorre(
-                                    torreId: $get('torre_id') ? (int) $get('torre_id') : null,
-                                    dataInizio: (string) ($get('data_inizio_prenotazione') ?? ''),
-                                    dataFine: (string) ($get('data_fine_prenotazione') ?? ''),
-                                ),
-                            ])
-                            ->helperText('Puoi lasciare vuoto. Il GR assegnerà la torre in fase di approvazione.'),
-                    ]),
+                                Forms\Components\DatePicker::make('data_fine_prenotazione')
+                                    ->label('Data fine utilizzo')
+                                    ->required()
+                                    ->native(false)
+                                    ->displayFormat('d/m/Y')
+                                    ->minDate(fn (Forms\Get $get) => $get('data_inizio_prenotazione') ?? today())
+                                    ->live(onBlur: true)
+                                    ->afterStateUpdated(function ($state, Forms\Get $get, $livewire): void {
+                                        $livewire->dispatch('preview-range-changed',
+                                            inizio: $get('data_inizio_prenotazione'),
+                                            fine: $state,
+                                        );
+                                    }),
+                            ]),
 
-                    Forms\Components\Placeholder::make('manuale_link')
-                        ->hiddenLabel()
-                        ->visible(fn (Forms\Get $get): bool => filled($get('torre_id')))
-                        ->content(function (Forms\Get $get): HtmlString {
-                            $torre = Torre::find($get('torre_id'));
+                            Forms\Components\Radio::make('torre_id')
+                                ->label('Quale torre preferisci?')
+                                ->helperText('Facoltativo: se non scegli, sarà il Gruppo Regionale ad assegnarla.')
+                                ->options(fn (): array => ['' => 'Nessuna preferenza']
+                                    + Torre::where('is_active', true)->pluck('nome', 'id')->all())
+                                ->live()
+                                ->dehydrateStateUsing(fn ($state) => filled($state) ? (int) $state : null)
+                                ->rules(fn (Forms\Get $get): array => [
+                                    new NoOverlapTorre(
+                                        torreId: $get('torre_id') ? (int) $get('torre_id') : null,
+                                        dataInizio: (string) ($get('data_inizio_prenotazione') ?? ''),
+                                        dataFine: (string) ($get('data_fine_prenotazione') ?? ''),
+                                    ),
+                                ])
+                                ->view('filament.sezione.forms.components.torre-radio-cards')
+                                ->columnSpanFull(),
+                        ]),
 
-                            if (! $torre || blank($torre->manuale_pdf_path)) {
-                                return new HtmlString('<span class="text-sm text-gray-500 dark:text-gray-400">Manuale non ancora disponibile.</span>');
-                            }
-
-                            return new HtmlString(sprintf(
-                                '<a href="%s" target="_blank" rel="noopener" class="text-sm font-medium text-primary-600 underline hover:text-primary-500">Visualizza/scarica il manuale d\'istruzioni della torre selezionata</a>',
-                                e(asset('storage/'.$torre->manuale_pdf_path))
-                            ));
-                        }),
-
-                    Forms\Components\Checkbox::make('manuale_letto_confirm')
-                        ->label('Ho letto e compreso il manuale d\'istruzioni')
-                        ->live()
-                        ->dehydrated(false)
-                        ->default(false)
-                        ->visible(fn (Forms\Get $get): bool => filled($get('torre_id')))
-                        ->rules(fn (Forms\Get $get): array => filled($get('torre_id')) ? ['accepted'] : [])
-                        ->validationMessages([
-                            'accepted' => 'Devi confermare di aver letto il manuale d\'istruzioni prima di proseguire.',
-                        ])
-                        ->afterStateUpdated(function (?bool $state, Forms\Set $set, Forms\Get $get): void {
-                            $set('manuale_letto_confermato_at', $state ? now() : null);
-                            $set('manuale_letto_torre_id', $state ? $get('torre_id') : null);
-                        }),
-
-                    Forms\Components\Hidden::make('manuale_letto_confermato_at'),
-                    Forms\Components\Hidden::make('manuale_letto_torre_id'),
-
-                    Forms\Components\Livewire::make(CalendarioPrenotazioniWidget::class)
-                        ->columnSpanFull(),
+                    Forms\Components\Section::make('Disponibilità')
+                        ->description('I giorni occupati sono evidenziati per torre nel calendario qui sotto.')
+                        ->schema([
+                            Forms\Components\Livewire::make(CalendarioPrenotazioniWidget::class)
+                                ->columnSpanFull(),
+                        ]),
                 ]),
 
             Forms\Components\Wizard\Step::make('Evento')
                 ->icon('heroicon-o-map-pin')
                 ->schema([
-                    Forms\Components\TextInput::make('nome_evento')
-                        ->label('Nome evento')
-                        ->required()
-                        ->maxLength(255),
+                    self::autofillAction('autofill_evento', [PrenotazioneWizardAutofill::class, 'evento']),
 
-                    Forms\Components\Select::make('tipo_evento')
-                        ->label('Tipo evento')
-                        ->required()
-                        ->options([
-                            'fiera' => 'Fiera',
-                            'manifestazione_cai' => 'Manifestazione CAI',
-                            'evento_promozionale' => 'Evento promozionale',
-                            'corso' => 'Corso',
-                            'altro' => 'Altro',
+                    Forms\Components\Section::make('Racconta l\'evento')
+                        ->description('Queste informazioni appariranno nella richiesta e sui documenti generati.')
+                        ->schema([
+                            Forms\Components\TextInput::make('nome_evento')
+                                ->label('Nome evento')
+                                ->required()
+                                ->maxLength(255)
+                                ->prefixIcon('heroicon-o-megaphone'),
+
+                            Forms\Components\Select::make('tipo_evento')
+                                ->label('Tipo evento')
+                                ->required()
+                                ->options(self::tipoEventoOptions())
+                                ->prefixIcon('heroicon-o-tag'),
+
+                            Forms\Components\Textarea::make('descrizione_evento')
+                                ->label('Descrizione')
+                                ->rows(3)
+                                ->maxLength(2000)
+                                ->columnSpanFull(),
                         ]),
 
-                    Forms\Components\Textarea::make('descrizione_evento')
-                        ->label('Descrizione')
-                        ->rows(3)
-                        ->maxLength(2000)
-                        ->columnSpanFull(),
+                    Forms\Components\Section::make('Dove e quando si svolge')
+                        ->schema([
+                            Forms\Components\TextInput::make('indirizzo_evento')
+                                ->label('Indirizzo evento')
+                                ->required()
+                                ->maxLength(255)
+                                ->prefixIcon('heroicon-o-map-pin')
+                                ->columnSpanFull(),
 
-                    Forms\Components\TextInput::make('indirizzo_evento')
-                        ->label('Indirizzo evento')
-                        ->required()
-                        ->maxLength(255),
+                            Forms\Components\Grid::make(2)->schema([
+                                Forms\Components\DatePicker::make('data_inizio_evento')
+                                    ->label('Data inizio evento')
+                                    ->required()
+                                    ->native(false)
+                                    ->displayFormat('d/m/Y')
+                                    ->prefixIcon('heroicon-o-calendar')
+                                    ->minDate(fn (Forms\Get $get) => $get('data_inizio_prenotazione')),
 
-                    Forms\Components\Grid::make(2)->schema([
-                        Forms\Components\DatePicker::make('data_inizio_evento')
-                            ->label('Data inizio evento')
-                            ->required()
-                            ->native(false)
-                            ->displayFormat('d/m/Y')
-                            ->minDate(fn (Forms\Get $get) => $get('data_inizio_prenotazione')),
-
-                        Forms\Components\DatePicker::make('data_fine_evento')
-                            ->label('Data fine evento')
-                            ->required()
-                            ->native(false)
-                            ->displayFormat('d/m/Y')
-                            ->minDate(fn (Forms\Get $get) => $get('data_inizio_evento')),
-                    ]),
+                                Forms\Components\DatePicker::make('data_fine_evento')
+                                    ->label('Data fine evento')
+                                    ->required()
+                                    ->native(false)
+                                    ->displayFormat('d/m/Y')
+                                    ->prefixIcon('heroicon-o-calendar')
+                                    ->minDate(fn (Forms\Get $get) => $get('data_inizio_evento')),
+                            ]),
+                        ]),
                 ]),
 
             Forms\Components\Wizard\Step::make('Logistica trasporto')
                 ->icon('heroicon-o-truck')
                 ->schema([
-                    Forms\Components\Grid::make(2)->schema([
-                        Forms\Components\DatePicker::make('data_ritiro')
-                            ->label('Data ritiro torre')
-                            ->native(false)
-                            ->displayFormat('d/m/Y'),
+                    self::autofillAction('autofill_logistica_trasporto', [PrenotazioneWizardAutofill::class, 'logisticaTrasporto']),
 
-                        Forms\Components\TextInput::make('luogo_ritiro')
-                            ->label('Luogo ritiro')
-                            ->maxLength(255),
+                    Forms\Components\Section::make('Come trasporterai la torre?')
+                        ->description('Date di ritiro e riconsegna presso il deposito, mezzo e conducente.')
+                        ->schema([
+                            Forms\Components\Grid::make(2)->schema([
+                                Forms\Components\DatePicker::make('data_ritiro')
+                                    ->label('Data ritiro torre')
+                                    ->native(false)
+                                    ->displayFormat('d/m/Y')
+                                    ->prefixIcon('heroicon-o-calendar')
+                                    ->rules(fn (Forms\Get $get): array => [
+                                        new DataRitiroEntroInizioPrenotazione(
+                                            dataInizioPrenotazione: (string) ($get('data_inizio_prenotazione') ?? ''),
+                                        ),
+                                    ]),
 
-                        Forms\Components\DatePicker::make('data_riconsegna')
-                            ->label('Data riconsegna torre')
-                            ->native(false)
-                            ->displayFormat('d/m/Y'),
+                                Forms\Components\DatePicker::make('data_riconsegna')
+                                    ->label('Data riconsegna torre')
+                                    ->native(false)
+                                    ->displayFormat('d/m/Y')
+                                    ->prefixIcon('heroicon-o-calendar')
+                                    ->helperText('È la stessa data mostrata nel calendario delle torri.'),
 
-                        Forms\Components\TextInput::make('luogo_riconsegna')
-                            ->label('Luogo riconsegna')
-                            ->maxLength(255),
-                    ]),
+                                Forms\Components\TextInput::make('targa_autoveicolo')
+                                    ->label('Targa autoveicolo')
+                                    ->maxLength(20)
+                                    ->prefixIcon('heroicon-o-identification'),
 
-                    Forms\Components\Grid::make(2)->schema([
-                        Forms\Components\TextInput::make('azienda_trasporto')
-                            ->label('Azienda di trasporto')
-                            ->default('Montagna Servizi')
-                            ->maxLength(255),
+                                Forms\Components\TextInput::make('nome_conducente')
+                                    ->label('Nome conducente')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->prefixIcon('heroicon-o-user'),
+                            ]),
+                        ]),
 
-                        Forms\Components\TextInput::make('targa_autoveicolo')
-                            ->label('Targa autoveicolo')
-                            ->maxLength(20),
-                    ]),
+                    Forms\Components\Section::make('Dichiarazione patente')
+                        ->schema([
+                            Forms\Components\Checkbox::make('patente_be_confermata')
+                                ->label('Dichiaro, sotto la mia responsabilità, di essere in possesso di patente di guida di categoria B+E (o superiore), idonea al traino del rimorchio della torre di arrampicata, e che quanto dichiarato corrisponde al vero.')
+                                ->live()
+                                ->dehydrated(false)
+                                ->default(false)
+                                ->rules(['accepted'])
+                                ->validationMessages([
+                                    'accepted' => 'Devi confermare il possesso della patente B+E per proseguire.',
+                                ])
+                                ->afterStateUpdated(fn (?bool $state, Forms\Set $set) => $set('patente_be_dichiarata_at', $state ? now() : null)),
 
-                    Forms\Components\Radio::make('tipo_mezzo')
-                        ->label('Tipo mezzo')
-                        ->options(collect(TipoMezzo::cases())->mapWithKeys(
-                            fn (TipoMezzo $t) => [$t->value => $t->label()]
-                        ))
-                        ->default(TipoMezzo::Aziendale->value)
-                        ->required()
-                        ->live()
-                        ->inline(),
-
-                    Forms\Components\Select::make('categoria_patente_privato')
-                        ->label('Categoria patente')
-                        ->options(collect(CategoriaPatente::cases())->mapWithKeys(
-                            fn (CategoriaPatente $c) => [$c->value => $c->label()]
-                        ))
-                        ->visible(fn (Forms\Get $get): bool => $get('tipo_mezzo') === TipoMezzo::Privato->value)
-                        ->required(fn (Forms\Get $get): bool => $get('tipo_mezzo') === TipoMezzo::Privato->value),
+                            Forms\Components\Hidden::make('patente_be_dichiarata_at'),
+                        ]),
                 ]),
 
             Forms\Components\Wizard\Step::make('Responsabile in loco')
                 ->icon('heroicon-o-user')
                 ->schema([
-                    Forms\Components\Grid::make(2)->schema([
-                        Forms\Components\TextInput::make('responsabile_nome')
-                            ->label('Nome e cognome')
-                            ->required()
-                            ->maxLength(255),
+                    self::autofillAction('autofill_responsabile_in_loco', [PrenotazioneWizardAutofill::class, 'responsabileInLoco']),
 
-                        Forms\Components\Select::make('responsabile_tipo')
-                            ->label('Qualifica CAI')
-                            ->required()
-                            ->options(collect(ResponsabileTipo::cases())->mapWithKeys(
-                                fn (ResponsabileTipo $t) => [$t->value => $t->label()]
-                            )),
-                    ]),
+                    Forms\Components\Section::make('Chi è il responsabile in loco?')
+                        ->description('La persona di riferimento per la torre durante l\'evento.')
+                        ->schema([
+                            Forms\Components\Grid::make(2)->schema([
+                                Forms\Components\TextInput::make('responsabile_nome')
+                                    ->label('Nome e cognome')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->prefixIcon('heroicon-o-user'),
 
-                    Forms\Components\TextInput::make('responsabile_titolo_cai')
-                        ->label('Titolo CAI')
-                        ->maxLength(255),
+                                Forms\Components\Select::make('responsabile_tipo')
+                                    ->label('Qualifica CAI')
+                                    ->required()
+                                    ->options(collect(ResponsabileTipo::cases())->mapWithKeys(
+                                        fn (ResponsabileTipo $t) => [$t->value => $t->label()]
+                                    ))
+                                    ->prefixIcon('heroicon-o-identification'),
+                            ]),
 
-                    Forms\Components\Grid::make(2)->schema([
-                        Forms\Components\TextInput::make('responsabile_telefono')
-                            ->label('Telefono')
-                            ->required()
-                            ->tel()
-                            ->maxLength(20),
+                            Forms\Components\TextInput::make('responsabile_titolo_cai')
+                                ->label('Titolo CAI')
+                                ->maxLength(255)
+                                ->prefixIcon('heroicon-o-academic-cap'),
+                        ]),
 
-                        Forms\Components\TextInput::make('responsabile_email')
-                            ->label('Email')
-                            ->required()
-                            ->email()
-                            ->maxLength(255),
-                    ]),
+                    Forms\Components\Section::make('Contatti')
+                        ->schema([
+                            Forms\Components\Grid::make(2)->schema([
+                                Forms\Components\TextInput::make('responsabile_telefono')
+                                    ->label('Telefono')
+                                    ->required()
+                                    ->tel()
+                                    ->maxLength(20)
+                                    ->prefixIcon('heroicon-o-phone'),
+
+                                Forms\Components\TextInput::make('responsabile_email')
+                                    ->label('Email')
+                                    ->required()
+                                    ->email()
+                                    ->maxLength(255)
+                                    ->prefixIcon('heroicon-o-envelope'),
+                            ]),
+                        ]),
                 ]),
 
             Forms\Components\Wizard\Step::make('Riepilogo')
                 ->icon('heroicon-o-check-circle')
                 ->schema([
-                    Forms\Components\Placeholder::make('riepilogo_evento')
-                        ->label('Evento')
-                        ->content(fn (Forms\Get $get): string => implode(' — ', array_filter([
-                            $get('nome_evento'),
-                            $get('tipo_evento'),
-                            $get('indirizzo_evento'),
-                        ]))),
-
-                    Forms\Components\Placeholder::make('riepilogo_periodo')
-                        ->label('Periodo prenotazione torre')
-                        ->content(fn (Forms\Get $get): string => implode(' → ', array_filter([
-                            $get('data_inizio_prenotazione'),
-                            $get('data_fine_prenotazione'),
-                        ]))),
-
-                    Forms\Components\Placeholder::make('riepilogo_trasporto')
-                        ->label('Trasporto')
-                        ->content(function (Forms\Get $get): string {
-                            $tipoMezzo = TipoMezzo::tryFrom((string) $get('tipo_mezzo'));
-
-                            return implode(' — ', array_filter([
-                                $tipoMezzo?->label(),
-                                $tipoMezzo === TipoMezzo::Privato
-                                    ? 'Patente '.(CategoriaPatente::tryFrom((string) $get('categoria_patente_privato'))?->label() ?? '—')
-                                    : null,
-                            ]));
-                        }),
-
-                    Forms\Components\Placeholder::make('riepilogo_responsabile')
-                        ->label('Responsabile in loco')
-                        ->content(fn (Forms\Get $get): string => implode(', ', array_filter([
-                            $get('responsabile_nome'),
-                            $get('responsabile_tipo'),
-                            $get('responsabile_telefono'),
-                        ]))),
+                    Forms\Components\Placeholder::make('riepilogo')
+                        ->hiddenLabel()
+                        ->content(fn (Forms\Get $get): Htmlable => new HtmlString(
+                            view('filament.sezione.forms.components.riepilogo', [
+                                'gruppi' => self::gruppiRiepilogo($get),
+                            ])->render()
+                        )),
 
                     Forms\Components\Placeholder::make('avviso_delibera')
-                        ->label('Passo successivo')
-                        ->content('Dopo aver salvato la bozza, carica la delibera del consiglio dalla pagina di modifica per poter inviare la richiesta al GR.'),
+                        ->hiddenLabel()
+                        ->content(new HtmlString(
+                            view('filament.sezione.forms.components.avviso-delibera')->render()
+                        )),
                 ]),
         ];
+    }
+
+    /** @return list<array{icon: string, titolo: string, stepId: string, righe: list<array<string, mixed>>}> */
+    private static function gruppiRiepilogo(Forms\Get $get): array
+    {
+        $torre = Torre::find($get('torre_id'));
+
+        return [
+            [
+                'icon' => 'heroicon-o-calendar-days',
+                'titolo' => 'Quando & dove',
+                'stepId' => 'quando-dove',
+                'righe' => [
+                    ['tipo' => 'testo', 'label' => 'Periodo di utilizzo', 'valore' => self::formattaPeriodo($get('data_inizio_prenotazione'), $get('data_fine_prenotazione'))],
+                    ['tipo' => 'torre', 'label' => 'Torre richiesta', 'torre' => $torre],
+                    ['tipo' => 'testo', 'label' => 'Deposito torre', 'valore' => self::depositoTorre($torre)],
+                    ['tipo' => 'manuale', 'label' => 'Manuale d\'istruzioni', 'torre' => $torre, 'confermato' => (bool) $get('manuale_step_confermato')],
+                ],
+            ],
+            [
+                'icon' => 'heroicon-o-flag',
+                'titolo' => 'Evento',
+                'stepId' => 'evento',
+                'righe' => [
+                    ['tipo' => 'testo', 'label' => 'Nome evento', 'valore' => $get('nome_evento') ?: '—'],
+                    ['tipo' => 'testo', 'label' => 'Tipo', 'valore' => self::labelTipoEvento($get('tipo_evento'))],
+                    ['tipo' => 'testo', 'label' => 'Indirizzo', 'valore' => $get('indirizzo_evento') ?: '—'],
+                    ['tipo' => 'testo', 'label' => 'Date evento', 'valore' => self::formattaPeriodo($get('data_inizio_evento'), $get('data_fine_evento'))],
+                ],
+            ],
+            [
+                'icon' => 'heroicon-o-truck',
+                'titolo' => 'Logistica trasporto',
+                'stepId' => 'logistica-trasporto',
+                'righe' => [
+                    ['tipo' => 'testo', 'label' => 'Ritiro', 'valore' => self::formattaData($get('data_ritiro'))],
+                    ['tipo' => 'testo', 'label' => 'Riconsegna', 'valore' => self::formattaData($get('data_riconsegna'))],
+                    ['tipo' => 'testo', 'label' => 'Targa autoveicolo', 'valore' => $get('targa_autoveicolo') ?: '—'],
+                    ['tipo' => 'testo', 'label' => 'Conducente', 'valore' => $get('nome_conducente') ?: '—'],
+                    ['tipo' => 'testo', 'label' => 'Patente B+E', 'valore' => filled($get('patente_be_dichiarata_at')) ? 'Dichiarata' : 'Da confermare'],
+                ],
+            ],
+            [
+                'icon' => 'heroicon-o-user',
+                'titolo' => 'Responsabile in loco',
+                'stepId' => 'responsabile-in-loco',
+                'righe' => [
+                    ['tipo' => 'testo', 'label' => 'Nome', 'valore' => $get('responsabile_nome') ?: '—'],
+                    ['tipo' => 'testo', 'label' => 'Tipo e titolo CAI', 'valore' => self::formattaResponsabileTipo($get('responsabile_tipo'), $get('responsabile_titolo_cai'))],
+                    ['tipo' => 'testo', 'label' => 'Contatti', 'valore' => self::formattaContatti($get('responsabile_telefono'), $get('responsabile_email'))],
+                ],
+            ],
+        ];
+    }
+
+    public static function torreManualeRiferimento(): ?Torre
+    {
+        return Torre::where('is_active', true)
+            ->whereNotNull('manuale_pdf_path')
+            ->orderBy('id')
+            ->first();
+    }
+
+    private static function depositoTorre(?Torre $torre): string
+    {
+        return $torre === null ? '—' : (string) $torre->indirizzo_deposito;
+    }
+
+    private static function formattaPeriodo(?string $inizio, ?string $fine): string
+    {
+        $formatta = fn (?string $valore): ?string => filled($valore) ? Carbon::parse($valore)->format('d/m/Y') : null;
+        $parti = array_filter([$formatta($inizio), $formatta($fine)]);
+
+        return $parti === [] ? '—' : implode(' → ', $parti);
+    }
+
+    private static function formattaData(?string $data): string
+    {
+        return filled($data) ? Carbon::parse($data)->format('d/m/Y') : '—';
+    }
+
+    private static function formattaResponsabileTipo(?string $tipo, ?string $titolo): string
+    {
+        $parti = array_filter([ResponsabileTipo::tryFrom((string) $tipo)?->label(), $titolo]);
+
+        return $parti === [] ? '—' : implode(' · ', $parti);
+    }
+
+    private static function formattaContatti(?string $telefono, ?string $email): string
+    {
+        $parti = array_filter([$telefono, $email]);
+
+        return $parti === [] ? '—' : implode(' · ', $parti);
+    }
+
+    /** @return array<string, string> */
+    private static function tipoEventoOptions(): array
+    {
+        return [
+            'fiera' => 'Fiera',
+            'manifestazione_cai' => 'Manifestazione CAI',
+            'evento_promozionale' => 'Evento promozionale',
+            'corso' => 'Corso',
+            'altro' => 'Altro',
+        ];
+    }
+
+    private static function labelTipoEvento(?string $value): string
+    {
+        return self::tipoEventoOptions()[$value] ?? '—';
     }
 
     public static function form(Form $form): Form
@@ -365,13 +495,7 @@ class PrenotazioneResource extends Resource
                     Forms\Components\Select::make('tipo_evento')
                         ->label('Tipo evento')
                         ->required()
-                        ->options([
-                            'fiera' => 'Fiera',
-                            'manifestazione_cai' => 'Manifestazione CAI',
-                            'evento_promozionale' => 'Evento promozionale',
-                            'corso' => 'Corso',
-                            'altro' => 'Altro',
-                        ]),
+                        ->options(self::tipoEventoOptions()),
 
                     Forms\Components\Textarea::make('descrizione_evento')
                         ->label('Descrizione')
@@ -404,50 +528,40 @@ class PrenotazioneResource extends Resource
                         Forms\Components\DatePicker::make('data_ritiro')
                             ->label('Data ritiro torre')
                             ->native(false)
-                            ->displayFormat('d/m/Y'),
-
-                        Forms\Components\TextInput::make('luogo_ritiro')
-                            ->label('Luogo ritiro')
-                            ->maxLength(255),
+                            ->displayFormat('d/m/Y')
+                            ->rules(fn (Forms\Get $get): array => [
+                                new DataRitiroEntroInizioPrenotazione(
+                                    dataInizioPrenotazione: (string) ($get('data_inizio_prenotazione') ?? ''),
+                                ),
+                            ]),
 
                         Forms\Components\DatePicker::make('data_riconsegna')
                             ->label('Data riconsegna torre')
                             ->native(false)
                             ->displayFormat('d/m/Y'),
 
-                        Forms\Components\TextInput::make('luogo_riconsegna')
-                            ->label('Luogo riconsegna')
-                            ->maxLength(255),
-                    ]),
-
-                    Forms\Components\Grid::make(2)->schema([
-                        Forms\Components\TextInput::make('azienda_trasporto')
-                            ->label('Azienda di trasporto')
-                            ->default('Montagna Servizi')
-                            ->maxLength(255),
-
                         Forms\Components\TextInput::make('targa_autoveicolo')
                             ->label('Targa autoveicolo')
                             ->maxLength(20),
+
+                        Forms\Components\TextInput::make('nome_conducente')
+                            ->label('Nome conducente')
+                            ->required()
+                            ->maxLength(255),
                     ]),
 
-                    Forms\Components\Radio::make('tipo_mezzo')
-                        ->label('Tipo mezzo')
-                        ->options(collect(TipoMezzo::cases())->mapWithKeys(
-                            fn (TipoMezzo $t) => [$t->value => $t->label()]
-                        ))
-                        ->default(TipoMezzo::Aziendale->value)
-                        ->required()
+                    Forms\Components\Checkbox::make('patente_be_confermata')
+                        ->label('Dichiaro, sotto la mia responsabilità, di essere in possesso di patente di guida di categoria B+E (o superiore), idonea al traino del rimorchio della torre di arrampicata, e che quanto dichiarato corrisponde al vero.')
                         ->live()
-                        ->inline(),
+                        ->dehydrated(false)
+                        ->rules(['accepted'])
+                        ->validationMessages([
+                            'accepted' => 'Devi confermare il possesso della patente B+E per proseguire.',
+                        ])
+                        ->afterStateHydrated(fn (Forms\Components\Checkbox $component, ?Prenotazione $record) => $component->state(filled($record?->patente_be_dichiarata_at)))
+                        ->afterStateUpdated(fn (?bool $state, Forms\Set $set) => $set('patente_be_dichiarata_at', $state ? now() : null)),
 
-                    Forms\Components\Select::make('categoria_patente_privato')
-                        ->label('Categoria patente')
-                        ->options(collect(CategoriaPatente::cases())->mapWithKeys(
-                            fn (CategoriaPatente $c) => [$c->value => $c->label()]
-                        ))
-                        ->visible(fn (Forms\Get $get): bool => $get('tipo_mezzo') === TipoMezzo::Privato->value)
-                        ->required(fn (Forms\Get $get): bool => $get('tipo_mezzo') === TipoMezzo::Privato->value),
+                    Forms\Components\Hidden::make('patente_be_dichiarata_at'),
                 ]),
 
             Forms\Components\Section::make('Responsabile in loco')
@@ -485,42 +599,155 @@ class PrenotazioneResource extends Resource
                     ]),
                 ]),
 
-            Forms\Components\Section::make('Allegati')
+            Forms\Components\Grid::make(['default' => 1, 'lg' => 3])
                 ->schema([
-                    SpatieMediaLibraryFileUpload::make('delibera_consiglio')
-                        ->label('Delibera del Consiglio Direttivo')
-                        ->helperText('Obbligatoria per inviare la richiesta al GR.')
-                        ->collection('delibera_consiglio')
-                        ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
-                        ->maxSize(10240),
+                    Forms\Components\Group::make([
+                        Forms\Components\Section::make('Allegati')
+                            ->description('La delibera del consiglio è obbligatoria per inviare la richiesta.')
+                            ->schema([
+                                self::allegatoField(
+                                    name: 'delibera_consiglio',
+                                    collection: 'delibera_consiglio',
+                                    titolo: 'Delibera del Consiglio Direttivo',
+                                    obbligatorio: true,
+                                    sottotitoloMancante: 'Non ancora caricata — obbligatoria per l\'invio al GR',
+                                    iconaMancante: 'heroicon-o-exclamation-triangle',
+                                ),
+                                self::allegatoField(
+                                    name: 'autorizzazione_suolo_pubblico',
+                                    collection: 'autorizzazione_suolo_pubblico',
+                                    titolo: 'Autorizzazione suolo pubblico',
+                                    obbligatorio: false,
+                                    sottotitoloMancante: 'Facoltativa — richiesta se l\'evento occupa suolo pubblico',
+                                    iconaMancante: 'heroicon-o-document-plus',
+                                ),
+                                self::allegatoField(
+                                    name: 'autorizzazione_ztl',
+                                    collection: 'autorizzazione_ztl',
+                                    titolo: 'Autorizzazione ZTL',
+                                    obbligatorio: false,
+                                    sottotitoloMancante: 'Facoltativa — solo se l\'evento è in zona a traffico limitato',
+                                    iconaMancante: 'heroicon-o-document-plus',
+                                ),
+                                self::allegatoField(
+                                    name: 'patente_responsabile',
+                                    collection: 'patente_responsabile',
+                                    titolo: 'Patente del responsabile',
+                                    obbligatorio: false,
+                                    sottotitoloMancante: 'Richiesta se il trasporto avviene con mezzo privato',
+                                    iconaMancante: 'heroicon-o-identification',
+                                ),
+                                self::allegatoField(
+                                    name: 'altri',
+                                    collection: 'altri',
+                                    titolo: 'Altri allegati',
+                                    obbligatorio: false,
+                                    sottotitoloMancante: 'Documenti aggiuntivi utili alla valutazione',
+                                    iconaMancante: 'heroicon-o-paper-clip',
+                                    multiple: true,
+                                ),
+                            ])
+                            ->collapsible(),
+                    ])->columnSpan(['lg' => 2]),
 
-                    SpatieMediaLibraryFileUpload::make('autorizzazione_suolo_pubblico')
-                        ->label('Autorizzazione suolo pubblico')
-                        ->collection('autorizzazione_suolo_pubblico')
-                        ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
-                        ->maxSize(10240),
-
-                    SpatieMediaLibraryFileUpload::make('autorizzazione_ztl')
-                        ->label('Autorizzazione ZTL')
-                        ->collection('autorizzazione_ztl')
-                        ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
-                        ->maxSize(10240),
-
-                    SpatieMediaLibraryFileUpload::make('patente_responsabile')
-                        ->label('Patente del responsabile')
-                        ->collection('patente_responsabile')
-                        ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
-                        ->maxSize(10240),
-
-                    SpatieMediaLibraryFileUpload::make('altri')
-                        ->label('Altri documenti')
-                        ->collection('altri')
-                        ->multiple()
-                        ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
-                        ->maxSize(10240),
-                ])
-                ->collapsible(),
+                    Forms\Components\Group::make([
+                        self::azioneInvioSection(),
+                        self::azioneEliminaSection(),
+                    ])->columnSpan(['lg' => 1]),
+                ]),
         ]);
+    }
+
+    private static function allegatoField(
+        string $name,
+        string $collection,
+        string $titolo,
+        bool $obbligatorio,
+        string $sottotitoloMancante,
+        string $iconaMancante,
+        bool $multiple = false,
+    ): SpatieMediaLibraryFileUpload {
+        return SpatieMediaLibraryFileUpload::make($name)
+            ->hiddenLabel()
+            ->collection($collection)
+            ->multiple($multiple)
+            ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
+            ->maxSize(10240)
+            ->view('filament.sezione.forms.components.allegato-file-upload')
+            ->viewData([
+                'titolo' => $titolo,
+                'obbligatorio' => $obbligatorio,
+                'sottotitoloMancante' => $sottotitoloMancante,
+                'iconaMancante' => $iconaMancante,
+            ]);
+    }
+
+    private static function azioneInvioSection(): Forms\Components\Section
+    {
+        return Forms\Components\Section::make('Invio al Gruppo Regionale')
+            ->schema([
+                Forms\Components\Placeholder::make('invio_hint')
+                    ->hiddenLabel()
+                    ->content(fn (?Prenotazione $record): HtmlString => new HtmlString(
+                        view('filament.sezione.forms.components.azione-invio-hint', [
+                            'bloccato' => ! ($record?->hasMedia('delibera_consiglio') ?? false),
+                        ])->render()
+                    )),
+
+                Forms\Components\Actions::make([
+                    Forms\Components\Actions\Action::make('invia_richiesta')
+                        ->label('Invia richiesta al GR')
+                        ->icon('heroicon-o-paper-airplane')
+                        ->color('success')
+                        ->disabled(fn (?Prenotazione $record): bool => ! ($record?->hasMedia('delibera_consiglio') ?? false))
+                        ->requiresConfirmation()
+                        ->modalHeading('Invia richiesta al GR')
+                        ->modalDescription('Confermi l\'invio della richiesta? Dopo l\'invio non potrai più modificare la prenotazione.')
+                        ->action(function (?Prenotazione $record, Forms\Components\Actions\Action $action): void {
+                            if ($record === null) {
+                                return;
+                            }
+
+                            app(PrenotazioneStateMachine::class)->inviaRichiesta($record, auth()->user());
+
+                            Notification::make()
+                                ->title('Richiesta inviata')
+                                ->body('La richiesta è stata inviata al GR Lombardia.')
+                                ->success()
+                                ->send();
+
+                            $action->redirect(PrenotazioneResource::getUrl('view', ['record' => $record]));
+                        }),
+                ])->fullWidth(),
+            ]);
+    }
+
+    private static function azioneEliminaSection(): Forms\Components\Section
+    {
+        return Forms\Components\Section::make('Zona pericolosa')
+            ->description('Puoi eliminare questa richiesta solo finché è in Bozza. L\'operazione non è reversibile.')
+            ->visible(fn (?Prenotazione $record): bool => $record?->status === PrenotazioneStatus::Bozza)
+            ->extraAttributes(['style' => 'border-color:#E7B7B0'])
+            ->schema([
+                Forms\Components\Actions::make([
+                    Forms\Components\Actions\Action::make('elimina_bozza')
+                        ->label('Elimina bozza')
+                        ->icon('heroicon-o-trash')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->action(function (?Prenotazione $record, Forms\Components\Actions\Action $action): void {
+                            if ($record === null) {
+                                return;
+                            }
+
+                            $record->delete();
+
+                            Notification::make()->title('Bozza eliminata')->success()->send();
+
+                            $action->redirect(PrenotazioneResource::getUrl('index'));
+                        }),
+                ])->fullWidth(),
+            ]);
     }
 
     public static function table(Table $table): Table
@@ -530,39 +757,33 @@ class PrenotazioneResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('nome_evento')
                     ->label('Evento')
+                    ->weight('bold')
                     ->searchable()
-                    ->limit(40),
+                    ->limit(40)
+                    ->description(fn (Prenotazione $record): string => collect([
+                        self::labelTipoEvento($record->tipo_evento),
+                        $record->indirizzo_evento,
+                    ])->filter()->implode(' · ')),
+
+                Tables\Columns\TextColumn::make('periodo')
+                    ->label('Periodo')
+                    ->getStateUsing(fn (Prenotazione $record): string => self::formattaPeriodo(
+                        $record->data_inizio_prenotazione->toDateString(),
+                        $record->data_fine_prenotazione->toDateString(),
+                    ))
+                    ->sortable(query: fn (Builder $query, string $direction): Builder => $query->orderBy('data_inizio_prenotazione', $direction)),
 
                 Tables\Columns\TextColumn::make('torre.nome')
                     ->label('Torre')
                     ->badge()
-                    ->color(fn (mixed $state, Prenotazione $record): string => match ($record->torre_id) {
-                        1 => 'info',
-                        2 => 'warning',
-                        default => 'gray',
-                    })
-                    ->default('—'),
-
-                Tables\Columns\TextColumn::make('data_inizio_prenotazione')
-                    ->label('Da')
-                    ->date('d/m/Y')
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('data_fine_prenotazione')
-                    ->label('A')
-                    ->date('d/m/Y')
-                    ->sortable(),
+                    ->color(fn (Prenotazione $record): array => Color::hex(Torre::coloreHexPer($record->torre)))
+                    ->default('Da assegnare'),
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('Stato')
                     ->badge()
                     ->formatStateUsing(fn (PrenotazioneStatus $state): string => $state->label())
                     ->color(fn (PrenotazioneStatus $state): string => $state->color()),
-
-                Tables\Columns\IconColumn::make('has_delibera')
-                    ->label('Delibera')
-                    ->boolean()
-                    ->getStateUsing(fn (Prenotazione $record): bool => $record->hasMedia('delibera_consiglio')),
             ])
             ->filters([
                 SelectFilter::make('status')

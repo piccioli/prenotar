@@ -1,0 +1,54 @@
+/* Montagna Servizi — shell mobile condivisa (US-002): spazio riservato nel contenuto
+   perché la bottom tab bar fissa (.fi-mobile-bottom-nav) non copra l'ultima porzione
+   di pagina. Attivo solo sotto 768px, coerente col breakpoint md della bottom nav stessa. */
+@media (max-width: 767px) {
+  .fi-main {
+    padding-bottom: 4.5rem;
+  }
+
+  /* Wizard prenotazione (US-007): la CTA fissa del wizard sostituisce la bottom nav
+     globale sulla pagina di creazione, le due barre fisse in fondo allo schermo non
+     possono coesistere. Selettore scoped alle 2 classi che il template della pagina di
+     creazione già applica (vedi create-prenotazione.blade.php), non un cambio globale. */
+  .fi-resource-prenotaziones.fi-resource-create-record-page .fi-mobile-bottom-nav {
+    display: none;
+  }
+
+  .fi-resource-prenotaziones.fi-resource-create-record-page .fi-main {
+    padding-bottom: 7.5rem;
+  }
+
+  /* 'Le mie prenotazioni' mobile (US-013): le tab Attive/Archivio diventano un
+     selettore a pillole segmentate come nel mockup 'Mobile Sezione Lista'.
+     Restyle CSS-only sulle classi stabili di Filament (fi-tabs/fi-tabs-item/
+     fi-active/fi-badge): getTabs() e la sua logica di conteggio (US-012)
+     restano invariati, qui si cambia solo l'aspetto. */
+  .fi-resource-prenotaziones.fi-resource-list-records-page .fi-tabs {
+    gap: 4px;
+    border-radius: 999px;
+    border: 1px solid var(--stone-200);
+    background: var(--stone-100);
+    padding: 4px;
+    box-shadow: none;
+  }
+
+  .fi-resource-prenotaziones.fi-resource-list-records-page .fi-tabs-item {
+    flex: 1;
+    min-height: 44px;
+    border-radius: 999px;
+  }
+
+  .fi-resource-prenotaziones.fi-resource-list-records-page .fi-tabs-item.fi-active {
+    background: var(--surface-brand);
+  }
+
+  .fi-resource-prenotaziones.fi-resource-list-records-page .fi-tabs-item.fi-active .fi-tabs-item-label {
+    color: #FFFFFF;
+  }
+
+  .fi-resource-prenotaziones.fi-resource-list-records-page .fi-tabs-item.fi-active .fi-badge {
+    background: transparent;
+    box-shadow: none;
+    color: #FFFFFF;
+  }
+}

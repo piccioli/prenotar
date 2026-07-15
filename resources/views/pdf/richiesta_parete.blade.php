@@ -54,25 +54,29 @@
 <h2>Logistica trasporto</h2>
 <table class="data">
     <tr>
-        <td class="label">Azienda trasporto</td>
-        <td class="value">{{ $p->azienda_trasporto ?? '—' }}</td>
+        <td class="label">Conducente</td>
+        <td class="value">{{ $p->nome_conducente ?? '—' }}</td>
     </tr>
     <tr>
         <td class="label">Targa autoveicolo</td>
         <td class="value">{{ $p->targa_autoveicolo ?? '—' }}</td>
     </tr>
     <tr>
-        <td class="label">Luogo e data ritiro</td>
-        <td class="value">
-            {{ $p->luogo_ritiro ?? '—' }}
-            @if($p->data_ritiro) — {{ $p->data_ritiro->format('d/m/Y') }} @endif
-        </td>
+        <td class="label">Data ritiro</td>
+        <td class="value">{{ $p->data_ritiro?->format('d/m/Y') ?? '—' }}</td>
     </tr>
     <tr>
-        <td class="label">Luogo e data riconsegna</td>
+        <td class="label">Data riconsegna</td>
+        <td class="value">{{ $p->data_riconsegna?->format('d/m/Y') ?? '—' }}</td>
+    </tr>
+    <tr>
+        <td class="label">Patente B+E</td>
         <td class="value">
-            {{ $p->luogo_riconsegna ?? '—' }}
-            @if($p->data_riconsegna) — {{ $p->data_riconsegna->format('d/m/Y') }} @endif
+            @if($p->patente_be_dichiarata_at)
+                Dichiarata il {{ $p->patente_be_dichiarata_at->format('d/m/Y H:i') }}
+            @else
+                Non dichiarata
+            @endif
         </td>
     </tr>
 </table>

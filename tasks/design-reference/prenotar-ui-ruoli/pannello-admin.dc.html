@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="_ds/montagna-servizi-design-system-5cc04e95-0654-4ed9-8c55-821b392c3598/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/montagna-servizi-design-system-5cc04e95-0654-4ed9-8c55-821b392c3598/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/montagna-servizi-design-system-5cc04e95-0654-4ed9-8c55-821b392c3598/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/montagna-servizi-design-system-5cc04e95-0654-4ed9-8c55-821b392c3598/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/montagna-servizi-design-system-5cc04e95-0654-4ed9-8c55-821b392c3598/tokens/effects.css">
+  <link rel="stylesheet" href="_ds/montagna-servizi-design-system-5cc04e95-0654-4ed9-8c55-821b392c3598/tokens/base.css">
+  <link rel="stylesheet" href="_ds/montagna-servizi-design-system-5cc04e95-0654-4ed9-8c55-821b392c3598/styles.css">
+  <script src="_ds/montagna-servizi-design-system-5cc04e95-0654-4ed9-8c55-821b392c3598/_ds_bundle.js"></script>
+  <script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js"></script>
+  <style>
+    body { margin: 0; background: #E4E8E5; }
+    a { color: var(--larch-700); }
+    a:hover { color: #7A4614; }
+  </style>
+</helmet>
+
+<section style="padding:48px 56px 96px 56px;font-family:var(--font-sans);display:flex;flex-direction:column;gap:36px">
+
+  <div style="display:flex;flex-direction:column;gap:14px;max-width:1100px">
+    <div style="font-size:12px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--larch-700)">Prenotar · CAI GR Lombardia</div>
+    <h1 style="margin:0;font-size:34px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Pannello Admin <span style="color:var(--stone-500);font-weight:600">— /admin</span></h1>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:var(--stone-700);max-width:820px">Il pannello tecnico, in <strong>larice</strong>. Densità un po' più alta ma stessa leggibilità; le azioni pericolose (impersona, force stato, eliminazione definitiva) sono sempre visivamente distinte da quelle ordinarie.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+      <span style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:#FFFFFF;border:1px solid var(--stone-300);font-size:13px;font-weight:700;color:var(--stone-800)"><span style="width:12px;height:12px;border-radius:4px;background:var(--larch-600)"></span>Larice — pannello Admin</span>
+      <span style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:#FFFFFF;border:1px solid var(--stone-300);font-size:13px;font-weight:700;color:var(--stone-800)"><span style="width:12px;height:12px;border-radius:4px;background:var(--danger-600)"></span>Rosso — solo azioni distruttive</span>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:56px;align-items:flex-start">
+
+  <!-- ============ 1a · DASHBOARD ADMIN ============ -->
+  <div id="1a" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="#1a" style="display:inline-flex;padding:5px 12px;border-radius:999px;background:#5C3A12;color:#FFFFFF;font-size:12px;font-weight:800;letter-spacing:0.06em;text-decoration:none">1A</a>
+      <div>
+        <div style="font-weight:800;font-size:16px;color:var(--stone-900)">Dashboard — stato di sistema</div>
+        <div style="font-size:13px;color:var(--stone-600)">Utenti attivi, ultimo import Excel, errori recenti, link a Horizon e test email</div>
+      </div>
+    </div>
+    <div data-screen-label="Admin Dashboard" style="width:1440px;background:#FFFFFF;border:1px solid var(--stone-300);border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden;display:flex;min-height:900px">
+      <aside style="width:248px;flex-shrink:0;background:#3D2A10;display:flex;flex-direction:column;padding:20px 14px 16px 14px;gap:4px">
+        <div style="display:flex;align-items:center;gap:12px;padding:6px 10px 18px 10px;border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:14px">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center"><i data-lucide="mountain" stroke-width="1.75" style="width:22px;height:22px;color:#FFFFFF"></i></div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="font-weight:800;font-size:16px;color:#FFFFFF;letter-spacing:-0.02em;line-height:1">Prenotar</div>
+            <div style="font-size:10.5px;font-weight:700;letter-spacing:0.12em;color:#E0963B;text-transform:uppercase">Pannello Admin</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;background:rgba(255,255,255,0.16);color:#FFFFFF;font-size:14px;font-weight:700"><i data-lucide="house" stroke-width="1.75" style="width:18px;height:18px"></i>Dashboard</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="users" stroke-width="1.75" style="width:18px;height:18px"></i>Utenti</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="tower-control" stroke-width="1.75" style="width:18px;height:18px"></i>Torri</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="clipboard-list" stroke-width="1.75" style="width:18px;height:18px"></i>Prenotazioni</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="file-spreadsheet" stroke-width="1.75" style="width:18px;height:18px"></i>Import Excel</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="scroll-text" stroke-width="1.75" style="width:18px;height:18px"></i>Audit log</div>
+        <div style="height:1px;background:rgba(255,255,255,0.12);margin:10px 6px"></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="mail-check" stroke-width="1.75" style="width:18px;height:18px"></i>Test email</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="activity" stroke-width="1.75" style="width:18px;height:18px"></i>Horizon <i data-lucide="external-link" stroke-width="1.75" style="width:14px;height:14px;margin-left:auto;color:#C77E2A"></i></div>
+        <div style="flex:1"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 10px 4px 10px;border-top:1px solid rgba(255,255,255,0.12)">
+          <div style="width:36px;height:36px;border-radius:999px;background:var(--larch-600);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF">DT</div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="font-size:13.5px;font-weight:700;color:#FFFFFF;line-height:1.2">Davide Tremolada</div>
+            <div style="font-size:12px;color:#E0963B">Amministratore</div>
+          </div>
+        </div>
+      </aside>
+      <div style="flex:1;background:var(--stone-50);display:flex;flex-direction:column">
+        <div style="height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 36px;border-bottom:1px solid var(--stone-200);background:#FFFFFF">
+          <div style="font-size:14px;font-weight:700;color:var(--stone-800)">Dashboard</div>
+          <div style="display:flex;align-items:center;gap:20px">
+            <span style="display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:var(--green-100);color:var(--green-800);font-size:12px;font-weight:800"><span style="width:8px;height:8px;border-radius:999px;background:var(--green-600)"></span>Sistema operativo</span>
+            <i data-lucide="bell" stroke-width="1.75" style="width:19px;height:19px;color:var(--stone-500)"></i>
+          </div>
+        </div>
+        <div style="padding:36px;display:flex;flex-direction:column;gap:24px">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <h2 style="margin:0;font-size:26px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Stato del sistema</h2>
+            <p style="margin:0;font-size:15px;color:var(--stone-600)">Panoramica tecnica della piattaforma.</p>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:18px">
+            <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)"><i data-lucide="users" stroke-width="1.75" style="width:15px;height:15px"></i>Utenti attivi</div>
+              <div style="font-size:28px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900);line-height:1">218 <span style="font-size:14px;font-weight:600;color:var(--stone-500)">/ 231</span></div>
+              <div style="font-size:12.5px;color:var(--stone-500)">13 disattivati</div>
+            </div>
+            <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)"><i data-lucide="file-spreadsheet" stroke-width="1.75" style="width:15px;height:15px"></i>Ultimo import Excel</div>
+              <div style="font-size:19px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900);line-height:1.2">8 lug 2026, 06:00</div>
+              <div style="font-size:12.5px;color:var(--green-700);font-weight:700;display:flex;align-items:center;gap:5px"><i data-lucide="circle-check" stroke-width="1.75" style="width:13px;height:13px"></i>229 righe, 0 errori</div>
+            </div>
+            <div style="background:#FFFFFF;border:1.5px solid var(--larch-200);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--larch-700)"><i data-lucide="triangle-alert" stroke-width="1.75" style="width:15px;height:15px"></i>Errori recenti (7 gg)</div>
+              <div style="font-size:28px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900);line-height:1">2</div>
+              <div style="font-size:12.5px;color:var(--larch-700);font-weight:700;text-decoration:underline;cursor:pointer">Vedi nel log →</div>
+            </div>
+            <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)"><i data-lucide="activity" stroke-width="1.75" style="width:15px;height:15px"></i>Coda job (Horizon)</div>
+              <div style="font-size:28px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900);line-height:1">0 <span style="font-size:14px;font-weight:600;color:var(--stone-500)">in attesa</span></div>
+              <div style="font-size:12.5px;color:var(--larch-700);font-weight:700;text-decoration:underline;cursor:pointer">Apri Horizon ↗</div>
+            </div>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:20px;overflow:hidden">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 26px;border-bottom:1px solid var(--stone-200)">
+              <div style="font-size:16px;font-weight:800;color:var(--stone-900)">Ultimi eventi di sistema</div>
+              <span style="font-size:13.5px;font-weight:700;color:var(--larch-700);text-decoration:underline;cursor:pointer">Audit log completo</span>
+            </div>
+            <div style="display:grid;grid-template-columns:190px 1fr 220px;gap:16px;padding:14px 26px;border-bottom:1px solid var(--stone-100);align-items:center">
+              <span style="font-size:13px;color:var(--stone-500)">oggi, 08:12</span>
+              <span style="font-size:14px;color:var(--stone-800)"><strong>presidente@caibergamo.it</strong> ha inviato la richiesta "Corso di arrampicata giovanile"</span>
+              <span style="font-size:12.5px;font-weight:800;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.06em">prenotazione.inviata</span>
+            </div>
+            <div style="display:grid;grid-template-columns:190px 1fr 220px;gap:16px;padding:14px 26px;border-bottom:1px solid var(--stone-100);align-items:center">
+              <span style="font-size:13px;color:var(--stone-500)">ieri, 17:44</span>
+              <span style="font-size:14px;color:var(--stone-800)"><strong>admin</strong> ha impersonato <strong>presidente@cailecco.it</strong> per 12 minuti</span>
+              <span style="display:inline-flex;width:fit-content;padding:3px 10px;border-radius:999px;background:var(--larch-100);color:var(--larch-700);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em">impersonate</span>
+            </div>
+            <div style="display:grid;grid-template-columns:190px 1fr 220px;gap:16px;padding:14px 26px;align-items:center">
+              <span style="font-size:13px;color:var(--stone-500)">ieri, 06:00</span>
+              <span style="font-size:14px;color:var(--stone-800)">Import Excel automatico completato — 229 righe, 3 aggiornate</span>
+              <span style="font-size:12.5px;font-weight:800;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.06em">import.completato</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 1b · GESTIONE UTENTI ============ -->
+  <div id="1b" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="#1b" style="display:inline-flex;padding:5px 12px;border-radius:999px;background:#5C3A12;color:#FFFFFF;font-size:12px;font-weight:800;letter-spacing:0.06em;text-decoration:none">1B</a>
+      <div>
+        <div style="font-weight:800;font-size:16px;color:var(--stone-900)">Gestione utenti</div>
+        <div style="font-size:13px;color:var(--stone-600)">Impersona come azione "pericolosa" ben distinta; S.SEZ. etichettata (BUG-05)</div>
+      </div>
+    </div>
+    <div data-screen-label="Admin Utenti" style="width:1440px;background:#FFFFFF;border:1px solid var(--stone-300);border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden;display:flex;min-height:900px">
+      <aside style="width:248px;flex-shrink:0;background:#3D2A10;display:flex;flex-direction:column;padding:20px 14px 16px 14px;gap:4px">
+        <div style="display:flex;align-items:center;gap:12px;padding:6px 10px 18px 10px;border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:14px">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center"><i data-lucide="mountain" stroke-width="1.75" style="width:22px;height:22px;color:#FFFFFF"></i></div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="font-weight:800;font-size:16px;color:#FFFFFF;letter-spacing:-0.02em;line-height:1">Prenotar</div>
+            <div style="font-size:10.5px;font-weight:700;letter-spacing:0.12em;color:#E0963B;text-transform:uppercase">Pannello Admin</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="house" stroke-width="1.75" style="width:18px;height:18px"></i>Dashboard</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;background:rgba(255,255,255,0.16);color:#FFFFFF;font-size:14px;font-weight:700"><i data-lucide="users" stroke-width="1.75" style="width:18px;height:18px"></i>Utenti</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="tower-control" stroke-width="1.75" style="width:18px;height:18px"></i>Torri</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="clipboard-list" stroke-width="1.75" style="width:18px;height:18px"></i>Prenotazioni</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="file-spreadsheet" stroke-width="1.75" style="width:18px;height:18px"></i>Import Excel</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="scroll-text" stroke-width="1.75" style="width:18px;height:18px"></i>Audit log</div>
+        <div style="height:1px;background:rgba(255,255,255,0.12);margin:10px 6px"></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="mail-check" stroke-width="1.75" style="width:18px;height:18px"></i>Test email</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="activity" stroke-width="1.75" style="width:18px;height:18px"></i>Horizon <i data-lucide="external-link" stroke-width="1.75" style="width:14px;height:14px;margin-left:auto;color:#C77E2A"></i></div>
+        <div style="flex:1"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 10px 4px 10px;border-top:1px solid rgba(255,255,255,0.12)">
+          <div style="width:36px;height:36px;border-radius:999px;background:var(--larch-600);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF">DT</div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="font-size:13.5px;font-weight:700;color:#FFFFFF;line-height:1.2">Davide Tremolada</div>
+            <div style="font-size:12px;color:#E0963B">Amministratore</div>
+          </div>
+        </div>
+      </aside>
+      <div style="flex:1;background:var(--stone-50);display:flex;flex-direction:column">
+        <div style="height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 36px;border-bottom:1px solid var(--stone-200);background:#FFFFFF">
+          <div style="font-size:14px;font-weight:700;color:var(--stone-800)">Utenti</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--stone-600)"><i data-lucide="circle-help" stroke-width="1.75" style="width:18px;height:18px"></i>Guida</div>
+        </div>
+        <div style="padding:36px;display:flex;flex-direction:column;gap:20px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:20px">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <h2 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Utenti</h2>
+              <p style="margin:0;font-size:14px;color:var(--stone-600)">231 account: 152 Sezioni, 77 Sottosezioni, 1 GR, 1 admin.</p>
+            </div>
+            <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="primary" size="md" hint-size="auto,44px">Nuovo utente</x-import>
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid var(--stone-300);border-radius:10px;background:#FFFFFF;font-size:14px;color:var(--stone-500);min-width:300px"><i data-lucide="search" stroke-width="1.75" style="width:16px;height:16px"></i>Cerca nome, email o sezione…</div>
+            <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px solid var(--stone-300);border-radius:10px;background:#FFFFFF;font-size:14px;color:var(--stone-800)">Ruolo: <strong>Tutti</strong><i data-lucide="chevron-down" stroke-width="1.75" style="width:16px;height:16px;color:var(--stone-500)"></i></div>
+            <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px solid var(--stone-300);border-radius:10px;background:#FFFFFF;font-size:14px;color:var(--stone-800)">Stato: <strong>Tutti</strong><i data-lucide="chevron-down" stroke-width="1.75" style="width:16px;height:16px;color:var(--stone-500)"></i></div>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:16px;overflow:hidden">
+            <div style="display:grid;grid-template-columns:1.8fr 2fr 1.1fr 1.8fr 1fr 210px;gap:14px;padding:13px 24px;background:var(--stone-100);border-bottom:1px solid var(--stone-200)">
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Nome</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Email</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Ruolo</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Appartenenza</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Stato</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500);text-align:right">Azioni</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1.8fr 2fr 1.1fr 1.8fr 1fr 210px;gap:14px;padding:15px 24px;border-bottom:1px solid var(--stone-100);align-items:center">
+              <div style="font-size:14.5px;font-weight:700;color:var(--stone-900)">Anna Colombo</div>
+              <div style="font-size:13.5px;color:var(--stone-600)">presidente@caibergamo.it</div>
+              <div><x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Badge" tone="info" variant="outline" hint-size="auto,24px">Sezione</x-import></div>
+              <div style="font-size:13.5px;color:var(--stone-700)">Sezione di Bergamo</div>
+              <div><span style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--green-700)"><span style="width:8px;height:8px;border-radius:999px;background:var(--green-600)"></span>Attivo</span></div>
+              <div style="display:flex;gap:8px;justify-content:flex-end">
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border:1.5px solid var(--larch-600);border-radius:999px;color:var(--larch-700);font-size:12.5px;font-weight:800;cursor:pointer"><i data-lucide="venetian-mask" stroke-width="1.75" style="width:14px;height:14px"></i>Impersona</span>
+                <span style="width:32px;height:32px;border:1px solid var(--stone-300);border-radius:999px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="key-round" stroke-width="1.75" style="width:15px;height:15px;color:var(--stone-600)"></i></span>
+                <span style="width:32px;height:32px;border:1px solid var(--stone-300);border-radius:999px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="user-round-x" stroke-width="1.75" style="width:15px;height:15px;color:var(--stone-600)"></i></span>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1.8fr 2fr 1.1fr 1.8fr 1fr 210px;gap:14px;padding:15px 24px;border-bottom:1px solid var(--stone-100);align-items:center">
+              <div style="font-size:14.5px;font-weight:700;color:var(--stone-900)">Paolo Invernizzi</div>
+              <div style="font-size:13.5px;color:var(--stone-600)">valmadrera@cailecco.it</div>
+              <div><x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Badge" tone="info" variant="outline" hint-size="auto,24px">Sottosezione</x-import></div>
+              <div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:13.5px;font-weight:700;color:var(--stone-800)">S.SEZ. Valmadrera</span><span style="font-size:12px;color:var(--stone-500)">sez. rif. Lecco</span></div>
+              <div><span style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--green-700)"><span style="width:8px;height:8px;border-radius:999px;background:var(--green-600)"></span>Attivo</span></div>
+              <div style="display:flex;gap:8px;justify-content:flex-end">
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border:1.5px solid var(--larch-600);border-radius:999px;color:var(--larch-700);font-size:12.5px;font-weight:800;cursor:pointer"><i data-lucide="venetian-mask" stroke-width="1.75" style="width:14px;height:14px"></i>Impersona</span>
+                <span style="width:32px;height:32px;border:1px solid var(--stone-300);border-radius:999px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="key-round" stroke-width="1.75" style="width:15px;height:15px;color:var(--stone-600)"></i></span>
+                <span style="width:32px;height:32px;border:1px solid var(--stone-300);border-radius:999px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="user-round-x" stroke-width="1.75" style="width:15px;height:15px;color:var(--stone-600)"></i></span>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1.8fr 2fr 1.1fr 1.8fr 1fr 210px;gap:14px;padding:15px 24px;border-bottom:1px solid var(--stone-100);align-items:center">
+              <div style="font-size:14.5px;font-weight:700;color:var(--stone-900)">Giacomo Meraviglia</div>
+              <div style="font-size:13.5px;color:var(--stone-600)">presidente@caigrlombardia.it</div>
+              <div><x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Badge" tone="brand" variant="outline" hint-size="auto,24px">GR Manager</x-import></div>
+              <div style="font-size:13.5px;color:var(--stone-700)">GR Lombardia</div>
+              <div><span style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--green-700)"><span style="width:8px;height:8px;border-radius:999px;background:var(--green-600)"></span>Attivo</span></div>
+              <div style="display:flex;gap:8px;justify-content:flex-end">
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border:1.5px solid var(--larch-600);border-radius:999px;color:var(--larch-700);font-size:12.5px;font-weight:800;cursor:pointer"><i data-lucide="venetian-mask" stroke-width="1.75" style="width:14px;height:14px"></i>Impersona</span>
+                <span style="width:32px;height:32px;border:1px solid var(--stone-300);border-radius:999px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="key-round" stroke-width="1.75" style="width:15px;height:15px;color:var(--stone-600)"></i></span>
+                <span style="width:32px;height:32px;border:1px solid var(--stone-300);border-radius:999px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="user-round-x" stroke-width="1.75" style="width:15px;height:15px;color:var(--stone-600)"></i></span>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1.8fr 2fr 1.1fr 1.8fr 1fr 210px;gap:14px;padding:15px 24px;align-items:center;background:var(--stone-50)">
+              <div style="font-size:14.5px;font-weight:700;color:var(--stone-500)">Franco Bianchi</div>
+              <div style="font-size:13.5px;color:var(--stone-500)">sondalo@caivaltellina.it</div>
+              <div><x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Badge" tone="neutral" variant="outline" hint-size="auto,24px">Sottosezione</x-import></div>
+              <div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:13.5px;font-weight:700;color:var(--stone-500)">S.SEZ. Sondalo</span><span style="font-size:12px;color:var(--stone-400)">sez. rif. Valtellinese</span></div>
+              <div><span style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--stone-500)"><span style="width:8px;height:8px;border-radius:999px;background:var(--stone-400)"></span>Disattivato</span></div>
+              <div style="display:flex;gap:8px;justify-content:flex-end;align-items:center">
+                <span style="font-size:12.5px;color:var(--stone-500);font-style:italic;margin-right:4px">"cambio presidente"</span>
+                <span style="width:32px;height:32px;border:1px solid var(--stone-300);border-radius:999px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="user-round-check" stroke-width="1.75" style="width:15px;height:15px;color:var(--green-600)"></i></span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--stone-500)"><i data-lucide="venetian-mask" stroke-width="1.75" style="width:15px;height:15px;color:var(--larch-700)"></i>L'impersonazione è tracciata in audit log con durata e motivo. La disattivazione richiede sempre una motivazione.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 1c · GESTIONE TORRI ============ -->
+  <div id="1c" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="#1c" style="display:inline-flex;padding:5px 12px;border-radius:999px;background:#5C3A12;color:#FFFFFF;font-size:12px;font-weight:800;letter-spacing:0.06em;text-decoration:none">1C</a>
+      <div>
+        <div style="font-weight:800;font-size:16px;color:var(--stone-900)">Gestione torri — CRUD</div>
+        <div style="font-size:13px;color:var(--stone-600)">Indirizzo di deposito in primo piano (BUG-08); PDF specifiche e manuale; colore torre fissato</div>
+      </div>
+    </div>
+    <div data-screen-label="Admin Torri" style="width:1440px;background:#FFFFFF;border:1px solid var(--stone-300);border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden;display:flex;min-height:900px">
+      <aside style="width:248px;flex-shrink:0;background:#3D2A10;display:flex;flex-direction:column;padding:20px 14px 16px 14px;gap:4px">
+        <div style="display:flex;align-items:center;gap:12px;padding:6px 10px 18px 10px;border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:14px">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center"><i data-lucide="mountain" stroke-width="1.75" style="width:22px;height:22px;color:#FFFFFF"></i></div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="font-weight:800;font-size:16px;color:#FFFFFF;letter-spacing:-0.02em;line-height:1">Prenotar</div>
+            <div style="font-size:10.5px;font-weight:700;letter-spacing:0.12em;color:#E0963B;text-transform:uppercase">Pannello Admin</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="house" stroke-width="1.75" style="width:18px;height:18px"></i>Dashboard</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="users" stroke-width="1.75" style="width:18px;height:18px"></i>Utenti</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;background:rgba(255,255,255,0.16);color:#FFFFFF;font-size:14px;font-weight:700"><i data-lucide="tower-control" stroke-width="1.75" style="width:18px;height:18px"></i>Torri</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="clipboard-list" stroke-width="1.75" style="width:18px;height:18px"></i>Prenotazioni</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="file-spreadsheet" stroke-width="1.75" style="width:18px;height:18px"></i>Import Excel</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="scroll-text" stroke-width="1.75" style="width:18px;height:18px"></i>Audit log</div>
+        <div style="height:1px;background:rgba(255,255,255,0.12);margin:10px 6px"></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="mail-check" stroke-width="1.75" style="width:18px;height:18px"></i>Test email</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="activity" stroke-width="1.75" style="width:18px;height:18px"></i>Horizon <i data-lucide="external-link" stroke-width="1.75" style="width:14px;height:14px;margin-left:auto;color:#C77E2A"></i></div>
+        <div style="flex:1"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 10px 4px 10px;border-top:1px solid rgba(255,255,255,0.12)">
+          <div style="width:36px;height:36px;border-radius:999px;background:var(--larch-600);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF">DT</div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="font-size:13.5px;font-weight:700;color:#FFFFFF;line-height:1.2">Davide Tremolada</div>
+            <div style="font-size:12px;color:#E0963B">Amministratore</div>
+          </div>
+        </div>
+      </aside>
+      <div style="flex:1;background:var(--stone-50);display:flex;flex-direction:column">
+        <div style="height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 36px;border-bottom:1px solid var(--stone-200);background:#FFFFFF">
+          <div style="font-size:14px;font-weight:700;color:var(--stone-800)">Torri</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--stone-600)"><i data-lucide="circle-help" stroke-width="1.75" style="width:18px;height:18px"></i>Guida</div>
+        </div>
+        <div style="padding:36px;display:flex;flex-direction:column;gap:22px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:20px">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <h2 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Torri di arrampicata</h2>
+              <p style="margin:0;font-size:14px;color:var(--stone-600)">Il colore assegnato qui identifica la torre in tutta l'app: calendario, badge, dettagli.</p>
+            </div>
+            <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="primary" size="md" hint-size="auto,44px">Nuova torre</x-import>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+            <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:20px;overflow:hidden;display:flex;flex-direction:column">
+              <div style="height:8px;background:var(--green-600)"></div>
+              <div style="padding:26px 28px;display:flex;flex-direction:column;gap:16px">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <div style="display:flex;align-items:center;gap:10px"><span style="width:12px;height:12px;border-radius:4px;background:var(--green-600)"></span><span style="font-size:19px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Torre 1 · CityWall 8m</span></div>
+                    <div style="font-size:13.5px;color:var(--stone-600);line-height:1.5">Torre mobile 8 metri, 4 linee di salita, rimorchio omologato.</div>
+                  </div>
+                  <span style="display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:var(--green-100);color:var(--green-800);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em">Attiva</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;background:var(--green-50);border:1.5px solid var(--green-200);border-radius:12px;padding:14px 16px">
+                  <i data-lucide="map-pin" stroke-width="1.75" style="width:20px;height:20px;color:var(--green-600);flex-shrink:0"></i>
+                  <div style="display:flex;flex-direction:column;gap:1px">
+                    <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--green-700)">Indirizzo di deposito</div>
+                    <div style="font-size:15px;font-weight:700;color:var(--stone-900)">Via delle Industrie 12, Zanica (BG)</div>
+                  </div>
+                </div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap">
+                  <span style="display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border:1px solid var(--stone-300);border-radius:999px;font-size:13px;font-weight:700;color:var(--stone-700)"><i data-lucide="file-text" stroke-width="1.75" style="width:15px;height:15px;color:var(--green-600)"></i>Specifiche tecniche.pdf</span>
+                  <span style="display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border:1px solid var(--stone-300);border-radius:999px;font-size:13px;font-weight:700;color:var(--stone-700)"><i data-lucide="book-open" stroke-width="1.75" style="width:15px;height:15px;color:var(--green-600)"></i>Manuale d'istruzioni.pdf</span>
+                  <span style="display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border:1px solid var(--stone-300);border-radius:999px;font-size:13px;font-weight:700;color:var(--stone-700)"><i data-lucide="image" stroke-width="1.75" style="width:15px;height:15px;color:var(--green-600)"></i>4 foto</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--stone-200);padding-top:16px">
+                  <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="outline" size="sm" hint-size="auto,34px">Modifica</x-import>
+                  <span style="font-size:13px;color:var(--stone-500)">12 prenotazioni nel 2026</span>
+                </div>
+              </div>
+            </div>
+            <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:20px;overflow:hidden;display:flex;flex-direction:column">
+              <div style="height:8px;background:var(--larch-600)"></div>
+              <div style="padding:26px 28px;display:flex;flex-direction:column;gap:16px">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <div style="display:flex;align-items:center;gap:10px"><span style="width:12px;height:12px;border-radius:4px;background:var(--larch-600)"></span><span style="font-size:19px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Torre 2 · CityWall 5m</span></div>
+                    <div style="font-size:13.5px;color:var(--stone-600);line-height:1.5">Torre mobile 5 metri, 3 linee di salita, adatta a eventi indoor.</div>
+                  </div>
+                  <span style="display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:var(--green-100);color:var(--green-800);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em">Attiva</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;background:var(--larch-100);border:1.5px solid var(--larch-200);border-radius:12px;padding:14px 16px">
+                  <i data-lucide="map-pin" stroke-width="1.75" style="width:20px;height:20px;color:var(--larch-700);flex-shrink:0"></i>
+                  <div style="display:flex;flex-direction:column;gap:1px">
+                    <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--larch-700)">Indirizzo di deposito</div>
+                    <div style="font-size:15px;font-weight:700;color:var(--stone-900)">Via Nazionale 88, Colico (LC)</div>
+                  </div>
+                </div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap">
+                  <span style="display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border:1px solid var(--stone-300);border-radius:999px;font-size:13px;font-weight:700;color:var(--stone-700)"><i data-lucide="file-text" stroke-width="1.75" style="width:15px;height:15px;color:var(--larch-600)"></i>Specifiche tecniche.pdf</span>
+                  <span style="display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border:1px solid var(--stone-300);border-radius:999px;font-size:13px;font-weight:700;color:var(--stone-700)"><i data-lucide="book-open" stroke-width="1.75" style="width:15px;height:15px;color:var(--larch-600)"></i>Manuale d'istruzioni.pdf</span>
+                  <span style="display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border:1px solid var(--stone-300);border-radius:999px;font-size:13px;font-weight:700;color:var(--stone-700)"><i data-lucide="image" stroke-width="1.75" style="width:15px;height:15px;color:var(--larch-600)"></i>2 foto</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--stone-200);padding-top:16px">
+                  <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="outline" size="sm" hint-size="auto,34px">Modifica</x-import>
+                  <span style="font-size:13px;color:var(--stone-500)">8 prenotazioni nel 2026</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 1d · PRENOTAZIONI (sola lettura + straordinarie) ============ -->
+  <div id="1d" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="#1d" style="display:inline-flex;padding:5px 12px;border-radius:999px;background:#5C3A12;color:#FFFFFF;font-size:12px;font-weight:800;letter-spacing:0.06em;text-decoration:none">1D</a>
+      <div>
+        <div style="font-weight:800;font-size:16px;color:var(--stone-900)">Prenotazioni — sola lettura + azioni straordinarie</div>
+        <div style="font-size:13px;color:var(--stone-600)">"Force stato" ed eliminazione definitiva relegate a un menu dedicato con conferma forte</div>
+      </div>
+    </div>
+    <div data-screen-label="Admin Prenotazioni" style="width:1440px;background:#FFFFFF;border:1px solid var(--stone-300);border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden;display:flex;min-height:900px">
+      <aside style="width:248px;flex-shrink:0;background:#3D2A10;display:flex;flex-direction:column;padding:20px 14px 16px 14px;gap:4px">
+        <div style="display:flex;align-items:center;gap:12px;padding:6px 10px 18px 10px;border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:14px">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center"><i data-lucide="mountain" stroke-width="1.75" style="width:22px;height:22px;color:#FFFFFF"></i></div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="font-weight:800;font-size:16px;color:#FFFFFF;letter-spacing:-0.02em;line-height:1">Prenotar</div>
+            <div style="font-size:10.5px;font-weight:700;letter-spacing:0.12em;color:#E0963B;text-transform:uppercase">Pannello Admin</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="house" stroke-width="1.75" style="width:18px;height:18px"></i>Dashboard</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="users" stroke-width="1.75" style="width:18px;height:18px"></i>Utenti</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="tower-control" stroke-width="1.75" style="width:18px;height:18px"></i>Torri</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;background:rgba(255,255,255,0.16);color:#FFFFFF;font-size:14px;font-weight:700"><i data-lucide="clipboard-list" stroke-width="1.75" style="width:18px;height:18px"></i>Prenotazioni</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="file-spreadsheet" stroke-width="1.75" style="width:18px;height:18px"></i>Import Excel</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="scroll-text" stroke-width="1.75" style="width:18px;height:18px"></i>Audit log</div>
+        <div style="height:1px;background:rgba(255,255,255,0.12);margin:10px 6px"></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="mail-check" stroke-width="1.75" style="width:18px;height:18px"></i>Test email</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="activity" stroke-width="1.75" style="width:18px;height:18px"></i>Horizon <i data-lucide="external-link" stroke-width="1.75" style="width:14px;height:14px;margin-left:auto;color:#C77E2A"></i></div>
+        <div style="flex:1"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 10px 4px 10px;border-top:1px solid rgba(255,255,255,0.12)">
+          <div style="width:36px;height:36px;border-radius:999px;background:var(--larch-600);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF">DT</div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="font-size:13.5px;font-weight:700;color:#FFFFFF;line-height:1.2">Davide Tremolada</div>
+            <div style="font-size:12px;color:#E0963B">Amministratore</div>
+          </div>
+        </div>
+      </aside>
+      <div style="flex:1;background:var(--stone-50);display:flex;flex-direction:column">
+        <div style="height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 36px;border-bottom:1px solid var(--stone-200);background:#FFFFFF">
+          <div style="font-size:14px;font-weight:700;color:var(--stone-800)">Prenotazioni</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--stone-600)"><i data-lucide="circle-help" stroke-width="1.75" style="width:18px;height:18px"></i>Guida</div>
+        </div>
+        <div style="padding:36px;display:flex;flex-direction:column;gap:20px">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <h2 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Tutte le prenotazioni</h2>
+            <p style="margin:0;font-size:14px;color:var(--stone-600)">Sola lettura. Le azioni straordinarie richiedono motivazione e vengono tracciate con snapshot in audit log.</p>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:16px">
+            <div style="display:grid;grid-template-columns:1.8fr 2fr 1.3fr 1fr 1.5fr 56px;gap:14px;padding:13px 24px;background:var(--stone-100);border-bottom:1px solid var(--stone-200);border-radius:16px 16px 0 0">
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Richiedente</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Evento</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Periodo</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Torre</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Stato</div>
+              <div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1.8fr 2fr 1.3fr 1fr 1.5fr 56px;gap:14px;padding:16px 24px;border-bottom:1px solid var(--stone-100);align-items:center">
+              <div style="font-size:14px;font-weight:700;color:var(--stone-900)">Sezione di Bergamo</div>
+              <div style="font-size:13.5px;color:var(--stone-700)">Festa dello Sport — Bergamo</div>
+              <div style="font-size:13.5px;font-weight:600;color:var(--stone-800)">19 – 21 set 2026</div>
+              <div><span style="display:inline-flex;align-items:center;gap:7px;padding:4px 11px;border-radius:999px;background:var(--green-100);color:var(--green-800);font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em"><span style="width:8px;height:8px;border-radius:999px;background:var(--green-600)"></span>T1</span></div>
+              <div><x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Badge" tone="success" variant="soft" hint-size="auto,24px">Approvata</x-import></div>
+              <div style="display:flex;justify-content:flex-end"><span style="width:32px;height:32px;border:1px solid var(--stone-300);border-radius:999px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="ellipsis-vertical" stroke-width="1.75" style="width:15px;height:15px;color:var(--stone-600)"></i></span></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1.8fr 2fr 1.3fr 1fr 1.5fr 56px;gap:14px;padding:16px 24px;border-bottom:1px solid var(--stone-100);align-items:center;background:#FDFBF7">
+              <div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:14px;font-weight:700;color:var(--stone-900)">S.SEZ. Valmadrera</span><span style="font-size:12px;color:var(--stone-500)">sez. rif. Lecco</span></div>
+              <div style="font-size:13.5px;color:var(--stone-700)">Festa d'autunno in Valsassina</div>
+              <div style="font-size:13.5px;font-weight:600;color:var(--stone-800)">10 – 11 ott 2026</div>
+              <div><span style="display:inline-flex;align-items:center;gap:7px;padding:4px 11px;border-radius:999px;background:var(--larch-100);color:var(--larch-700);font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em"><span style="width:8px;height:8px;border-radius:999px;background:var(--larch-600)"></span>T2</span></div>
+              <div><x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Badge" tone="warning" variant="soft" hint-size="auto,24px">Inviata</x-import></div>
+              <div style="display:flex;justify-content:flex-end"><span style="width:32px;height:32px;border:1.5px solid var(--larch-600);background:var(--larch-100);border-radius:999px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="ellipsis-vertical" stroke-width="2" style="width:15px;height:15px;color:var(--larch-700)"></i></span></div>
+            </div>
+            <div style="position:relative;border-bottom:1px solid var(--stone-100)">
+              <div style="position:absolute;right:70px;top:-6px;width:300px;background:#FFFFFF;border:1px solid var(--stone-300);border-radius:14px;box-shadow:var(--shadow-md);padding:8px;z-index:5;display:flex;flex-direction:column;gap:2px">
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;font-size:14px;font-weight:600;color:var(--stone-800)"><i data-lucide="eye" stroke-width="1.75" style="width:16px;height:16px;color:var(--stone-500)"></i>Vedi dettaglio</div>
+                <div style="height:1px;background:var(--stone-200);margin:4px 8px"></div>
+                <div style="padding:6px 12px 2px 12px;font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--larch-700)">Azioni straordinarie</div>
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--larch-100);font-size:14px;font-weight:700;color:var(--larch-700)"><i data-lucide="wrench" stroke-width="1.75" style="width:16px;height:16px"></i>Force stato… <span style="margin-left:auto;font-size:11.5px;font-weight:700;color:var(--larch-700)">motivo richiesto</span></div>
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;font-size:14px;font-weight:700;color:var(--danger-600)"><i data-lucide="trash-2" stroke-width="1.75" style="width:16px;height:16px"></i>Elimina definitivamente… <span style="margin-left:auto;font-size:11.5px;font-weight:700;color:var(--danger-600)">conferma forte</span></div>
+              </div>
+              <div style="display:grid;grid-template-columns:1.8fr 2fr 1.3fr 1fr 1.5fr 56px;gap:14px;padding:16px 24px;align-items:center">
+                <div style="font-size:14px;font-weight:700;color:var(--stone-900)">Sezione di Como</div>
+                <div style="font-size:13.5px;color:var(--stone-700)">Fiera di Como</div>
+                <div style="font-size:13.5px;font-weight:600;color:var(--stone-800)">25 – 27 set 2026</div>
+                <div><span style="display:inline-flex;align-items:center;gap:7px;padding:4px 11px;border-radius:999px;background:var(--larch-100);color:var(--larch-700);font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em"><span style="width:8px;height:8px;border-radius:999px;background:var(--larch-600)"></span>T2</span></div>
+                <div><x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Badge" tone="info" variant="solid" hint-size="auto,24px">Inviata all'assicurazione</x-import></div>
+                <div style="display:flex;justify-content:flex-end"><span style="width:32px;height:32px;border:1px solid var(--stone-300);border-radius:999px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="ellipsis-vertical" stroke-width="1.75" style="width:15px;height:15px;color:var(--stone-600)"></i></span></div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1.8fr 2fr 1.3fr 1fr 1.5fr 56px;gap:14px;padding:16px 24px;align-items:center">
+              <div style="font-size:14px;font-weight:700;color:var(--stone-900)">Sezione di Brescia</div>
+              <div style="font-size:13.5px;color:var(--stone-700)">Adamello Ultra Trail — villaggio</div>
+              <div style="font-size:13.5px;font-weight:600;color:var(--stone-800)">28 – 30 ago 2026</div>
+              <div><span style="display:inline-flex;align-items:center;gap:7px;padding:4px 11px;border-radius:999px;background:var(--green-100);color:var(--green-800);font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em"><span style="width:8px;height:8px;border-radius:999px;background:var(--green-600)"></span>T1</span></div>
+              <div><x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Badge" tone="neutral" variant="solid" hint-size="auto,24px">Concluso</x-import></div>
+              <div style="display:flex;justify-content:flex-end"><span style="width:32px;height:32px;border:1px solid var(--stone-300);border-radius:999px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="ellipsis-vertical" stroke-width="1.75" style="width:15px;height:15px;color:var(--stone-600)"></i></span></div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--stone-500)"><i data-lucide="shield-alert" stroke-width="1.75" style="width:15px;height:15px;color:var(--larch-700)"></i>Il menu della seconda riga è mostrato aperto per illustrare la separazione tra azione ordinaria e azioni straordinarie.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 1e · IMPORT EXCEL ============ -->
+  <div id="1e" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="#1e" style="display:inline-flex;padding:5px 12px;border-radius:999px;background:#5C3A12;color:#FFFFFF;font-size:12px;font-weight:800;letter-spacing:0.06em;text-decoration:none">1E</a>
+      <div>
+        <div style="font-weight:800;font-size:16px;color:var(--stone-900)">Log import Excel</div>
+        <div style="font-size:13px;color:var(--stone-600)">Storico con righe importate/aggiornate/in errore e dettaglio errori espanso</div>
+      </div>
+    </div>
+    <div data-screen-label="Admin Import Excel" style="width:1440px;background:#FFFFFF;border:1px solid var(--stone-300);border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden;display:flex;min-height:820px">
+      <aside style="width:248px;flex-shrink:0;background:#3D2A10;display:flex;flex-direction:column;padding:20px 14px 16px 14px;gap:4px">
+        <div style="display:flex;align-items:center;gap:12px;padding:6px 10px 18px 10px;border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:14px">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center"><i data-lucide="mountain" stroke-width="1.75" style="width:22px;height:22px;color:#FFFFFF"></i></div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="font-weight:800;font-size:16px;color:#FFFFFF;letter-spacing:-0.02em;line-height:1">Prenotar</div>
+            <div style="font-size:10.5px;font-weight:700;letter-spacing:0.12em;color:#E0963B;text-transform:uppercase">Pannello Admin</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="house" stroke-width="1.75" style="width:18px;height:18px"></i>Dashboard</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="users" stroke-width="1.75" style="width:18px;height:18px"></i>Utenti</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="tower-control" stroke-width="1.75" style="width:18px;height:18px"></i>Torri</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="clipboard-list" stroke-width="1.75" style="width:18px;height:18px"></i>Prenotazioni</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;background:rgba(255,255,255,0.16);color:#FFFFFF;font-size:14px;font-weight:700"><i data-lucide="file-spreadsheet" stroke-width="1.75" style="width:18px;height:18px"></i>Import Excel</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="scroll-text" stroke-width="1.75" style="width:18px;height:18px"></i>Audit log</div>
+        <div style="height:1px;background:rgba(255,255,255,0.12);margin:10px 6px"></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="mail-check" stroke-width="1.75" style="width:18px;height:18px"></i>Test email</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="activity" stroke-width="1.75" style="width:18px;height:18px"></i>Horizon <i data-lucide="external-link" stroke-width="1.75" style="width:14px;height:14px;margin-left:auto;color:#C77E2A"></i></div>
+        <div style="flex:1"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 10px 4px 10px;border-top:1px solid rgba(255,255,255,0.12)">
+          <div style="width:36px;height:36px;border-radius:999px;background:var(--larch-600);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF">DT</div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="font-size:13.5px;font-weight:700;color:#FFFFFF;line-height:1.2">Davide Tremolada</div>
+            <div style="font-size:12px;color:#E0963B">Amministratore</div>
+          </div>
+        </div>
+      </aside>
+      <div style="flex:1;background:var(--stone-50);display:flex;flex-direction:column">
+        <div style="height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 36px;border-bottom:1px solid var(--stone-200);background:#FFFFFF">
+          <div style="font-size:14px;font-weight:700;color:var(--stone-800)">Import Excel</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--stone-600)"><i data-lucide="circle-help" stroke-width="1.75" style="width:18px;height:18px"></i>Guida</div>
+        </div>
+        <div style="padding:36px;display:flex;flex-direction:column;gap:20px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:20px">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <h2 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Log import Excel</h2>
+              <p style="margin:0;font-size:14px;color:var(--stone-600)">Anagrafica sezioni e utenti, importata ogni notte alle 06:00.</p>
+            </div>
+            <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="outline" size="md" hint-size="auto,44px">Avvia import manuale</x-import>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:16px;overflow:hidden">
+            <div style="display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 1fr 130px;gap:14px;padding:13px 24px;background:var(--stone-100);border-bottom:1px solid var(--stone-200)">
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Data</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Righe totali</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Importate</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Aggiornate</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">In errore</div>
+              <div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 1fr 130px;gap:14px;padding:16px 24px;border-bottom:1px solid var(--stone-100);align-items:center">
+              <div style="font-size:14px;font-weight:700;color:var(--stone-900)">8 lug 2026, 06:00</div>
+              <div style="font-size:14px;color:var(--stone-700)">229</div>
+              <div style="font-size:14px;color:var(--stone-700)">0</div>
+              <div style="font-size:14px;color:var(--stone-700)">3</div>
+              <div><span style="font-size:14px;font-weight:700;color:var(--green-700)">0</span></div>
+              <div style="text-align:right;font-size:13.5px;font-weight:700;color:var(--larch-700);cursor:pointer">Dettaglio →</div>
+            </div>
+            <div style="background:#FDFBF7;border-bottom:1px solid var(--stone-100)">
+              <div style="display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 1fr 130px;gap:14px;padding:16px 24px;align-items:center">
+                <div style="font-size:14px;font-weight:700;color:var(--stone-900)">7 lug 2026, 06:00</div>
+                <div style="font-size:14px;color:var(--stone-700)">229</div>
+                <div style="font-size:14px;color:var(--stone-700)">1</div>
+                <div style="font-size:14px;color:var(--stone-700)">0</div>
+                <div><span style="display:inline-flex;padding:3px 10px;border-radius:999px;background:var(--danger-100);color:var(--danger-600);font-size:12.5px;font-weight:800">2</span></div>
+                <div style="text-align:right;font-size:13.5px;font-weight:700;color:var(--larch-700);cursor:pointer">Chiudi ↑</div>
+              </div>
+              <div style="padding:0 24px 18px 24px;display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 16px;background:#FFFFFF;border:1px solid var(--danger-100);border-radius:10px">
+                  <i data-lucide="circle-x" stroke-width="1.75" style="width:16px;height:16px;color:var(--danger-600);flex-shrink:0;margin-top:2px"></i>
+                  <div style="font-size:13.5px;color:var(--stone-800);line-height:1.5"><strong>Riga 87</strong> — email duplicata "presidente@caisondrio.it": già assegnata all'utente #112. Riga saltata.</div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 16px;background:#FFFFFF;border:1px solid var(--danger-100);border-radius:10px">
+                  <i data-lucide="circle-x" stroke-width="1.75" style="width:16px;height:16px;color:var(--danger-600);flex-shrink:0;margin-top:2px"></i>
+                  <div style="font-size:13.5px;color:var(--stone-800);line-height:1.5"><strong>Riga 143</strong> — sezione di riferimento "CAI Melzo" non trovata per S.SEZ. Truccazzano. Riga saltata.</div>
+                </div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 1fr 130px;gap:14px;padding:16px 24px;align-items:center">
+              <div style="font-size:14px;font-weight:700;color:var(--stone-900)">6 lug 2026, 06:00</div>
+              <div style="font-size:14px;color:var(--stone-700)">228</div>
+              <div style="font-size:14px;color:var(--stone-700)">0</div>
+              <div style="font-size:14px;color:var(--stone-700)">0</div>
+              <div><span style="font-size:14px;font-weight:700;color:var(--green-700)">0</span></div>
+              <div style="text-align:right;font-size:13.5px;font-weight:700;color:var(--larch-700);cursor:pointer">Dettaglio →</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 1f · AUDIT LOG ============ -->
+  <div id="1f" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="#1f" style="display:inline-flex;padding:5px 12px;border-radius:999px;background:#5C3A12;color:#FFFFFF;font-size:12px;font-weight:800;letter-spacing:0.06em;text-decoration:none">1F</a>
+      <div>
+        <div style="font-weight:800;font-size:16px;color:var(--stone-900)">Audit log</div>
+        <div style="font-size:13px;color:var(--stone-600)">Chi ha fatto cosa e quando, filtrabile per tipo evento e intervallo date</div>
+      </div>
+    </div>
+    <div data-screen-label="Admin Audit log" style="width:1440px;background:#FFFFFF;border:1px solid var(--stone-300);border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden;display:flex;min-height:820px">
+      <aside style="width:248px;flex-shrink:0;background:#3D2A10;display:flex;flex-direction:column;padding:20px 14px 16px 14px;gap:4px">
+        <div style="display:flex;align-items:center;gap:12px;padding:6px 10px 18px 10px;border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:14px">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center"><i data-lucide="mountain" stroke-width="1.75" style="width:22px;height:22px;color:#FFFFFF"></i></div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="font-weight:800;font-size:16px;color:#FFFFFF;letter-spacing:-0.02em;line-height:1">Prenotar</div>
+            <div style="font-size:10.5px;font-weight:700;letter-spacing:0.12em;color:#E0963B;text-transform:uppercase">Pannello Admin</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="house" stroke-width="1.75" style="width:18px;height:18px"></i>Dashboard</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="users" stroke-width="1.75" style="width:18px;height:18px"></i>Utenti</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="tower-control" stroke-width="1.75" style="width:18px;height:18px"></i>Torri</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="clipboard-list" stroke-width="1.75" style="width:18px;height:18px"></i>Prenotazioni</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="file-spreadsheet" stroke-width="1.75" style="width:18px;height:18px"></i>Import Excel</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;background:rgba(255,255,255,0.16);color:#FFFFFF;font-size:14px;font-weight:700"><i data-lucide="scroll-text" stroke-width="1.75" style="width:18px;height:18px"></i>Audit log</div>
+        <div style="height:1px;background:rgba(255,255,255,0.12);margin:10px 6px"></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="mail-check" stroke-width="1.75" style="width:18px;height:18px"></i>Test email</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#F3D9B4;font-size:14px;font-weight:600"><i data-lucide="activity" stroke-width="1.75" style="width:18px;height:18px"></i>Horizon <i data-lucide="external-link" stroke-width="1.75" style="width:14px;height:14px;margin-left:auto;color:#C77E2A"></i></div>
+        <div style="flex:1"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 10px 4px 10px;border-top:1px solid rgba(255,255,255,0.12)">
+          <div style="width:36px;height:36px;border-radius:999px;background:var(--larch-600);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF">DT</div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="font-size:13.5px;font-weight:700;color:#FFFFFF;line-height:1.2">Davide Tremolada</div>
+            <div style="font-size:12px;color:#E0963B">Amministratore</div>
+          </div>
+        </div>
+      </aside>
+      <div style="flex:1;background:var(--stone-50);display:flex;flex-direction:column">
+        <div style="height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 36px;border-bottom:1px solid var(--stone-200);background:#FFFFFF">
+          <div style="font-size:14px;font-weight:700;color:var(--stone-800)">Audit log</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--stone-600)"><i data-lucide="circle-help" stroke-width="1.75" style="width:18px;height:18px"></i>Guida</div>
+        </div>
+        <div style="padding:36px;display:flex;flex-direction:column;gap:20px">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <h2 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Audit log</h2>
+            <p style="margin:0;font-size:14px;color:var(--stone-600)">Ogni azione rilevante è registrata e non modificabile.</p>
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px solid var(--stone-300);border-radius:10px;background:#FFFFFF;font-size:14px;color:var(--stone-800)">Tipo evento: <strong>Tutti</strong><i data-lucide="chevron-down" stroke-width="1.75" style="width:16px;height:16px;color:var(--stone-500)"></i></div>
+            <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px solid var(--stone-300);border-radius:10px;background:#FFFFFF;font-size:14px;color:var(--stone-800)"><i data-lucide="calendar" stroke-width="1.75" style="width:16px;height:16px;color:var(--stone-500)"></i>1 lug – 12 lug 2026</div>
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid var(--stone-300);border-radius:10px;background:#FFFFFF;font-size:14px;color:var(--stone-500);min-width:260px"><i data-lucide="search" stroke-width="1.75" style="width:16px;height:16px"></i>Cerca utente…</div>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:16px;overflow:hidden">
+            <div style="display:grid;grid-template-columns:170px 1.4fr 2.4fr 200px;gap:14px;padding:13px 24px;background:var(--stone-100);border-bottom:1px solid var(--stone-200)">
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Quando</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Chi</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Cosa</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Tipo</div>
+            </div>
+            <div style="display:grid;grid-template-columns:170px 1.4fr 2.4fr 200px;gap:14px;padding:15px 24px;border-bottom:1px solid var(--stone-100);align-items:center">
+              <div style="font-size:13px;color:var(--stone-500)">12 lug, 08:12</div>
+              <div style="font-size:13.5px;font-weight:700;color:var(--stone-900)">presidente@caibergamo.it</div>
+              <div style="font-size:13.5px;color:var(--stone-700)">Ha inviato la richiesta "Corso di arrampicata giovanile" al GR</div>
+              <div><span style="font-size:12px;font-weight:800;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.06em">prenotazione.inviata</span></div>
+            </div>
+            <div style="display:grid;grid-template-columns:170px 1.4fr 2.4fr 200px;gap:14px;padding:15px 24px;border-bottom:1px solid var(--stone-100);align-items:center;background:#FDFBF7">
+              <div style="font-size:13px;color:var(--stone-500)">11 lug, 17:44</div>
+              <div style="font-size:13.5px;font-weight:700;color:var(--stone-900)">admin</div>
+              <div style="font-size:13.5px;color:var(--stone-700)">Ha impersonato presidente@cailecco.it — motivo: "verifica bug wizard step 3" — durata 12 min</div>
+              <div><span style="display:inline-flex;padding:3px 10px;border-radius:999px;background:var(--larch-100);color:var(--larch-700);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em">impersonate</span></div>
+            </div>
+            <div style="display:grid;grid-template-columns:170px 1.4fr 2.4fr 200px;gap:14px;padding:15px 24px;border-bottom:1px solid var(--stone-100);align-items:center">
+              <div style="font-size:13px;color:var(--stone-500)">10 lug, 09:41</div>
+              <div style="font-size:13.5px;font-weight:700;color:var(--stone-900)">presidente@caigrlombardia.it</div>
+              <div style="font-size:13.5px;color:var(--stone-700)">Ha approvato "Festa d'autunno in Valsassina" assegnando Torre 2</div>
+              <div><span style="font-size:12px;font-weight:800;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.06em">prenotazione.approvata</span></div>
+            </div>
+            <div style="display:grid;grid-template-columns:170px 1.4fr 2.4fr 200px;gap:14px;padding:15px 24px;align-items:center;background:#FDF6F5">
+              <div style="font-size:13px;color:var(--stone-500)">8 lug, 15:02</div>
+              <div style="font-size:13.5px;font-weight:700;color:var(--stone-900)">admin</div>
+              <div style="font-size:13.5px;color:var(--stone-700)">Ha eliminato definitivamente la prenotazione #204 (duplicato) — snapshot salvato</div>
+              <div><span style="display:inline-flex;padding:3px 10px;border-radius:999px;background:var(--danger-100);color:var(--danger-600);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em">hard-delete</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() { this._icons(); }
+  componentDidUpdate() { this._icons(); }
+  _icons() {
+    const run = () => {
+      if (window.lucide && window.lucide.createIcons) {
+        try { window.lucide.createIcons(); } catch (e) {}
+      } else {
+        setTimeout(run, 300);
+      }
+    };
+    run();
+  }
+  renderVals() {
+    return { vero: true };
+  }
+}
+</script>
+</body>
+</html>

@@ -10,11 +10,19 @@ use App\Models\Prenotazione;
 use Filament\Actions;
 use Filament\Resources\Components\Tab;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Builder;
 
 class ListPrenotazioni extends ListRecords
 {
     protected static string $resource = PrenotazioneResource::class;
+
+    /**
+     * Override del template stock (US-013): sotto il breakpoint mobile, la
+     * tabella lascia spazio a una lista di card (mockup 'Mobile Sezione Lista'),
+     * riusando le stesse tab/ordinamento/paginazione via `$this->getTableRecords()`.
+     */
+    protected static string $view = 'filament.sezione.resources.prenotazione-resource.pages.list-prenotazioni';
 
     protected function getHeaderActions(): array
     {
@@ -23,6 +31,11 @@ class ListPrenotazioni extends ListRecords
                 ->label('Nuova prenotazione')
                 ->visible(fn (): bool => auth()->user()->can('create', Prenotazione::class)),
         ];
+    }
+
+    public function getSubheading(): string|Htmlable|null
+    {
+        return 'Ordinate dalla data più vicina (BUG-01). Le concluse e annullate sono in Archivio (BUG-02).';
     }
 
     public function getTabs(): array

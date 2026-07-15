@@ -7,6 +7,8 @@ namespace App\Filament\Admin\Resources;
 use App\Filament\Admin\Resources\ExcelImportResource\Pages;
 use App\Models\ExcelImport;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\FontWeight;
+use Filament\Support\Enums\IconPosition;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -29,11 +31,11 @@ class ExcelImportResource extends Resource
                 TextColumn::make('created_at')
                     ->label('Data')
                     ->dateTime('d/m/Y H:i')
+                    ->weight(FontWeight::Bold)
                     ->sortable(),
-                TextColumn::make('filename')
-                    ->label('File')
-                    ->searchable()
-                    ->limit(50),
+                TextColumn::make('righe_totali')
+                    ->label('Righe totali')
+                    ->state(fn (ExcelImport $record): int => $record->righe_importate + $record->righe_aggiornate + $record->righe_in_errore),
                 TextColumn::make('righe_importate')
                     ->label('Importate')
                     ->numeric(),
@@ -41,13 +43,30 @@ class ExcelImportResource extends Resource
                     ->label('Aggiornate')
                     ->numeric(),
                 TextColumn::make('righe_in_errore')
-                    ->label('Errori')
+                    ->label('In errore')
                     ->numeric()
-                    ->color(fn ($state) => $state > 0 ? 'danger' : 'success'),
+                    ->weight(FontWeight::Bold)
+                    ->badge(fn (int $state): bool => $state > 0)
+                    ->color(fn (int $state): string => $state > 0 ? 'danger' : 'success'),
+                TextColumn::make('filename')
+                    ->label('File')
+                    ->searchable()
+                    ->limit(50)
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('importedBy.name')
                     ->label('Da')
-                    ->default('—'),
+                    ->default('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('dettaglio')
+                    ->label('')
+                    ->state('Dettaglio')
+                    ->icon('heroicon-o-arrow-right')
+                    ->iconPosition(IconPosition::After)
+                    ->weight(FontWeight::Bold)
+                    ->color('primary')
+                    ->alignEnd(),
             ])
+            ->recordUrl(fn (ExcelImport $record): string => Pages\ViewExcelImport::getUrl(['record' => $record]))
             ->defaultSort('created_at', 'desc')
             ->paginated([10, 25, 50]);
     }

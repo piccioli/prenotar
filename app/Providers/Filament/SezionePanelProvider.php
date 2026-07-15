@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\FirstAccessPage;
+use App\Filament\Sezione\Pages\CalendarioPage;
+use App\Filament\Sezione\Resources\PrenotazioneResource;
+use App\Filament\Sezione\Resources\PrenotazioneResource\Pages\ListPrenotazioni;
 use App\Filament\Sezione\Widgets\PrenotazioniDashboardWidget;
 use App\Http\Middleware\EnsureContactEmail;
+use App\Support\Auth\PanelRedirector;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -15,6 +19,7 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -30,13 +35,15 @@ class SezionePanelProvider extends PanelProvider
         return $panel
             ->id('sezione')
             ->path('sezione')
-            ->login()
+            ->login(fn () => redirect(PanelRedirector::loginUrl()))
             ->passwordReset()
             ->colors([
-                'primary' => Color::Blue,
+                'primary' => Color::hex('#2E5878'),
             ])
+            ->viteTheme('resources/css/filament/sezione/theme.css')
             ->brandName('Prenotar — Sezione')
-            ->brandLogo(asset('images/cai-lombardia-placeholder.svg'))
+            ->brandLogo(asset('images/prenotar-logo.svg'))
+            ->favicon(asset('images/prenotar-mark.svg'))
             ->plugins([
                 FilamentFullCalendarPlugin::make(),
             ])
@@ -50,6 +57,28 @@ class SezionePanelProvider extends PanelProvider
             ->widgets([
                 PrenotazioniDashboardWidget::class,
             ])
+            ->renderHook(
+                PanelsRenderHook::TOPBAR_START,
+                fn (): string => view('filament.components.mobile-topbar-brand')->render(),
+            )
+            ->renderHook(
+                PanelsRenderHook::TOPBAR_END,
+                fn (): string => view('filament.components.mobile-topbar-notifications')->render(),
+            )
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): string => view('filament.components.mobile-bottom-nav', [
+                    'items' => self::mobileNavItems(),
+                ])->render(),
+            )
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): string => view('filament.components.mobile-fab', [
+                    'href' => PrenotazioneResource::getUrl('create'),
+                    'label' => 'Nuova prenotazione',
+                ])->render(),
+                scopes: [ListPrenotazioni::class],
+            )
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -65,5 +94,42 @@ class SezionePanelProvider extends PanelProvider
                 Authenticate::class,
                 EnsureContactEmail::class,
             ]);
+    }
+
+    /**
+     * @return array<int, array{label: string, icon: string, url: string, active: bool}>
+     */
+    private static function mobileNavItems(): array
+    {
+        return [
+            [
+                'label' => 'Home',
+                'icon' => 'heroicon-o-home',
+                'url' => Pages\Dashboard::getUrl(),
+                'active' => request()->routeIs('filament.sezione.pages.dashboard'),
+            ],
+            [
+                'label' => 'Nuova',
+                'icon' => 'heroicon-o-plus',
+                'url' => PrenotazioneResource::getUrl('create'),
+                'active' => request()->routeIs('filament.sezione.resources.prenotaziones.create'),
+            ],
+            [
+                'label' => 'Prenotazioni',
+                'icon' => 'heroicon-o-clipboard-document-list',
+                'url' => PrenotazioneResource::getUrl(),
+                'active' => request()->routeIs([
+                    'filament.sezione.resources.prenotaziones.index',
+                    'filament.sezione.resources.prenotaziones.view',
+                    'filament.sezione.resources.prenotaziones.edit',
+                ]),
+            ],
+            [
+                'label' => 'Calendario',
+                'icon' => 'heroicon-o-calendar-days',
+                'url' => CalendarioPage::getUrl(),
+                'active' => request()->routeIs('filament.sezione.pages.calendario'),
+            ],
+        ];
     }
 }

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Filament\Sezione\Resources\PrenotazioneResource\Pages;
 
-use App\Enums\CategoriaPatente;
 use App\Enums\PrenotazioneStatus;
 use App\Enums\ResponsabileTipo;
-use App\Enums\TipoMezzo;
 use App\Filament\Sezione\Resources\PrenotazioneResource;
 use App\Models\Prenotazione;
+use App\Models\Torre;
 use App\Services\PrenotazioneStateMachine;
+use Carbon\Carbon;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Infolists\Components\RepeatableEntry;
@@ -20,7 +20,10 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Support\Colors\Color;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\HtmlString;
 
 class ViewPrenotazione extends ViewRecord
 {
@@ -34,6 +37,15 @@ class ViewPrenotazione extends ViewRecord
         }
 
         return $record;
+    }
+
+    /** Etichetta S.SEZ./SEZ. del titolare della prenotazione (BUG-05), stesso componente condiviso di dashboard e lista. */
+    public function getSubheading(): string|Htmlable|null
+    {
+        return new HtmlString(view('filament.components.etichetta-sezione', [
+            'sezione' => $this->prenotazione()->sezione,
+            'sottosezione' => $this->prenotazione()->sottosezione,
+        ])->render());
     }
 
     protected function getHeaderActions(): array
@@ -109,7 +121,11 @@ class ViewPrenotazione extends ViewRecord
                                         ->badge()
                                         ->formatStateUsing(fn (PrenotazioneStatus $state): string => $state->label())
                                         ->color(fn (PrenotazioneStatus $state): string => $state->color()),
-                                    TextEntry::make('torre.nome')->label('Torre')->badge()->default('—'),
+                                    TextEntry::make('torre.nome')
+                                        ->label('Torre')
+                                        ->badge()
+                                        ->color(fn (Prenotazione $record): array => Color::hex(Torre::coloreHexPer($record->torre)))
+                                        ->default('—'),
                                     TextEntry::make('torre.indirizzo_deposito')->label('Indirizzo deposito torre')->default('—'),
                                     TextEntry::make('data_inizio_prenotazione')->label('Da')->date('d/m/Y'),
                                     TextEntry::make('data_fine_prenotazione')->label('A')->date('d/m/Y'),
@@ -128,19 +144,13 @@ class ViewPrenotazione extends ViewRecord
 
                             Section::make('Logistica trasporto')
                                 ->schema([
-                                    TextEntry::make('tipo_mezzo')
-                                        ->label('Tipo mezzo')
-                                        ->formatStateUsing(fn (mixed $state): string => $state instanceof TipoMezzo ? $state->label() : (string) $state),
-                                    TextEntry::make('categoria_patente_privato')
-                                        ->label('Categoria patente')
-                                        ->visible(fn (Prenotazione $record): bool => $record->tipo_mezzo === TipoMezzo::Privato)
-                                        ->formatStateUsing(fn (mixed $state): string => $state instanceof CategoriaPatente ? $state->label() : (string) $state),
-                                    TextEntry::make('azienda_trasporto')->label('Azienda trasporto'),
                                     TextEntry::make('targa_autoveicolo')->label('Targa')->default('—'),
+                                    TextEntry::make('nome_conducente')->label('Conducente')->default('—'),
                                     TextEntry::make('data_ritiro')->label('Data ritiro')->date('d/m/Y')->placeholder('—'),
-                                    TextEntry::make('luogo_ritiro')->label('Luogo ritiro')->default('—'),
                                     TextEntry::make('data_riconsegna')->label('Data riconsegna')->date('d/m/Y')->placeholder('—'),
-                                    TextEntry::make('luogo_riconsegna')->label('Luogo riconsegna')->default('—'),
+                                    TextEntry::make('patente_be_dichiarata_at')
+                                        ->label('Patente B+E')
+                                        ->formatStateUsing(fn (?Carbon $state): string => $state !== null ? "Dichiarata il {$state->format('d/m/Y H:i')}" : 'Non dichiarata'),
                                 ])->columns(3),
 
                             Section::make('Responsabile in loco')

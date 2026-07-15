@@ -41,6 +41,7 @@ DESC;
                 'manuale_pdf_path' => $manualePath,
                 'specs_tecniche_pdf_path' => $manualePath,
                 'is_active' => true,
+                'colore_hex' => '#1D574B',
             ],
         );
 
@@ -53,6 +54,7 @@ DESC;
                 'manuale_pdf_path' => $manualePath,
                 'specs_tecniche_pdf_path' => $manualePath,
                 'is_active' => true,
+                'colore_hex' => '#C77E2A',
             ],
         );
     }

@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="_ds/montagna-servizi-design-system-5cc04e95-0654-4ed9-8c55-821b392c3598/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/montagna-servizi-design-system-5cc04e95-0654-4ed9-8c55-821b392c3598/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/montagna-servizi-design-system-5cc04e95-0654-4ed9-8c55-821b392c3598/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/montagna-servizi-design-system-5cc04e95-0654-4ed9-8c55-821b392c3598/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/montagna-servizi-design-system-5cc04e95-0654-4ed9-8c55-821b392c3598/tokens/effects.css">
+  <link rel="stylesheet" href="_ds/montagna-servizi-design-system-5cc04e95-0654-4ed9-8c55-821b392c3598/tokens/base.css">
+  <link rel="stylesheet" href="_ds/montagna-servizi-design-system-5cc04e95-0654-4ed9-8c55-821b392c3598/styles.css">
+  <script src="_ds/montagna-servizi-design-system-5cc04e95-0654-4ed9-8c55-821b392c3598/_ds_bundle.js"></script>
+  <script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js"></script>
+  <style>
+    body { margin: 0; background: #E4E8E5; }
+    a { color: #23445D; }
+    a:hover { color: #14293A; }
+  </style>
+</helmet>
+
+<section style="padding:48px 56px 96px 56px;font-family:var(--font-sans);display:flex;flex-direction:column;gap:36px">
+
+  <!-- ===================== Intro / sistema ===================== -->
+  <div style="display:flex;flex-direction:column;gap:14px;max-width:1100px">
+    <div style="font-size:12px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--green-600)">Prenotar · CAI GR Lombardia</div>
+    <h1 style="margin:0;font-size:34px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Pannello Sezione <span style="color:var(--stone-500);font-weight:600">— /sezione</span></h1>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:var(--stone-700);max-width:820px">Tutte le schermate del ruolo Sezione, hi-fi. Palette alpina derivata dal design system Montagna Servizi: il pannello Sezione usa l'<strong>ardesia-blu</strong>; le due torri hanno colori fissi identici in tutta l'app (calendario, badge, riepiloghi).</p>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+      <span style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:#FFFFFF;border:1px solid var(--stone-300);font-size:13px;font-weight:700;color:var(--stone-800)"><span style="width:12px;height:12px;border-radius:4px;background:#2E5878"></span>Ardesia — pannello Sezione</span>
+      <span style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:#FFFFFF;border:1px solid var(--stone-300);font-size:13px;font-weight:700;color:var(--stone-800)"><span style="width:12px;height:12px;border-radius:4px;background:var(--green-600)"></span>Pino — Torre 1 · CityWall 8m</span>
+      <span style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:#FFFFFF;border:1px solid var(--stone-300);font-size:13px;font-weight:700;color:var(--stone-800)"><span style="width:12px;height:12px;border-radius:4px;background:var(--larch-600)"></span>Larice — Torre 2 · CityWall 5m</span>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:56px;align-items:flex-start">
+
+  <!-- ============================================================ -->
+  <!-- 1a · DASHBOARD — prenotazione attiva                          -->
+  <!-- ============================================================ -->
+  <div id="1a" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="#1a" style="display:inline-flex;padding:5px 12px;border-radius:999px;background:#1A3448;color:#FFFFFF;font-size:12px;font-weight:800;letter-spacing:0.06em;text-decoration:none">1A</a>
+      <div>
+        <div style="font-weight:800;font-size:16px;color:var(--stone-900)">Dashboard — con prenotazione attiva</div>
+        <div style="font-size:13px;color:var(--stone-600)">La prossima prenotazione è la prima cosa che si vede; indirizzo di deposito sempre in evidenza (BUG-08)</div>
+      </div>
+    </div>
+    <div data-screen-label="Dashboard prenotazione attiva" style="width:1440px;background:#FFFFFF;border:1px solid var(--stone-300);border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden;display:flex;min-height:900px">
+      <aside style="width:248px;flex-shrink:0;background:#1A3448;display:flex;flex-direction:column;padding:20px 14px 16px 14px;gap:4px">
+        <div style="display:flex;align-items:center;gap:12px;padding:6px 10px 18px 10px;border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:14px">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center"><i data-lucide="mountain" stroke-width="1.75" style="width:22px;height:22px;color:#FFFFFF"></i></div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="font-weight:800;font-size:16px;color:#FFFFFF;letter-spacing:-0.02em;line-height:1">Prenotar</div>
+            <div style="font-size:10.5px;font-weight:700;letter-spacing:0.12em;color:#9BBCD1;text-transform:uppercase">Pannello Sezione</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,0.16);color:#FFFFFF;font-size:14.5px;font-weight:700"><i data-lucide="house" stroke-width="1.75" style="width:19px;height:19px"></i>Dashboard</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#C6DAE7;font-size:14.5px;font-weight:600"><i data-lucide="calendar-plus" stroke-width="1.75" style="width:19px;height:19px"></i>Nuova prenotazione</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#C6DAE7;font-size:14.5px;font-weight:600"><i data-lucide="clipboard-list" stroke-width="1.75" style="width:19px;height:19px"></i>Le mie prenotazioni</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#C6DAE7;font-size:14.5px;font-weight:600"><i data-lucide="calendar-days" stroke-width="1.75" style="width:19px;height:19px"></i>Calendario torri</div>
+        <div style="flex:1"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 10px 4px 10px;border-top:1px solid rgba(255,255,255,0.12)">
+          <div style="width:36px;height:36px;border-radius:999px;background:#3E6E90;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF">SB</div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="font-size:13.5px;font-weight:700;color:#FFFFFF;line-height:1.2">Sezione di Bergamo</div>
+            <div style="font-size:12px;color:#9BBCD1">Presidente</div>
+          </div>
+        </div>
+      </aside>
+      <div style="flex:1;background:var(--stone-50);display:flex;flex-direction:column">
+        <div style="height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 36px;border-bottom:1px solid var(--stone-200);background:#FFFFFF">
+          <div style="font-size:14px;font-weight:700;color:var(--stone-800)">Dashboard</div>
+          <div style="display:flex;align-items:center;gap:20px">
+            <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--stone-600)"><i data-lucide="circle-help" stroke-width="1.75" style="width:18px;height:18px"></i>Guida</div>
+            <i data-lucide="bell" stroke-width="1.75" style="width:19px;height:19px;color:var(--stone-500)"></i>
+          </div>
+        </div>
+        <div style="padding:36px;display:flex;flex-direction:column;gap:28px">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <h2 style="margin:0;font-size:26px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Buongiorno, Sezione di Bergamo</h2>
+            <p style="margin:0;font-size:15px;color:var(--stone-600)">Ecco la situazione delle tue prenotazioni delle torri di arrampicata.</p>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:20px;box-shadow:var(--shadow-xs);padding:28px 32px;display:flex;flex-direction:column;gap:20px">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px">
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div style="font-size:12px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:#3E6E90">Prossima prenotazione</div>
+                <div style="font-size:22px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Festa dello Sport — Bergamo</div>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                  <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Badge" tone="success" variant="soft" hint-size="auto,24px">Approvata</x-import>
+                  <span style="display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:var(--green-100);color:var(--green-800);font-size:12px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase"><span style="width:9px;height:9px;border-radius:999px;background:var(--green-600)"></span>Torre 1 · CityWall 8m</span>
+                </div>
+              </div>
+              <div style="display:flex;gap:10px;flex-shrink:0">
+                <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="primary" size="md" hint-size="auto,44px">Vedi dettaglio</x-import>
+                <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="ghost" size="md" hint-size="auto,44px">Apri calendario</x-import>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;border-top:1px solid var(--stone-200);padding-top:20px">
+              <div style="display:flex;gap:12px;align-items:flex-start">
+                <i data-lucide="calendar-range" stroke-width="1.75" style="width:20px;height:20px;color:#3E6E90;margin-top:2px"></i>
+                <div style="display:flex;flex-direction:column;gap:3px">
+                  <div style="font-size:12.5px;font-weight:700;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.06em">Periodo evento</div>
+                  <div style="font-size:15px;font-weight:700;color:var(--stone-800)">19 – 21 settembre 2026</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:12px;align-items:flex-start">
+                <i data-lucide="truck" stroke-width="1.75" style="width:20px;height:20px;color:#3E6E90;margin-top:2px"></i>
+                <div style="display:flex;flex-direction:column;gap:3px">
+                  <div style="font-size:12.5px;font-weight:700;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.06em">Ritiro / riconsegna</div>
+                  <div style="font-size:15px;font-weight:700;color:var(--stone-800)">18 set · 22 set 2026</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:12px;align-items:flex-start">
+                <i data-lucide="map-pin" stroke-width="1.75" style="width:20px;height:20px;color:#3E6E90;margin-top:2px"></i>
+                <div style="display:flex;flex-direction:column;gap:3px">
+                  <div style="font-size:12.5px;font-weight:700;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.06em">Deposito torre</div>
+                  <div style="font-size:15px;font-weight:700;color:var(--stone-800)">Via delle Industrie 12, Zanica (BG)</div>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;background:var(--larch-100);border:1px solid var(--larch-200);border-radius:12px;padding:14px 18px">
+              <i data-lucide="file-warning" stroke-width="1.75" style="width:20px;height:20px;color:var(--larch-700);flex-shrink:0"></i>
+              <div style="font-size:14px;color:var(--stone-800);line-height:1.5"><strong>Prossimo passo:</strong> carica il PDF firmato della delibera del consiglio entro il <strong>4 settembre</strong> per completare la pratica.</div>
+              <div style="flex:1"></div>
+              <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="outline" size="sm" hint-size="auto,34px">Carica PDF firmato</x-import>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px">
+            <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:10px">
+              <i data-lucide="calendar-plus" stroke-width="1.75" style="width:24px;height:24px;color:#2E5878"></i>
+              <div style="font-size:16px;font-weight:800;color:var(--stone-900)">Nuova prenotazione</div>
+              <div style="font-size:13.5px;color:var(--stone-600);line-height:1.5">Richiedi una torre con la procedura guidata in 5 passi.</div>
+              <div style="font-size:14px;font-weight:700;color:#23445D">Inizia →</div>
+            </div>
+            <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:10px">
+              <i data-lucide="clipboard-list" stroke-width="1.75" style="width:24px;height:24px;color:#2E5878"></i>
+              <div style="font-size:16px;font-weight:800;color:var(--stone-900)">Le mie prenotazioni</div>
+              <div style="font-size:13.5px;color:var(--stone-600);line-height:1.5">3 attive · 8 in archivio. Controlla stato e allegati.</div>
+              <div style="font-size:14px;font-weight:700;color:#23445D">Apri elenco →</div>
+            </div>
+            <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:10px">
+              <i data-lucide="calendar-days" stroke-width="1.75" style="width:24px;height:24px;color:#2E5878"></i>
+              <div style="font-size:16px;font-weight:800;color:var(--stone-900)">Calendario torri</div>
+              <div style="font-size:13.5px;color:var(--stone-600);line-height:1.5">Verifica la disponibilità delle due torri prima di richiedere.</div>
+              <div style="font-size:14px;font-weight:700;color:#23445D">Consulta →</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 1b · DASHBOARD — stato vuoto                                  -->
+  <!-- ============================================================ -->
+  <div id="1b" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="#1b" style="display:inline-flex;padding:5px 12px;border-radius:999px;background:#1A3448;color:#FFFFFF;font-size:12px;font-weight:800;letter-spacing:0.06em;text-decoration:none">1B</a>
+      <div>
+        <div style="font-weight:800;font-size:16px;color:var(--stone-900)">Dashboard — stato vuoto</div>
+        <div style="font-size:13px;color:var(--stone-600)">Nessuna prenotazione attiva: invito chiaro e unico a crearne una</div>
+      </div>
+    </div>
+    <div data-screen-label="Dashboard stato vuoto" style="width:1440px;background:#FFFFFF;border:1px solid var(--stone-300);border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden;display:flex;min-height:900px">
+      <aside style="width:248px;flex-shrink:0;background:#1A3448;display:flex;flex-direction:column;padding:20px 14px 16px 14px;gap:4px">
+        <div style="display:flex;align-items:center;gap:12px;padding:6px 10px 18px 10px;border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:14px">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center"><i data-lucide="mountain" stroke-width="1.75" style="width:22px;height:22px;color:#FFFFFF"></i></div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="font-weight:800;font-size:16px;color:#FFFFFF;letter-spacing:-0.02em;line-height:1">Prenotar</div>
+            <div style="font-size:10.5px;font-weight:700;letter-spacing:0.12em;color:#9BBCD1;text-transform:uppercase">Pannello Sezione</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,0.16);color:#FFFFFF;font-size:14.5px;font-weight:700"><i data-lucide="house" stroke-width="1.75" style="width:19px;height:19px"></i>Dashboard</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#C6DAE7;font-size:14.5px;font-weight:600"><i data-lucide="calendar-plus" stroke-width="1.75" style="width:19px;height:19px"></i>Nuova prenotazione</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#C6DAE7;font-size:14.5px;font-weight:600"><i data-lucide="clipboard-list" stroke-width="1.75" style="width:19px;height:19px"></i>Le mie prenotazioni</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#C6DAE7;font-size:14.5px;font-weight:600"><i data-lucide="calendar-days" stroke-width="1.75" style="width:19px;height:19px"></i>Calendario torri</div>
+        <div style="flex:1"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 10px 4px 10px;border-top:1px solid rgba(255,255,255,0.12)">
+          <div style="width:36px;height:36px;border-radius:999px;background:#3E6E90;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF">SV</div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="font-size:13.5px;font-weight:700;color:#FFFFFF;line-height:1.2">Sezione Valtellinese</div>
+            <div style="font-size:12px;color:#9BBCD1">Presidente</div>
+          </div>
+        </div>
+      </aside>
+      <div style="flex:1;background:var(--stone-50);display:flex;flex-direction:column">
+        <div style="height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 36px;border-bottom:1px solid var(--stone-200);background:#FFFFFF">
+          <div style="font-size:14px;font-weight:700;color:var(--stone-800)">Dashboard</div>
+          <div style="display:flex;align-items:center;gap:20px">
+            <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--stone-600)"><i data-lucide="circle-help" stroke-width="1.75" style="width:18px;height:18px"></i>Guida</div>
+            <i data-lucide="bell" stroke-width="1.75" style="width:19px;height:19px;color:var(--stone-500)"></i>
+          </div>
+        </div>
+        <div style="padding:36px;display:flex;flex-direction:column;gap:28px;flex:1">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <h2 style="margin:0;font-size:26px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Buongiorno, Sezione Valtellinese</h2>
+            <p style="margin:0;font-size:15px;color:var(--stone-600)">Ecco la situazione delle tue prenotazioni delle torri di arrampicata.</p>
+          </div>
+          <div style="flex:1;background:#FFFFFF;border:1.5px dashed var(--stone-300);border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:64px;text-align:center">
+            <div style="width:72px;height:72px;border-radius:999px;background:#F0F6FA;display:flex;align-items:center;justify-content:center"><i data-lucide="mountain-snow" stroke-width="1.5" style="width:36px;height:36px;color:#3E6E90"></i></div>
+            <div style="font-size:20px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Nessuna prenotazione attiva</div>
+            <div style="font-size:15px;color:var(--stone-600);max-width:460px;line-height:1.6">La tua sezione non ha richieste in corso. Puoi richiedere una delle due torri di arrampicata con la procedura guidata: bastano 5 passi.</div>
+            <div style="display:flex;gap:12px;margin-top:6px">
+              <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="primary" size="lg" hint-size="auto,52px">Nuova prenotazione</x-import>
+              <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="ghost" size="lg" hint-size="auto,52px">Vedi disponibilità torri</x-import>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 1c · WIZARD STEP 1 — Quando e dove                            -->
+  <!-- ============================================================ -->
+  <div id="1c" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="#1c" style="display:inline-flex;padding:5px 12px;border-radius:999px;background:#1A3448;color:#FFFFFF;font-size:12px;font-weight:800;letter-spacing:0.06em;text-decoration:none">1C</a>
+      <div>
+        <div style="font-weight:800;font-size:16px;color:var(--stone-900)">Wizard · Step 1 — Quando e dove</div>
+        <div style="font-size:13px;color:var(--stone-600)">Disponibilità embedded, deposito visibile sulle torri, checkbox manuale bloccante (usa i Tweaks per spuntarla)</div>
+      </div>
+    </div>
+    <div data-screen-label="Wizard step 1 Quando e dove" style="width:1440px;background:#FFFFFF;border:1px solid var(--stone-300);border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden;display:flex;min-height:900px">
+      <aside style="width:248px;flex-shrink:0;background:#1A3448;display:flex;flex-direction:column;padding:20px 14px 16px 14px;gap:4px">
+        <div style="display:flex;align-items:center;gap:12px;padding:6px 10px 18px 10px;border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:14px">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center"><i data-lucide="mountain" stroke-width="1.75" style="width:22px;height:22px;color:#FFFFFF"></i></div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="font-weight:800;font-size:16px;color:#FFFFFF;letter-spacing:-0.02em;line-height:1">Prenotar</div>
+            <div style="font-size:10.5px;font-weight:700;letter-spacing:0.12em;color:#9BBCD1;text-transform:uppercase">Pannello Sezione</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#C6DAE7;font-size:14.5px;font-weight:600"><i data-lucide="house" stroke-width="1.75" style="width:19px;height:19px"></i>Dashboard</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,0.16);color:#FFFFFF;font-size:14.5px;font-weight:700"><i data-lucide="calendar-plus" stroke-width="1.75" style="width:19px;height:19px"></i>Nuova prenotazione</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#C6DAE7;font-size:14.5px;font-weight:600"><i data-lucide="clipboard-list" stroke-width="1.75" style="width:19px;height:19px"></i>Le mie prenotazioni</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#C6DAE7;font-size:14.5px;font-weight:600"><i data-lucide="calendar-days" stroke-width="1.75" style="width:19px;height:19px"></i>Calendario torri</div>
+        <div style="flex:1"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 10px 4px 10px;border-top:1px solid rgba(255,255,255,0.12)">
+          <div style="width:36px;height:36px;border-radius:999px;background:#3E6E90;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF">SB</div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="font-size:13.5px;font-weight:700;color:#FFFFFF;line-height:1.2">Sezione di Bergamo</div>
+            <div style="font-size:12px;color:#9BBCD1">Presidente</div>
+          </div>
+        </div>
+      </aside>
+      <div style="flex:1;background:var(--stone-50);display:flex;flex-direction:column">
+        <div style="height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 36px;border-bottom:1px solid var(--stone-200);background:#FFFFFF">
+          <div style="font-size:14px;color:var(--stone-500)">Nuova prenotazione <span style="color:var(--stone-400)">/</span> <span style="font-weight:700;color:var(--stone-800)">Quando e dove</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--stone-600)"><i data-lucide="circle-help" stroke-width="1.75" style="width:18px;height:18px"></i>Guida</div>
+        </div>
+        <div style="padding:36px 36px 44px 36px;display:flex;flex-direction:column;align-items:center;gap:32px">
+          <!-- progress -->
+          <div style="display:flex;align-items:flex-start;width:100%;max-width:940px">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:132px">
+              <div style="width:34px;height:34px;border-radius:999px;background:#FFFFFF;border:2px solid #2E5878;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#2E5878">1</div>
+              <div style="font-size:13px;font-weight:800;color:#1A3448;text-align:center">Quando e dove</div>
+            </div>
+            <div style="flex:1;height:2px;background:var(--stone-300);margin-top:16px"></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:132px">
+              <div style="width:34px;height:34px;border-radius:999px;background:var(--stone-100);border:2px solid var(--stone-300);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--stone-500)">2</div>
+              <div style="font-size:13px;font-weight:600;color:var(--stone-500);text-align:center">Evento</div>
+            </div>
+            <div style="flex:1;height:2px;background:var(--stone-300);margin-top:16px"></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:132px">
+              <div style="width:34px;height:34px;border-radius:999px;background:var(--stone-100);border:2px solid var(--stone-300);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--stone-500)">3</div>
+              <div style="font-size:13px;font-weight:600;color:var(--stone-500);text-align:center">Logistica</div>
+            </div>
+            <div style="flex:1;height:2px;background:var(--stone-300);margin-top:16px"></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:132px">
+              <div style="width:34px;height:34px;border-radius:999px;background:var(--stone-100);border:2px solid var(--stone-300);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--stone-500)">4</div>
+              <div style="font-size:13px;font-weight:600;color:var(--stone-500);text-align:center">Responsabile</div>
+            </div>
+            <div style="flex:1;height:2px;background:var(--stone-300);margin-top:16px"></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:132px">
+              <div style="width:34px;height:34px;border-radius:999px;background:var(--stone-100);border:2px solid var(--stone-300);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--stone-500)">5</div>
+              <div style="font-size:13px;font-weight:600;color:var(--stone-500);text-align:center">Riepilogo</div>
+            </div>
+          </div>
+          <!-- card -->
+          <div style="width:100%;max-width:940px;background:#FFFFFF;border:1px solid var(--stone-200);border-radius:20px;box-shadow:var(--shadow-xs);padding:32px 36px;display:flex;flex-direction:column;gap:28px">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <h3 style="margin:0;font-size:20px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Quando ti serve la torre?</h3>
+              <p style="margin:0;font-size:14px;color:var(--stone-600)">Indica il periodo di utilizzo. La disponibilità qui sotto si aggiorna in base alle date.</p>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="font-size:13px;font-weight:700;color:var(--stone-700)">Data inizio utilizzo <span style="color:var(--danger-600)">*</span></label>
+                <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border:1.5px solid var(--stone-300);border-radius:10px;background:#FFFFFF"><i data-lucide="calendar" stroke-width="1.75" style="width:18px;height:18px;color:var(--stone-500)"></i><span style="font-size:15px;color:var(--stone-800)">19/09/2026</span></div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="font-size:13px;font-weight:700;color:var(--stone-700)">Data fine utilizzo <span style="color:var(--danger-600)">*</span></label>
+                <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border:1.5px solid var(--stone-300);border-radius:10px;background:#FFFFFF"><i data-lucide="calendar" stroke-width="1.75" style="width:18px;height:18px;color:var(--stone-500)"></i><span style="font-size:15px;color:var(--stone-800)">21/09/2026</span></div>
+              </div>
+            </div>
+            <!-- torre -->
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;flex-direction:column;gap:3px">
+                <label style="font-size:13px;font-weight:700;color:var(--stone-700)">Quale torre preferisci?</label>
+                <div style="font-size:13px;color:var(--stone-500)">Facoltativo: se non scegli, sarà il Gruppo Regionale ad assegnarla.</div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+                <div style="border:1.5px solid var(--stone-300);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:9px;background:#FFFFFF">
+                  <div style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:18px;border-radius:999px;border:2px solid var(--stone-400)"></span><span style="font-size:15px;font-weight:800;color:var(--stone-800)">Nessuna preferenza</span></div>
+                  <div style="font-size:13px;color:var(--stone-600);line-height:1.5">Il GR assegnerà la torre disponibile più adatta.</div>
+                </div>
+                <div style="border:2px solid #2E5878;border-radius:14px;padding:17px;display:flex;flex-direction:column;gap:9px;background:#F0F6FA">
+                  <div style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:18px;border-radius:999px;border:5.5px solid #2E5878;background:#FFFFFF"></span><span style="font-size:15px;font-weight:800;color:var(--stone-900)">Torre 1 · CityWall 8m</span><span style="width:10px;height:10px;border-radius:999px;background:var(--green-600);margin-left:auto"></span></div>
+                  <div style="display:flex;align-items:flex-start;gap:7px;font-size:13px;color:var(--stone-700);line-height:1.45"><i data-lucide="map-pin" stroke-width="1.75" style="width:15px;height:15px;color:var(--green-600);margin-top:1px;flex-shrink:0"></i><span><strong>Deposito:</strong> Via delle Industrie 12, Zanica (BG)</span></div>
+                </div>
+                <div style="border:1.5px solid var(--stone-300);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:9px;background:#FFFFFF">
+                  <div style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:18px;border-radius:999px;border:2px solid var(--stone-400)"></span><span style="font-size:15px;font-weight:800;color:var(--stone-800)">Torre 2 · CityWall 5m</span><span style="width:10px;height:10px;border-radius:999px;background:var(--larch-600);margin-left:auto"></span></div>
+                  <div style="display:flex;align-items:flex-start;gap:7px;font-size:13px;color:var(--stone-600);line-height:1.45"><i data-lucide="map-pin" stroke-width="1.75" style="width:15px;height:15px;color:var(--larch-600);margin-top:1px;flex-shrink:0"></i><span><strong>Deposito:</strong> Via Nazionale 88, Colico (LC)</span></div>
+                </div>
+              </div>
+            </div>
+            <!-- manuale: requisito di sicurezza -->
+            <sc-if value="{{ nonManualeLetto }}" hint-placeholder-val="{{ true }}">
+              <div style="border:1.5px solid var(--larch-200);background:var(--larch-100);border-radius:14px;padding:20px 22px;display:flex;gap:16px;align-items:flex-start">
+                <i data-lucide="book-open" stroke-width="1.75" style="width:24px;height:24px;color:var(--larch-700);flex-shrink:0;margin-top:2px"></i>
+                <div style="display:flex;flex-direction:column;gap:12px;flex:1">
+                  <div style="display:flex;flex-direction:column;gap:4px">
+                    <div style="font-size:15px;font-weight:800;color:var(--stone-900)">Prima di continuare: leggi il manuale della Torre 1</div>
+                    <div style="font-size:13.5px;color:var(--stone-700);line-height:1.5">È un requisito di sicurezza. Se cambi torre dovrai confermare di nuovo la lettura.</div>
+                  </div>
+                  <a href="#1c" style="display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--larch-700);text-decoration:underline;width:fit-content"><i data-lucide="file-text" stroke-width="1.75" style="width:17px;height:17px"></i>Manuale d'istruzioni — Torre 1 · CityWall 8m (PDF, 2,4 MB)</a>
+                  <label style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:#FFFFFF;border:1.5px solid var(--larch-200);border-radius:10px;cursor:pointer">
+                    <span style="width:22px;height:22px;border:2px solid var(--larch-700);border-radius:6px;background:#FFFFFF;flex-shrink:0"></span>
+                    <span style="font-size:14.5px;font-weight:700;color:var(--stone-900)">Dichiaro di aver letto il manuale d'istruzioni della torre selezionata <span style="color:var(--danger-600)">*</span></span>
+                  </label>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ manualeLetto }}" hint-placeholder-val="{{ false }}">
+              <div style="border:1.5px solid var(--green-200);background:var(--green-50);border-radius:14px;padding:20px 22px;display:flex;gap:16px;align-items:flex-start">
+                <i data-lucide="book-open-check" stroke-width="1.75" style="width:24px;height:24px;color:var(--green-600);flex-shrink:0;margin-top:2px"></i>
+                <div style="display:flex;flex-direction:column;gap:12px;flex:1">
+                  <div style="display:flex;flex-direction:column;gap:4px">
+                    <div style="font-size:15px;font-weight:800;color:var(--stone-900)">Manuale della Torre 1 confermato</div>
+                    <div style="font-size:13.5px;color:var(--stone-700);line-height:1.5">Se cambi torre dovrai confermare di nuovo la lettura del manuale corrispondente.</div>
+                  </div>
+                  <a href="#1c" style="display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--green-700);text-decoration:underline;width:fit-content"><i data-lucide="file-text" stroke-width="1.75" style="width:17px;height:17px"></i>Manuale d'istruzioni — Torre 1 · CityWall 8m (PDF, 2,4 MB)</a>
+                  <label style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:#FFFFFF;border:1.5px solid var(--green-200);border-radius:10px;cursor:pointer">
+                    <span style="width:22px;height:22px;border-radius:6px;background:var(--green-600);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="check" stroke-width="3" style="width:14px;height:14px;color:#FFFFFF"></i></span>
+                    <span style="font-size:14.5px;font-weight:700;color:var(--stone-900)">Dichiaro di aver letto il manuale d'istruzioni della torre selezionata</span>
+                  </label>
+                </div>
+              </div>
+            </sc-if>
+            <!-- disponibilità -->
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;flex-direction:column;gap:3px">
+                  <label style="font-size:13px;font-weight:700;color:var(--stone-700)">Disponibilità — settembre 2026</label>
+                  <div style="font-size:13px;color:var(--stone-500)">I giorni colorati sono già occupati. Le tue date sono evidenziate.</div>
+                </div>
+                <div style="display:flex;gap:14px">
+                  <span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:var(--stone-700)"><span style="width:10px;height:10px;border-radius:3px;background:var(--green-600)"></span>Torre 1</span>
+                  <span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:var(--stone-700)"><span style="width:10px;height:10px;border-radius:3px;background:var(--larch-600)"></span>Torre 2</span>
+                </div>
+              </div>
+              <div style="border:1px solid var(--stone-200);border-radius:14px;overflow:hidden">
+                <div style="display:grid;grid-template-columns:repeat(7,1fr);background:var(--stone-100);border-bottom:1px solid var(--stone-200)">
+                  <div style="padding:8px 0;text-align:center;font-size:12px;font-weight:800;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.06em">Lun</div>
+                  <div style="padding:8px 0;text-align:center;font-size:12px;font-weight:800;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.06em">Mar</div>
+                  <div style="padding:8px 0;text-align:center;font-size:12px;font-weight:800;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.06em">Mer</div>
+                  <div style="padding:8px 0;text-align:center;font-size:12px;font-weight:800;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.06em">Gio</div>
+                  <div style="padding:8px 0;text-align:center;font-size:12px;font-weight:800;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.06em">Ven</div>
+                  <div style="padding:8px 0;text-align:center;font-size:12px;font-weight:800;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.06em">Sab</div>
+                  <div style="padding:8px 0;text-align:center;font-size:12px;font-weight:800;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.06em">Dom</div>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(7,1fr)">
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--stone-400);border-bottom:1px solid var(--stone-100)">31</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--stone-700);border-bottom:1px solid var(--stone-100)">1</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--stone-700);border-bottom:1px solid var(--stone-100)">2</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--stone-700);border-bottom:1px solid var(--stone-100)">3</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF;background:var(--green-600);border-bottom:1px solid var(--stone-100)">4</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF;background:var(--green-600);border-bottom:1px solid var(--stone-100)">5</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF;background:var(--green-600);border-bottom:1px solid var(--stone-100)">6</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--stone-700);border-bottom:1px solid var(--stone-100)">7</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--stone-700);border-bottom:1px solid var(--stone-100)">8</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--stone-700);border-bottom:1px solid var(--stone-100)">9</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--stone-700);border-bottom:1px solid var(--stone-100)">10</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--stone-700);border-bottom:1px solid var(--stone-100)">11</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF;background:var(--larch-600);border-bottom:1px solid var(--stone-100)">12</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF;background:var(--larch-600);border-bottom:1px solid var(--stone-100)">13</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--stone-700)">14</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--stone-700)">15</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--stone-700)">16</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--stone-700)">17</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--stone-700)">18</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#1A3448;background:#C6DAE7;border:2px solid #2E5878;border-right:none">19</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#1A3448;background:#C6DAE7;border-top:2px solid #2E5878;border-bottom:2px solid #2E5878">20</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#1A3448;background:#C6DAE7;border:2px solid #2E5878;border-left:none">21</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--stone-700)">22</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--stone-700)">23</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--stone-700)">24</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF;background:var(--larch-600)">25</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF;background:var(--larch-600)">26</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF;background:var(--larch-600)">27</div>
+                  <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--stone-700)">28</div>
+                </div>
+              </div>
+            </div>
+            <!-- footer -->
+            <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--stone-200);padding-top:22px">
+              <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="ghost" size="md" hint-size="auto,44px">Annulla</x-import>
+              <div style="display:flex;align-items:center;gap:14px">
+                <sc-if value="{{ nonManualeLetto }}" hint-placeholder-val="{{ true }}">
+                  <span style="font-size:13.5px;font-weight:600;color:var(--larch-700)">Conferma la lettura del manuale per continuare</span>
+                </sc-if>
+                <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="primary" size="md" disabled="{{ continuaDisabilitato }}" hint-size="auto,44px">Continua</x-import>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 1d · WIZARD STEP 3 — Logistica trasporto                      -->
+  <!-- ============================================================ -->
+  <div id="1d" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="#1d" style="display:inline-flex;padding:5px 12px;border-radius:999px;background:#1A3448;color:#FFFFFF;font-size:12px;font-weight:800;letter-spacing:0.06em;text-decoration:none">1D</a>
+      <div>
+        <div style="font-weight:800;font-size:16px;color:var(--stone-900)">Wizard · Step 3 — Logistica trasporto</div>
+        <div style="font-size:13px;color:var(--stone-600)">Toggle mezzo aziendale/privato (nei Tweaks); un'unica data di riconsegna, la stessa mostrata nel calendario (BUG-04)</div>
+      </div>
+    </div>
+    <div data-screen-label="Wizard step 3 Logistica" style="width:1440px;background:#FFFFFF;border:1px solid var(--stone-300);border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden;display:flex;min-height:900px">
+      <aside style="width:248px;flex-shrink:0;background:#1A3448;display:flex;flex-direction:column;padding:20px 14px 16px 14px;gap:4px">
+        <div style="display:flex;align-items:center;gap:12px;padding:6px 10px 18px 10px;border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:14px">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center"><i data-lucide="mountain" stroke-width="1.75" style="width:22px;height:22px;color:#FFFFFF"></i></div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="font-weight:800;font-size:16px;color:#FFFFFF;letter-spacing:-0.02em;line-height:1">Prenotar</div>
+            <div style="font-size:10.5px;font-weight:700;letter-spacing:0.12em;color:#9BBCD1;text-transform:uppercase">Pannello Sezione</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#C6DAE7;font-size:14.5px;font-weight:600"><i data-lucide="house" stroke-width="1.75" style="width:19px;height:19px"></i>Dashboard</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,0.16);color:#FFFFFF;font-size:14.5px;font-weight:700"><i data-lucide="calendar-plus" stroke-width="1.75" style="width:19px;height:19px"></i>Nuova prenotazione</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#C6DAE7;font-size:14.5px;font-weight:600"><i data-lucide="clipboard-list" stroke-width="1.75" style="width:19px;height:19px"></i>Le mie prenotazioni</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#C6DAE7;font-size:14.5px;font-weight:600"><i data-lucide="calendar-days" stroke-width="1.75" style="width:19px;height:19px"></i>Calendario torri</div>
+        <div style="flex:1"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 10px 4px 10px;border-top:1px solid rgba(255,255,255,0.12)">
+          <div style="width:36px;height:36px;border-radius:999px;background:#3E6E90;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF">SB</div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="font-size:13.5px;font-weight:700;color:#FFFFFF;line-height:1.2">Sezione di Bergamo</div>
+            <div style="font-size:12px;color:#9BBCD1">Presidente</div>
+          </div>
+        </div>
+      </aside>
+      <div style="flex:1;background:var(--stone-50);display:flex;flex-direction:column">
+        <div style="height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 36px;border-bottom:1px solid var(--stone-200);background:#FFFFFF">
+          <div style="font-size:14px;color:var(--stone-500)">Nuova prenotazione <span style="color:var(--stone-400)">/</span> <span style="font-weight:700;color:var(--stone-800)">Logistica trasporto</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--stone-600)"><i data-lucide="circle-help" stroke-width="1.75" style="width:18px;height:18px"></i>Guida</div>
+        </div>
+        <div style="padding:36px 36px 44px 36px;display:flex;flex-direction:column;align-items:center;gap:32px">
+          <!-- progress -->
+          <div style="display:flex;align-items:flex-start;width:100%;max-width:940px">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:132px">
+              <div style="width:34px;height:34px;border-radius:999px;background:#2E5878;display:flex;align-items:center;justify-content:center"><i data-lucide="check" stroke-width="3" style="width:16px;height:16px;color:#FFFFFF"></i></div>
+              <div style="font-size:13px;font-weight:600;color:var(--stone-600);text-align:center">Quando e dove</div>
+            </div>
+            <div style="flex:1;height:2px;background:#2E5878;margin-top:16px"></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:132px">
+              <div style="width:34px;height:34px;border-radius:999px;background:#2E5878;display:flex;align-items:center;justify-content:center"><i data-lucide="check" stroke-width="3" style="width:16px;height:16px;color:#FFFFFF"></i></div>
+              <div style="font-size:13px;font-weight:600;color:var(--stone-600);text-align:center">Evento</div>
+            </div>
+            <div style="flex:1;height:2px;background:#2E5878;margin-top:16px"></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:132px">
+              <div style="width:34px;height:34px;border-radius:999px;background:#FFFFFF;border:2px solid #2E5878;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#2E5878">3</div>
+              <div style="font-size:13px;font-weight:800;color:#1A3448;text-align:center">Logistica</div>
+            </div>
+            <div style="flex:1;height:2px;background:var(--stone-300);margin-top:16px"></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:132px">
+              <div style="width:34px;height:34px;border-radius:999px;background:var(--stone-100);border:2px solid var(--stone-300);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--stone-500)">4</div>
+              <div style="font-size:13px;font-weight:600;color:var(--stone-500);text-align:center">Responsabile</div>
+            </div>
+            <div style="flex:1;height:2px;background:var(--stone-300);margin-top:16px"></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:132px">
+              <div style="width:34px;height:34px;border-radius:999px;background:var(--stone-100);border:2px solid var(--stone-300);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--stone-500)">5</div>
+              <div style="font-size:13px;font-weight:600;color:var(--stone-500);text-align:center">Riepilogo</div>
+            </div>
+          </div>
+          <!-- card -->
+          <div style="width:100%;max-width:940px;background:#FFFFFF;border:1px solid var(--stone-200);border-radius:20px;box-shadow:var(--shadow-xs);padding:32px 36px;display:flex;flex-direction:column;gap:28px">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <h3 style="margin:0;font-size:20px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Come trasporterai la torre?</h3>
+              <p style="margin:0;font-size:14px;color:var(--stone-600)">Date e luoghi di ritiro e riconsegna presso il deposito, e mezzo utilizzato.</p>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="font-size:13px;font-weight:700;color:var(--stone-700)">Data ritiro <span style="color:var(--danger-600)">*</span></label>
+                <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border:1.5px solid var(--stone-300);border-radius:10px;background:#FFFFFF"><i data-lucide="calendar" stroke-width="1.75" style="width:18px;height:18px;color:var(--stone-500)"></i><span style="font-size:15px;color:var(--stone-800)">18/09/2026</span></div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="font-size:13px;font-weight:700;color:var(--stone-700)">Luogo ritiro</label>
+                <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border:1.5px solid var(--stone-300);border-radius:10px;background:var(--stone-100)"><i data-lucide="map-pin" stroke-width="1.75" style="width:18px;height:18px;color:var(--green-600)"></i><span style="font-size:15px;color:var(--stone-800)">Deposito Torre 1 — Via delle Industrie 12, Zanica (BG)</span></div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="font-size:13px;font-weight:700;color:var(--stone-700)">Data riconsegna <span style="color:var(--danger-600)">*</span></label>
+                <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border:1.5px solid var(--stone-300);border-radius:10px;background:#FFFFFF"><i data-lucide="calendar" stroke-width="1.75" style="width:18px;height:18px;color:var(--stone-500)"></i><span style="font-size:15px;color:var(--stone-800)">22/09/2026</span></div>
+                <div style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--stone-500)"><i data-lucide="info" stroke-width="1.75" style="width:14px;height:14px"></i>È la stessa data mostrata nel calendario delle torri.</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="font-size:13px;font-weight:700;color:var(--stone-700)">Luogo riconsegna</label>
+                <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border:1.5px solid var(--stone-300);border-radius:10px;background:var(--stone-100)"><i data-lucide="map-pin" stroke-width="1.75" style="width:18px;height:18px;color:var(--green-600)"></i><span style="font-size:15px;color:var(--stone-800)">Deposito Torre 1 — Via delle Industrie 12, Zanica (BG)</span></div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="font-size:13px;font-weight:700;color:var(--stone-700)">Azienda di trasporto</label>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border:1.5px solid var(--stone-300);border-radius:10px;background:#FFFFFF"><span style="font-size:15px;color:var(--stone-800)">Montagna Servizi SCPA</span><i data-lucide="chevron-down" stroke-width="1.75" style="width:18px;height:18px;color:var(--stone-500)"></i></div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="font-size:13px;font-weight:700;color:var(--stone-700)">Targa del mezzo <span style="color:var(--danger-600)">*</span></label>
+                <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border:1.5px solid var(--stone-300);border-radius:10px;background:#FFFFFF"><span style="font-size:15px;color:var(--stone-800);letter-spacing:0.08em">GK 482 MZ</span></div>
+              </div>
+            </div>
+            <!-- mezzo -->
+            <div style="display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--stone-200);padding-top:24px">
+              <label style="font-size:13px;font-weight:700;color:var(--stone-700)">Che mezzo userai per il traino? <span style="color:var(--danger-600)">*</span></label>
+              <sc-if value="{{ mezzoAziendale }}" hint-placeholder-val="{{ false }}">
+                <div style="display:inline-flex;background:var(--stone-100);border:1px solid var(--stone-200);border-radius:999px;padding:4px;gap:4px;width:fit-content">
+                  <span style="padding:9px 22px;border-radius:999px;background:#2E5878;color:#FFFFFF;font-size:14px;font-weight:700">Mezzo aziendale</span>
+                  <span style="padding:9px 22px;border-radius:999px;color:var(--stone-600);font-size:14px;font-weight:600">Mezzo privato</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--stone-600)"><i data-lucide="info" stroke-width="1.75" style="width:16px;height:16px"></i>Il trasporto è affidato all'azienda indicata: nessun altro dato richiesto.</div>
+              </sc-if>
+              <sc-if value="{{ mezzoPrivato }}" hint-placeholder-val="{{ true }}">
+                <div style="display:inline-flex;background:var(--stone-100);border:1px solid var(--stone-200);border-radius:999px;padding:4px;gap:4px;width:fit-content">
+                  <span style="padding:9px 22px;border-radius:999px;color:var(--stone-600);font-size:14px;font-weight:600">Mezzo aziendale</span>
+                  <span style="padding:9px 22px;border-radius:999px;background:#2E5878;color:#FFFFFF;font-size:14px;font-weight:700">Mezzo privato</span>
+                </div>
+                <div style="border:1.5px solid #C6DAE7;background:#F0F6FA;border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+                  <div style="display:flex;flex-direction:column;gap:3px">
+                    <div style="font-size:14.5px;font-weight:800;color:var(--stone-900)">Categoria patente di chi guida <span style="color:var(--danger-600)">*</span></div>
+                    <div style="font-size:13px;color:var(--stone-600)">Con mezzo privato serve la patente adeguata al peso del rimorchio. Dovrai allegarne copia prima dell'invio.</div>
+                  </div>
+                  <div style="display:flex;gap:14px">
+                    <div style="flex:1;border:2px solid #2E5878;border-radius:12px;padding:14px 16px;background:#FFFFFF;display:flex;align-items:center;gap:10px"><span style="width:18px;height:18px;border-radius:999px;border:5.5px solid #2E5878;background:#FFFFFF;flex-shrink:0"></span><div><div style="font-size:15px;font-weight:800;color:var(--stone-900)">Patente B</div><div style="font-size:12.5px;color:var(--stone-600)">Rimorchio fino a 750 kg</div></div></div>
+                    <div style="flex:1;border:1.5px solid var(--stone-300);border-radius:12px;padding:14px 16px;background:#FFFFFF;display:flex;align-items:center;gap:10px"><span style="width:18px;height:18px;border-radius:999px;border:2px solid var(--stone-400);flex-shrink:0"></span><div><div style="font-size:15px;font-weight:800;color:var(--stone-800)">Patente B+E</div><div style="font-size:12.5px;color:var(--stone-600)">Rimorchio oltre 750 kg</div></div></div>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+            <!-- footer -->
+            <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--stone-200);padding-top:22px">
+              <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="ghost" size="md" hint-size="auto,44px">Indietro</x-import>
+              <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="primary" size="md" hint-size="auto,44px">Continua</x-import>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 1e · WIZARD STEP 5 — Riepilogo                                -->
+  <!-- ============================================================ -->
+  <div id="1e" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="#1e" style="display:inline-flex;padding:5px 12px;border-radius:999px;background:#1A3448;color:#FFFFFF;font-size:12px;font-weight:800;letter-spacing:0.06em;text-decoration:none">1E</a>
+      <div>
+        <div style="font-weight:800;font-size:16px;color:var(--stone-900)">Wizard · Step 5 — Riepilogo</div>
+        <div style="font-size:13px;color:var(--stone-600)">Ogni gruppo è modificabile; avviso esplicito sulla delibera prima del salvataggio</div>
+      </div>
+    </div>
+    <div data-screen-label="Wizard step 5 Riepilogo" style="width:1440px;background:#FFFFFF;border:1px solid var(--stone-300);border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden;display:flex;min-height:900px">
+      <aside style="width:248px;flex-shrink:0;background:#1A3448;display:flex;flex-direction:column;padding:20px 14px 16px 14px;gap:4px">
+        <div style="display:flex;align-items:center;gap:12px;padding:6px 10px 18px 10px;border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:14px">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center"><i data-lucide="mountain" stroke-width="1.75" style="width:22px;height:22px;color:#FFFFFF"></i></div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="font-weight:800;font-size:16px;color:#FFFFFF;letter-spacing:-0.02em;line-height:1">Prenotar</div>
+            <div style="font-size:10.5px;font-weight:700;letter-spacing:0.12em;color:#9BBCD1;text-transform:uppercase">Pannello Sezione</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#C6DAE7;font-size:14.5px;font-weight:600"><i data-lucide="house" stroke-width="1.75" style="width:19px;height:19px"></i>Dashboard</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,0.16);color:#FFFFFF;font-size:14.5px;font-weight:700"><i data-lucide="calendar-plus" stroke-width="1.75" style="width:19px;height:19px"></i>Nuova prenotazione</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#C6DAE7;font-size:14.5px;font-weight:600"><i data-lucide="clipboard-list" stroke-width="1.75" style="width:19px;height:19px"></i>Le mie prenotazioni</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#C6DAE7;font-size:14.5px;font-weight:600"><i data-lucide="calendar-days" stroke-width="1.75" style="width:19px;height:19px"></i>Calendario torri</div>
+        <div style="flex:1"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 10px 4px 10px;border-top:1px solid rgba(255,255,255,0.12)">
+          <div style="width:36px;height:36px;border-radius:999px;background:#3E6E90;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF">SB</div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="font-size:13.5px;font-weight:700;color:#FFFFFF;line-height:1.2">Sezione di Bergamo</div>
+            <div style="font-size:12px;color:#9BBCD1">Presidente</div>
+          </div>
+        </div>
+      </aside>
+      <div style="flex:1;background:var(--stone-50);display:flex;flex-direction:column">
+        <div style="height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 36px;border-bottom:1px solid var(--stone-200);background:#FFFFFF">
+          <div style="font-size:14px;color:var(--stone-500)">Nuova prenotazione <span style="color:var(--stone-400)">/</span> <span style="font-weight:700;color:var(--stone-800)">Riepilogo</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--stone-600)"><i data-lucide="circle-help" stroke-width="1.75" style="width:18px;height:18px"></i>Guida</div>
+        </div>
+        <div style="padding:36px 36px 44px 36px;display:flex;flex-direction:column;align-items:center;gap:32px">
+          <!-- progress -->
+          <div style="display:flex;align-items:flex-start;width:100%;max-width:940px">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:132px">
+              <div style="width:34px;height:34px;border-radius:999px;background:#2E5878;display:flex;align-items:center;justify-content:center"><i data-lucide="check" stroke-width="3" style="width:16px;height:16px;color:#FFFFFF"></i></div>
+              <div style="font-size:13px;font-weight:600;color:var(--stone-600);text-align:center">Quando e dove</div>
+            </div>
+            <div style="flex:1;height:2px;background:#2E5878;margin-top:16px"></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:132px">
+              <div style="width:34px;height:34px;border-radius:999px;background:#2E5878;display:flex;align-items:center;justify-content:center"><i data-lucide="check" stroke-width="3" style="width:16px;height:16px;color:#FFFFFF"></i></div>
+              <div style="font-size:13px;font-weight:600;color:var(--stone-600);text-align:center">Evento</div>
+            </div>
+            <div style="flex:1;height:2px;background:#2E5878;margin-top:16px"></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:132px">
+              <div style="width:34px;height:34px;border-radius:999px;background:#2E5878;display:flex;align-items:center;justify-content:center"><i data-lucide="check" stroke-width="3" style="width:16px;height:16px;color:#FFFFFF"></i></div>
+              <div style="font-size:13px;font-weight:600;color:var(--stone-600);text-align:center">Logistica</div>
+            </div>
+            <div style="flex:1;height:2px;background:#2E5878;margin-top:16px"></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:132px">
+              <div style="width:34px;height:34px;border-radius:999px;background:#2E5878;display:flex;align-items:center;justify-content:center"><i data-lucide="check" stroke-width="3" style="width:16px;height:16px;color:#FFFFFF"></i></div>
+              <div style="font-size:13px;font-weight:600;color:var(--stone-600);text-align:center">Responsabile</div>
+            </div>
+            <div style="flex:1;height:2px;background:#2E5878;margin-top:16px"></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:132px">
+              <div style="width:34px;height:34px;border-radius:999px;background:#FFFFFF;border:2px solid #2E5878;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#2E5878">5</div>
+              <div style="font-size:13px;font-weight:800;color:#1A3448;text-align:center">Riepilogo</div>
+            </div>
+          </div>
+          <!-- card -->
+          <div style="width:100%;max-width:940px;background:#FFFFFF;border:1px solid var(--stone-200);border-radius:20px;box-shadow:var(--shadow-xs);padding:32px 36px;display:flex;flex-direction:column;gap:24px">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <h3 style="margin:0;font-size:20px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Controlla e salva la richiesta</h3>
+              <p style="margin:0;font-size:14px;color:var(--stone-600)">Verifica i dati inseriti: puoi modificare ogni sezione prima di salvare.</p>
+            </div>
+            <div style="border:1px solid var(--stone-200);border-radius:14px;padding:22px 24px;display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:10px;font-size:15px;font-weight:800;color:var(--stone-900)"><i data-lucide="calendar-range" stroke-width="1.75" style="width:19px;height:19px;color:#2E5878"></i>Quando e dove</div>
+                <span style="font-size:13.5px;font-weight:700;color:#23445D;text-decoration:underline;cursor:pointer">Modifica</span>
+              </div>
+              <div style="display:grid;grid-template-columns:220px 1fr;gap:8px 24px;font-size:14.5px">
+                <div style="color:var(--stone-500)">Periodo di utilizzo</div><div style="color:var(--stone-800);font-weight:600">19 – 21 settembre 2026</div>
+                <div style="color:var(--stone-500)">Torre richiesta</div><div style="color:var(--stone-800);font-weight:600;display:flex;align-items:center;gap:8px"><span style="width:9px;height:9px;border-radius:999px;background:var(--green-600)"></span>Torre 1 · CityWall 8m</div>
+                <div style="color:var(--stone-500)">Deposito torre</div><div style="color:var(--stone-800);font-weight:600">Via delle Industrie 12, Zanica (BG)</div>
+                <div style="color:var(--stone-500)">Manuale d'istruzioni</div><div style="color:var(--green-700);font-weight:700;display:flex;align-items:center;gap:6px"><i data-lucide="circle-check" stroke-width="1.75" style="width:16px;height:16px"></i>Lettura confermata</div>
+              </div>
+            </div>
+            <div style="border:1px solid var(--stone-200);border-radius:14px;padding:22px 24px;display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:10px;font-size:15px;font-weight:800;color:var(--stone-900)"><i data-lucide="flag" stroke-width="1.75" style="width:19px;height:19px;color:#2E5878"></i>Evento</div>
+                <span style="font-size:13.5px;font-weight:700;color:#23445D;text-decoration:underline;cursor:pointer">Modifica</span>
+              </div>
+              <div style="display:grid;grid-template-columns:220px 1fr;gap:8px 24px;font-size:14.5px">
+                <div style="color:var(--stone-500)">Nome evento</div><div style="color:var(--stone-800);font-weight:600">Festa dello Sport — Bergamo</div>
+                <div style="color:var(--stone-500)">Tipo</div><div style="color:var(--stone-800);font-weight:600">Manifestazione CAI</div>
+                <div style="color:var(--stone-500)">Indirizzo</div><div style="color:var(--stone-800);font-weight:600">Piazzale degli Alpini, Bergamo</div>
+                <div style="color:var(--stone-500)">Date evento</div><div style="color:var(--stone-800);font-weight:600">19 – 21 settembre 2026</div>
+              </div>
+            </div>
+            <div style="border:1px solid var(--stone-200);border-radius:14px;padding:22px 24px;display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:10px;font-size:15px;font-weight:800;color:var(--stone-900)"><i data-lucide="truck" stroke-width="1.75" style="width:19px;height:19px;color:#2E5878"></i>Logistica trasporto</div>
+                <span style="font-size:13.5px;font-weight:700;color:#23445D;text-decoration:underline;cursor:pointer">Modifica</span>
+              </div>
+              <div style="display:grid;grid-template-columns:220px 1fr;gap:8px 24px;font-size:14.5px">
+                <div style="color:var(--stone-500)">Ritiro</div><div style="color:var(--stone-800);font-weight:600">18 set 2026 · Deposito Zanica (BG)</div>
+                <div style="color:var(--stone-500)">Riconsegna</div><div style="color:var(--stone-800);font-weight:600">22 set 2026 · Deposito Zanica (BG)</div>
+                <div style="color:var(--stone-500)">Mezzo</div><div style="color:var(--stone-800);font-weight:600">Privato · targa GK 482 MZ · patente B</div>
+              </div>
+            </div>
+            <div style="border:1px solid var(--stone-200);border-radius:14px;padding:22px 24px;display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:10px;font-size:15px;font-weight:800;color:var(--stone-900)"><i data-lucide="user-round" stroke-width="1.75" style="width:19px;height:19px;color:#2E5878"></i>Responsabile in loco</div>
+                <span style="font-size:13.5px;font-weight:700;color:#23445D;text-decoration:underline;cursor:pointer">Modifica</span>
+              </div>
+              <div style="display:grid;grid-template-columns:220px 1fr;gap:8px 24px;font-size:14.5px">
+                <div style="color:var(--stone-500)">Nome</div><div style="color:var(--stone-800);font-weight:600">Luca Pellegrini</div>
+                <div style="color:var(--stone-500)">Tipo e titolo CAI</div><div style="color:var(--stone-800);font-weight:600">Istruttore · INAL — Istruttore Nazionale di Alpinismo</div>
+                <div style="color:var(--stone-500)">Contatti</div><div style="color:var(--stone-800);font-weight:600">347 552 8190 · l.pellegrini@caibergamo.it</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:14px;background:#E4EEF4;border:1.5px solid #B9D2E0;border-radius:14px;padding:18px 22px;align-items:flex-start">
+              <i data-lucide="info" stroke-width="1.75" style="width:22px;height:22px;color:var(--info-600);flex-shrink:0;margin-top:1px"></i>
+              <div style="font-size:14px;color:var(--stone-800);line-height:1.6">Salvando, la richiesta resterà in <strong>Bozza</strong>: non è ancora inviata al Gruppo Regionale. Per inviarla dovrai prima caricare la <strong>delibera del consiglio direttivo</strong> nella pagina Allegati.</div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--stone-200);padding-top:22px">
+              <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="ghost" size="md" hint-size="auto,44px">Indietro</x-import>
+              <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="primary" size="md" hint-size="auto,44px">Salva come bozza</x-import>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 1f · MODIFICA / ALLEGATI                                      -->
+  <!-- ============================================================ -->
+  <div id="1f" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="#1f" style="display:inline-flex;padding:5px 12px;border-radius:999px;background:#1A3448;color:#FFFFFF;font-size:12px;font-weight:800;letter-spacing:0.06em;text-decoration:none">1F</a>
+      <div>
+        <div style="font-weight:800;font-size:16px;color:var(--stone-900)">Modifica prenotazione — Allegati</div>
+        <div style="font-size:13px;color:var(--stone-600)">Invio al GR bloccato finché manca la delibera; eliminazione bozza chiaramente separata</div>
+      </div>
+    </div>
+    <div data-screen-label="Modifica prenotazione Allegati" style="width:1440px;background:#FFFFFF;border:1px solid var(--stone-300);border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden;display:flex;min-height:900px">
+      <aside style="width:248px;flex-shrink:0;background:#1A3448;display:flex;flex-direction:column;padding:20px 14px 16px 14px;gap:4px">
+        <div style="display:flex;align-items:center;gap:12px;padding:6px 10px 18px 10px;border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:14px">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center"><i data-lucide="mountain" stroke-width="1.75" style="width:22px;height:22px;color:#FFFFFF"></i></div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="font-weight:800;font-size:16px;color:#FFFFFF;letter-spacing:-0.02em;line-height:1">Prenotar</div>
+            <div style="font-size:10.5px;font-weight:700;letter-spacing:0.12em;color:#9BBCD1;text-transform:uppercase">Pannello Sezione</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#C6DAE7;font-size:14.5px;font-weight:600"><i data-lucide="house" stroke-width="1.75" style="width:19px;height:19px"></i>Dashboard</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#C6DAE7;font-size:14.5px;font-weight:600"><i data-lucide="calendar-plus" stroke-width="1.75" style="width:19px;height:19px"></i>Nuova prenotazione</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,0.16);color:#FFFFFF;font-size:14.5px;font-weight:700"><i data-lucide="clipboard-list" stroke-width="1.75" style="width:19px;height:19px"></i>Le mie prenotazioni</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#C6DAE7;font-size:14.5px;font-weight:600"><i data-lucide="calendar-days" stroke-width="1.75" style="width:19px;height:19px"></i>Calendario torri</div>
+        <div style="flex:1"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 10px 4px 10px;border-top:1px solid rgba(255,255,255,0.12)">
+          <div style="width:36px;height:36px;border-radius:999px;background:#3E6E90;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF">SB</div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="font-size:13.5px;font-weight:700;color:#FFFFFF;line-height:1.2">Sezione di Bergamo</div>
+            <div style="font-size:12px;color:#9BBCD1">Presidente</div>
+          </div>
+        </div>
+      </aside>
+      <div style="flex:1;background:var(--stone-50);display:flex;flex-direction:column">
+        <div style="height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 36px;border-bottom:1px solid var(--stone-200);background:#FFFFFF">
+          <div style="font-size:14px;color:var(--stone-500)">Le mie prenotazioni <span style="color:var(--stone-400)">/</span> <span style="font-weight:700;color:var(--stone-800)">Open day sezione — autunno</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--stone-600)"><i data-lucide="circle-help" stroke-width="1.75" style="width:18px;height:18px"></i>Guida</div>
+        </div>
+        <div style="padding:36px;display:flex;flex-direction:column;gap:24px">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <h2 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Open day sezione — autunno</h2>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Badge" tone="neutral" variant="soft" hint-size="auto,24px">Bozza</x-import>
+                <span style="font-size:14px;color:var(--stone-600)">17 ottobre 2026 · torre da assegnare</span>
+              </div>
+            </div>
+            <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="outline" size="sm" hint-size="auto,34px">Modifica dati richiesta</x-import>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 380px;gap:24px;align-items:start">
+            <!-- allegati -->
+            <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:20px;padding:26px 28px;display:flex;flex-direction:column;gap:16px">
+              <div style="display:flex;flex-direction:column;gap:3px">
+                <div style="font-size:17px;font-weight:800;color:var(--stone-900)">Allegati</div>
+                <div style="font-size:13.5px;color:var(--stone-600)">La delibera del consiglio è obbligatoria per inviare la richiesta.</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:14px;padding:16px 18px;border:1.5px solid var(--larch-200);border-radius:12px;background:var(--larch-100)">
+                <i data-lucide="file-warning" stroke-width="1.75" style="width:22px;height:22px;color:var(--larch-700);flex-shrink:0"></i>
+                <div style="display:flex;flex-direction:column;gap:2px;flex:1">
+                  <div style="font-size:14.5px;font-weight:800;color:var(--stone-900)">Delibera del consiglio direttivo <span style="color:var(--danger-600)">*</span></div>
+                  <div style="font-size:13px;color:var(--stone-700)">Non ancora caricata — obbligatoria per l'invio al GR</div>
+                </div>
+                <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="primary" size="sm" hint-size="auto,34px">Carica PDF</x-import>
+              </div>
+              <div style="display:flex;align-items:center;gap:14px;padding:16px 18px;border:1px solid var(--stone-200);border-radius:12px;background:#FFFFFF">
+                <i data-lucide="file-check-2" stroke-width="1.75" style="width:22px;height:22px;color:var(--green-600);flex-shrink:0"></i>
+                <div style="display:flex;flex-direction:column;gap:2px;flex:1">
+                  <div style="font-size:14.5px;font-weight:800;color:var(--stone-900)">Autorizzazione suolo pubblico</div>
+                  <div style="font-size:13px;color:var(--stone-600)">aut-suolo-comune-bg.pdf · caricato il 02/07/2026</div>
+                </div>
+                <span style="font-size:13.5px;font-weight:700;color:#23445D;text-decoration:underline;cursor:pointer">Sostituisci</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:14px;padding:16px 18px;border:1px dashed var(--stone-300);border-radius:12px;background:var(--stone-50)">
+                <i data-lucide="file-plus-2" stroke-width="1.75" style="width:22px;height:22px;color:var(--stone-500);flex-shrink:0"></i>
+                <div style="display:flex;flex-direction:column;gap:2px;flex:1">
+                  <div style="font-size:14.5px;font-weight:700;color:var(--stone-800)">Autorizzazione ZTL</div>
+                  <div style="font-size:13px;color:var(--stone-500)">Facoltativa — solo se l'evento è in zona a traffico limitato</div>
+                </div>
+                <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="ghost" size="sm" hint-size="auto,34px">Carica</x-import>
+              </div>
+              <div style="display:flex;align-items:center;gap:14px;padding:16px 18px;border:1px dashed var(--stone-300);border-radius:12px;background:var(--stone-50)">
+                <i data-lucide="id-card" stroke-width="1.75" style="width:22px;height:22px;color:var(--stone-500);flex-shrink:0"></i>
+                <div style="display:flex;flex-direction:column;gap:2px;flex:1">
+                  <div style="font-size:14.5px;font-weight:700;color:var(--stone-800)">Patente del responsabile</div>
+                  <div style="font-size:13px;color:var(--stone-500)">Richiesta se il trasporto avviene con mezzo privato</div>
+                </div>
+                <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="ghost" size="sm" hint-size="auto,34px">Carica</x-import>
+              </div>
+              <div style="display:flex;align-items:center;gap:14px;padding:16px 18px;border:1px dashed var(--stone-300);border-radius:12px;background:var(--stone-50)">
+                <i data-lucide="paperclip" stroke-width="1.75" style="width:22px;height:22px;color:var(--stone-500);flex-shrink:0"></i>
+                <div style="display:flex;flex-direction:column;gap:2px;flex:1">
+                  <div style="font-size:14.5px;font-weight:700;color:var(--stone-800)">Altri allegati</div>
+                  <div style="font-size:13px;color:var(--stone-500)">Documenti aggiuntivi utili alla valutazione</div>
+                </div>
+                <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="ghost" size="sm" hint-size="auto,34px">Carica</x-import>
+              </div>
+            </div>
+            <!-- azioni -->
+            <div style="display:flex;flex-direction:column;gap:20px">
+              <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:20px;padding:24px 26px;display:flex;flex-direction:column;gap:14px">
+                <div style="font-size:16px;font-weight:800;color:var(--stone-900)">Invio al Gruppo Regionale</div>
+                <div style="display:flex;align-items:flex-start;gap:10px;font-size:13.5px;color:var(--stone-700);line-height:1.55">
+                  <i data-lucide="lock" stroke-width="1.75" style="width:17px;height:17px;color:var(--larch-700);flex-shrink:0;margin-top:2px"></i>
+                  <span>L'invio si abilita quando la <strong>delibera del consiglio</strong> è stata caricata.</span>
+                </div>
+                <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="primary" size="md" full-width="{{ vero }}" disabled="{{ vero }}" hint-size="100%,44px">Invia richiesta al GR</x-import>
+              </div>
+              <div style="background:#FFFFFF;border:1px solid #E7B7B0;border-radius:20px;padding:24px 26px;display:flex;flex-direction:column;gap:12px">
+                <div style="font-size:15px;font-weight:800;color:var(--danger-600)">Zona pericolosa</div>
+                <div style="font-size:13.5px;color:var(--stone-600);line-height:1.55">Puoi eliminare questa richiesta solo finché è in Bozza. L'operazione non è reversibile.</div>
+                <span style="display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border:1.5px solid var(--danger-600);border-radius:999px;color:var(--danger-600);font-size:14px;font-weight:700;cursor:pointer;width:100%;box-sizing:border-box"><i data-lucide="trash-2" stroke-width="1.75" style="width:17px;height:17px"></i>Elimina bozza</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 1g · LE MIE PRENOTAZIONI                                      -->
+  <!-- ============================================================ -->
+  <div id="1g" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="#1g" style="display:inline-flex;padding:5px 12px;border-radius:999px;background:#1A3448;color:#FFFFFF;font-size:12px;font-weight:800;letter-spacing:0.06em;text-decoration:none">1G</a>
+      <div>
+        <div style="font-weight:800;font-size:16px;color:var(--stone-900)">Le mie prenotazioni</div>
+        <div style="font-size:13px;color:var(--stone-600)">Ordinate dalla più vicina (BUG-01), archivio in tab separata (BUG-02), torri con colore coerente</div>
+      </div>
+    </div>
+    <div data-screen-label="Le mie prenotazioni" style="width:1440px;background:#FFFFFF;border:1px solid var(--stone-300);border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden;display:flex;min-height:900px">
+      <aside style="width:248px;flex-shrink:0;background:#1A3448;display:flex;flex-direction:column;padding:20px 14px 16px 14px;gap:4px">
+        <div style="display:flex;align-items:center;gap:12px;padding:6px 10px 18px 10px;border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:14px">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center"><i data-lucide="mountain" stroke-width="1.75" style="width:22px;height:22px;color:#FFFFFF"></i></div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="font-weight:800;font-size:16px;color:#FFFFFF;letter-spacing:-0.02em;line-height:1">Prenotar</div>
+            <div style="font-size:10.5px;font-weight:700;letter-spacing:0.12em;color:#9BBCD1;text-transform:uppercase">Pannello Sezione</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#C6DAE7;font-size:14.5px;font-weight:600"><i data-lucide="house" stroke-width="1.75" style="width:19px;height:19px"></i>Dashboard</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#C6DAE7;font-size:14.5px;font-weight:600"><i data-lucide="calendar-plus" stroke-width="1.75" style="width:19px;height:19px"></i>Nuova prenotazione</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,0.16);color:#FFFFFF;font-size:14.5px;font-weight:700"><i data-lucide="clipboard-list" stroke-width="1.75" style="width:19px;height:19px"></i>Le mie prenotazioni</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#C6DAE7;font-size:14.5px;font-weight:600"><i data-lucide="calendar-days" stroke-width="1.75" style="width:19px;height:19px"></i>Calendario torri</div>
+        <div style="flex:1"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 10px 4px 10px;border-top:1px solid rgba(255,255,255,0.12)">
+          <div style="width:36px;height:36px;border-radius:999px;background:#3E6E90;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF">SB</div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="font-size:13.5px;font-weight:700;color:#FFFFFF;line-height:1.2">Sezione di Bergamo</div>
+            <div style="font-size:12px;color:#9BBCD1">Presidente</div>
+          </div>
+        </div>
+      </aside>
+      <div style="flex:1;background:var(--stone-50);display:flex;flex-direction:column">
+        <div style="height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 36px;border-bottom:1px solid var(--stone-200);background:#FFFFFF">
+          <div style="font-size:14px;font-weight:700;color:var(--stone-800)">Le mie prenotazioni</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--stone-600)"><i data-lucide="circle-help" stroke-width="1.75" style="width:18px;height:18px"></i>Guida</div>
+        </div>
+        <div style="padding:36px;display:flex;flex-direction:column;gap:22px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:20px">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <h2 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Le mie prenotazioni</h2>
+              <p style="margin:0;font-size:14px;color:var(--stone-600)">Ordinate dalla data più vicina. Le concluse e annullate sono in Archivio.</p>
+            </div>
+            <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="primary" size="md" hint-size="auto,44px">Nuova prenotazione</x-import>
+          </div>
+          <div style="display:flex;gap:4px;border-bottom:1.5px solid var(--stone-200)">
+            <div style="padding:12px 22px;font-size:14.5px;font-weight:800;color:#1A3448;border-bottom:2.5px solid #2E5878;margin-bottom:-1.5px;display:flex;align-items:center;gap:8px">Attive <span style="display:inline-flex;padding:2px 8px;border-radius:999px;background:#E4EEF4;color:#23445D;font-size:12px;font-weight:800">4</span></div>
+            <div style="padding:12px 22px;font-size:14.5px;font-weight:600;color:var(--stone-500);display:flex;align-items:center;gap:8px">Archivio <span style="display:inline-flex;padding:2px 8px;border-radius:999px;background:var(--stone-100);color:var(--stone-500);font-size:12px;font-weight:800">8</span></div>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:16px;overflow:hidden">
+            <div style="display:grid;grid-template-columns:2.2fr 1.3fr 1.4fr 1.3fr 110px;gap:16px;padding:14px 24px;background:var(--stone-100);border-bottom:1px solid var(--stone-200)">
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Evento</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Periodo</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Torre</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Stato</div>
+              <div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:2.2fr 1.3fr 1.4fr 1.3fr 110px;gap:16px;padding:20px 24px;border-bottom:1px solid var(--stone-100);align-items:center">
+              <div style="display:flex;flex-direction:column;gap:3px"><div style="font-size:15px;font-weight:700;color:var(--stone-900)">Festa dello Sport — Bergamo</div><div style="font-size:13px;color:var(--stone-500)">Manifestazione CAI · Bergamo</div></div>
+              <div style="font-size:14.5px;font-weight:600;color:var(--stone-800)">19 – 21 set 2026</div>
+              <div><span style="display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:var(--green-100);color:var(--green-800);font-size:12px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase"><span style="width:9px;height:9px;border-radius:999px;background:var(--green-600)"></span>Torre 1</span></div>
+              <div><x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Badge" tone="success" variant="soft" hint-size="auto,24px">Approvata</x-import></div>
+              <div style="font-size:14px;font-weight:700;color:#23445D;text-align:right;cursor:pointer">Vedi →</div>
+            </div>
+            <div style="display:grid;grid-template-columns:2.2fr 1.3fr 1.4fr 1.3fr 110px;gap:16px;padding:20px 24px;border-bottom:1px solid var(--stone-100);align-items:center">
+              <div style="display:flex;flex-direction:column;gap:3px"><div style="font-size:15px;font-weight:700;color:var(--stone-900)">Corso di arrampicata giovanile</div><div style="font-size:13px;color:var(--stone-500)">Corso · Palamonti, Bergamo</div></div>
+              <div style="font-size:14.5px;font-weight:600;color:var(--stone-800)">3 – 4 ott 2026</div>
+              <div><span style="display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:var(--stone-100);color:var(--stone-600);font-size:12px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase">Da assegnare</span></div>
+              <div><x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Badge" tone="warning" variant="soft" hint-size="auto,24px">Inviata</x-import></div>
+              <div style="font-size:14px;font-weight:700;color:#23445D;text-align:right;cursor:pointer">Vedi →</div>
+            </div>
+            <div style="display:grid;grid-template-columns:2.2fr 1.3fr 1.4fr 1.3fr 110px;gap:16px;padding:20px 24px;border-bottom:1px solid var(--stone-100);align-items:center">
+              <div style="display:flex;flex-direction:column;gap:3px"><div style="font-size:15px;font-weight:700;color:var(--stone-900)">Open day sezione — autunno</div><div style="font-size:13px;color:var(--stone-500)">Evento promozionale · Bergamo</div></div>
+              <div style="font-size:14.5px;font-weight:600;color:var(--stone-800)">17 ott 2026</div>
+              <div><span style="display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:var(--stone-100);color:var(--stone-600);font-size:12px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase">Da assegnare</span></div>
+              <div><x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Badge" tone="neutral" variant="soft" hint-size="auto,24px">Bozza</x-import></div>
+              <div style="font-size:14px;font-weight:700;color:#23445D;text-align:right;cursor:pointer">Vedi →</div>
+            </div>
+            <div style="display:grid;grid-template-columns:2.2fr 1.3fr 1.4fr 1.3fr 110px;gap:16px;padding:20px 24px;align-items:center">
+              <div style="display:flex;flex-direction:column;gap:3px"><div style="font-size:15px;font-weight:700;color:var(--stone-900)">150° CAI — Manifestazione regionale</div><div style="font-size:13px;color:var(--stone-500)">Manifestazione CAI · Lecco</div></div>
+              <div style="font-size:14.5px;font-weight:600;color:var(--stone-800)">7 – 9 nov 2026</div>
+              <div><span style="display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:var(--larch-100);color:var(--larch-700);font-size:12px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase"><span style="width:9px;height:9px;border-radius:999px;background:var(--larch-600)"></span>Torre 2</span></div>
+              <div><x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Badge" tone="info" variant="soft" hint-size="auto,24px">PDF firmato inviato</x-import></div>
+              <div style="font-size:14px;font-weight:700;color:#23445D;text-align:right;cursor:pointer">Vedi →</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--stone-500)"><i data-lucide="info" stroke-width="1.75" style="width:15px;height:15px"></i>Gli stati possibili: Bozza, Inviata, Approvata, PDF firmato inviato, Inviata all'assicurazione, Concluso, Annullata.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 1h · CALENDARIO TORRI                                         -->
+  <!-- ============================================================ -->
+  <div id="1h" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="#1h" style="display:inline-flex;padding:5px 12px;border-radius:999px;background:#1A3448;color:#FFFFFF;font-size:12px;font-weight:800;letter-spacing:0.06em;text-decoration:none">1H</a>
+      <div>
+        <div style="font-weight:800;font-size:16px;color:var(--stone-900)">Calendario torri — sola consultazione</div>
+        <div style="font-size:13px;color:var(--stone-600)">Calendario unico, torri a colori e non a tab (BUG-07); depositi in legenda (BUG-08)</div>
+      </div>
+    </div>
+    <div data-screen-label="Calendario torri" style="width:1440px;background:#FFFFFF;border:1px solid var(--stone-300);border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden;display:flex;min-height:900px">
+      <aside style="width:248px;flex-shrink:0;background:#1A3448;display:flex;flex-direction:column;padding:20px 14px 16px 14px;gap:4px">
+        <div style="display:flex;align-items:center;gap:12px;padding:6px 10px 18px 10px;border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:14px">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center"><i data-lucide="mountain" stroke-width="1.75" style="width:22px;height:22px;color:#FFFFFF"></i></div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="font-weight:800;font-size:16px;color:#FFFFFF;letter-spacing:-0.02em;line-height:1">Prenotar</div>
+            <div style="font-size:10.5px;font-weight:700;letter-spacing:0.12em;color:#9BBCD1;text-transform:uppercase">Pannello Sezione</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#C6DAE7;font-size:14.5px;font-weight:600"><i data-lucide="house" stroke-width="1.75" style="width:19px;height:19px"></i>Dashboard</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#C6DAE7;font-size:14.5px;font-weight:600"><i data-lucide="calendar-plus" stroke-width="1.75" style="width:19px;height:19px"></i>Nuova prenotazione</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#C6DAE7;font-size:14.5px;font-weight:600"><i data-lucide="clipboard-list" stroke-width="1.75" style="width:19px;height:19px"></i>Le mie prenotazioni</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,0.16);color:#FFFFFF;font-size:14.5px;font-weight:700"><i data-lucide="calendar-days" stroke-width="1.75" style="width:19px;height:19px"></i>Calendario torri</div>
+        <div style="flex:1"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 10px 4px 10px;border-top:1px solid rgba(255,255,255,0.12)">
+          <div style="width:36px;height:36px;border-radius:999px;background:#3E6E90;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF">SB</div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="font-size:13.5px;font-weight:700;color:#FFFFFF;line-height:1.2">Sezione di Bergamo</div>
+            <div style="font-size:12px;color:#9BBCD1">Presidente</div>
+          </div>
+        </div>
+      </aside>
+      <div style="flex:1;background:var(--stone-50);display:flex;flex-direction:column">
+        <div style="height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 36px;border-bottom:1px solid var(--stone-200);background:#FFFFFF">
+          <div style="font-size:14px;font-weight:700;color:var(--stone-800)">Calendario torri</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--stone-600)"><i data-lucide="circle-help" stroke-width="1.75" style="width:18px;height:18px"></i>Guida</div>
+        </div>
+        <div style="padding:36px;display:flex;flex-direction:column;gap:20px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:16px">
+              <div style="display:flex;gap:6px">
+                <span style="width:36px;height:36px;border:1px solid var(--stone-300);border-radius:10px;display:inline-flex;align-items:center;justify-content:center;background:#FFFFFF"><i data-lucide="chevron-left" stroke-width="1.75" style="width:18px;height:18px;color:var(--stone-600)"></i></span>
+                <span style="width:36px;height:36px;border:1px solid var(--stone-300);border-radius:10px;display:inline-flex;align-items:center;justify-content:center;background:#FFFFFF"><i data-lucide="chevron-right" stroke-width="1.75" style="width:18px;height:18px;color:var(--stone-600)"></i></span>
+              </div>
+              <h2 style="margin:0;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Settembre 2026</h2>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+              <span style="display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:var(--green-100);font-size:13px;font-weight:700;color:var(--green-800)"><span style="width:11px;height:11px;border-radius:4px;background:var(--green-600)"></span>Torre 1 · CityWall 8m — dep. Zanica (BG)</span>
+              <span style="display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:var(--larch-100);font-size:13px;font-weight:700;color:var(--larch-700)"><span style="width:11px;height:11px;border-radius:4px;background:var(--larch-600)"></span>Torre 2 · CityWall 5m — dep. Colico (LC)</span>
+              <span style="display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--stone-500)"><i data-lucide="eye" stroke-width="1.75" style="width:15px;height:15px"></i>Sola consultazione</span>
+            </div>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:16px;overflow:hidden">
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--stone-200);background:var(--stone-100)">
+              <div style="padding:10px 0;text-align:center;font-size:12px;font-weight:800;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.08em">Lunedì</div>
+              <div style="padding:10px 0;text-align:center;font-size:12px;font-weight:800;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.08em">Martedì</div>
+              <div style="padding:10px 0;text-align:center;font-size:12px;font-weight:800;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.08em">Mercoledì</div>
+              <div style="padding:10px 0;text-align:center;font-size:12px;font-weight:800;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.08em">Giovedì</div>
+              <div style="padding:10px 0;text-align:center;font-size:12px;font-weight:800;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.08em">Venerdì</div>
+              <div style="padding:10px 0;text-align:center;font-size:12px;font-weight:800;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.08em">Sabato</div>
+              <div style="padding:10px 0;text-align:center;font-size:12px;font-weight:800;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.08em">Domenica</div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr)">
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-400);padding-left:4px">31</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">1</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">2</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">3</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px;display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">4</div><div style="height:26px;border-radius:7px 0 0 7px;background:var(--green-600);color:#FFFFFF;font-size:12px;font-weight:700;display:flex;align-items:center;padding:0 8px;white-space:nowrap;overflow:hidden;margin-right:-7px">Sagra di Clusone</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px;display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">5</div><div style="height:26px;background:var(--green-600);margin-left:-7px;margin-right:-7px"></div></div>
+              <div style="height:118px;border-bottom:1px solid var(--stone-100);padding:8px 6px;display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">6</div><div style="height:26px;border-radius:0 7px 7px 0;background:var(--green-600);margin-left:-7px"></div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">7</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">8</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">9</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">10</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">11</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px;display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">12</div><div style="height:26px;border-radius:7px 0 0 7px;background:var(--larch-600);color:#FFFFFF;font-size:12px;font-weight:700;display:flex;align-items:center;padding:0 8px;white-space:nowrap;overflow:hidden;margin-right:-7px">Open day CAI Lecco</div></div>
+              <div style="height:118px;border-bottom:1px solid var(--stone-100);padding:8px 6px;display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">13</div><div style="height:26px;border-radius:0 7px 7px 0;background:var(--larch-600);margin-left:-7px"></div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">14</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">15</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">16</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">17</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">18</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px;display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;font-weight:800;color:#1A3448;padding-left:4px">19</div><div style="height:26px;border-radius:7px 0 0 7px;background:var(--green-600);color:#FFFFFF;font-size:12px;font-weight:700;display:flex;align-items:center;padding:0 8px;white-space:nowrap;overflow:hidden;margin-right:-7px">Festa dello Sport — Bergamo</div></div>
+              <div style="height:118px;border-bottom:1px solid var(--stone-100);padding:8px 6px;display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">20</div><div style="height:26px;background:var(--green-600);margin-left:-7px;margin-right:-7px"></div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px;display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">21</div><div style="height:26px;border-radius:0 7px 7px 0;background:var(--green-600);margin-left:-7px"></div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">22</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">23</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">24</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px;display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">25</div><div style="height:26px;border-radius:7px 0 0 7px;background:var(--larch-600);color:#FFFFFF;font-size:12px;font-weight:700;display:flex;align-items:center;padding:0 8px;white-space:nowrap;overflow:hidden;margin-right:-7px">Fiera di Como</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px;display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">26</div><div style="height:26px;background:var(--larch-600);margin-left:-7px;margin-right:-7px"></div></div>
+              <div style="height:118px;border-bottom:1px solid var(--stone-100);padding:8px 6px;display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">27</div><div style="height:26px;border-radius:0 7px 7px 0;background:var(--larch-600);margin-left:-7px"></div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">28</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">29</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">30</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-400);padding-left:4px">1</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-400);padding-left:4px">2</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-400);padding-left:4px">3</div></div>
+              <div style="height:118px;padding:8px 6px"><div style="font-size:13px;color:var(--stone-400);padding-left:4px">4</div></div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--stone-500)"><i data-lucide="pointer" stroke-width="1.75" style="width:15px;height:15px"></i>Cliccando su un evento della propria sezione si apre il dettaglio prenotazione. Gli eventi delle altre sezioni mostrano solo torre e periodo.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;manualeLetto&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: false, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Wizard step 1&quot;, &quot;description&quot;: &quot;Spunta la checkbox 'ho letto il manuale' e sblocca Continua&quot; },
+  &quot;mezzoPrivato&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Wizard step 3&quot;, &quot;description&quot;: &quot;Mezzo privato: mostra la scelta obbligatoria della patente&quot; }
+}">
+class Component extends DCLogic {
+  componentDidMount() { this._icons(); }
+  componentDidUpdate() { this._icons(); }
+  _icons() {
+    const run = () => {
+      if (window.lucide && window.lucide.createIcons) {
+        try { window.lucide.createIcons(); } catch (e) {}
+      } else {
+        setTimeout(run, 300);
+      }
+    };
+    run();
+  }
+  renderVals() {
+    const manualeLetto = this.props.manualeLetto ?? false;
+    const mezzoPrivato = this.props.mezzoPrivato ?? true;
+    return {
+      manualeLetto,
+      nonManualeLetto: !manualeLetto,
+      mezzoPrivato,
+      mezzoAziendale: !mezzoPrivato,
+      continuaDisabilitato: !manualeLetto,
+      vero: true,
+    };
+  }
+}
+</script>
+</body>
+</html>

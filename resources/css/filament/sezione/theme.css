@@ -1,0 +1,28 @@
+@import '/vendor/filament/filament/resources/css/theme.css';
+
+@import '../tokens/index.css';
+@import '../mobile-shell.css';
+
+@config '../tailwind.config.js';
+
+/* Pannello Sezione — Ardesia (blu scuro). Scala campionata dal mockup
+   pannello-sezione.dc.html (non presente nel file tokens/colors.css condiviso,
+   che copre solo pino/larice/stone): non esiste altrove, quindi vive qui. */
+:root {
+  --ardesia-900: #1A3448;
+  --ardesia-800: #14293A;
+  --ardesia-700: #23445D;
+  --ardesia-600: #2E5878;
+  --ardesia-500: #3E6E90;
+  --ardesia-200: #C6DAE7;
+  --ardesia-100: #9BBCD1;
+  --ardesia-50:  #F0F6FA;
+
+  --text-brand: var(--ardesia-700);
+  --surface-subtle: var(--ardesia-50);
+  --surface-brand: var(--ardesia-600);
+  --surface-brand-strong: var(--ardesia-800);
+  --surface-inverse: var(--ardesia-900);
+  --border-strong: var(--ardesia-600);
+  --focus-ring: var(--ardesia-500);
+}

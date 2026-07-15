@@ -8,6 +8,7 @@ use App\Settings\GrSettings;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\TagsInput;
@@ -62,33 +63,41 @@ class ImpostazioniPage extends Page implements HasForms
             ->schema([
                 Tabs::make('settings')
                     ->tabs([
-                        Tabs\Tab::make('Email')
+                        Tabs\Tab::make('Notifiche e assicurazione')
+                            ->icon('heroicon-o-bell')
                             ->schema([
-                                Section::make('Destinatari notifiche GR')
-                                    ->description('Ricevono un\'email ad ogni nuova richiesta di prenotazione inviata da una sezione.')
+                                Grid::make(2)
                                     ->schema([
-                                        TagsInput::make('emails_notifiche_gr')
-                                            ->label('Indirizzi email')
-                                            ->placeholder('Aggiungi email e premi Invio')
-                                            ->splitKeys(['Enter', 'Tab', ','])
-                                            ->columnSpanFull(),
-                                    ]),
+                                        Section::make('Email di notifica del GR')
+                                            ->description('Ricevono un avviso a ogni nuova richiesta inviata.')
+                                            ->icon('heroicon-o-bell')
+                                            ->schema([
+                                                TagsInput::make('emails_notifiche_gr')
+                                                    ->label('Indirizzi email')
+                                                    ->placeholder('Aggiungi email e premi Invio')
+                                                    ->splitKeys(['Enter', 'Tab', ','])
+                                                    ->columnSpanFull(),
+                                            ]),
 
-                                Section::make('Destinatari email assicurazione')
-                                    ->description('Ricevono il Modulo 3 firmato all\'invio assicurazione.')
-                                    ->schema([
-                                        TagsInput::make('emails_assicurazione')
-                                            ->label('Indirizzi email')
-                                            ->placeholder('Aggiungi email e premi Invio')
-                                            ->splitKeys(['Enter', 'Tab', ','])
-                                            ->columnSpanFull(),
+                                        Section::make('Email assicurazione')
+                                            ->description('Destinatari del Modulo 3 all\'invio in assicurazione.')
+                                            ->icon('heroicon-o-shield-check')
+                                            ->schema([
+                                                TagsInput::make('emails_assicurazione')
+                                                    ->label('Indirizzi email')
+                                                    ->placeholder('Aggiungi email e premi Invio')
+                                                    ->splitKeys(['Enter', 'Tab', ','])
+                                                    ->columnSpanFull(),
+                                            ]),
                                     ]),
                             ]),
 
-                        Tabs\Tab::make('Presidente GR')
+                        Tabs\Tab::make('Firma del Presidente')
+                            ->icon('heroicon-o-pencil-square')
                             ->schema([
                                 Section::make('Anagrafica')
                                     ->description('Dati del presidente del GR Lombardia, usati per la firma del Modulo 3.')
+                                    ->icon('heroicon-o-user')
                                     ->schema([
                                         TextInput::make('presidente_nome')
                                             ->label('Nome e cognome')
@@ -107,6 +116,7 @@ class ImpostazioniPage extends Page implements HasForms
 
                                 Section::make('Documenti')
                                     ->description('Firma e carta d\'identità del presidente, allegati al Modulo 3 assicurazione.')
+                                    ->icon('heroicon-o-identification')
                                     ->schema([
                                         FileUpload::make('firma_presidente_path')
                                             ->label('Firma (JPG/PNG)')
@@ -128,12 +138,17 @@ class ImpostazioniPage extends Page implements HasForms
                             ]),
 
                         Tabs\Tab::make('Parametri operativi')
+                            ->icon('heroicon-o-clock')
                             ->schema([
                                 Section::make('Vincoli temporali')
+                                    ->description('Vincoli temporali applicati automaticamente alle richieste delle Sezioni.')
+                                    ->icon('heroicon-o-clock')
                                     ->schema([
                                         TextInput::make('giorni_minimi_caricamento_documenti')
                                             ->label('Giorni minimi anticipo richiesta')
                                             ->helperText('Numero di giorni prima dell\'evento entro cui le sezioni devono inviare la richiesta.')
+                                            ->prefixIcon('heroicon-o-calendar')
+                                            ->suffix('giorni')
                                             ->numeric()
                                             ->minValue(1)
                                             ->maxValue(120)
@@ -142,6 +157,8 @@ class ImpostazioniPage extends Page implements HasForms
                                         TextInput::make('ore_minime_richiesta_assicurazione')
                                             ->label('Ore minime preavviso assicurazione')
                                             ->helperText('Ore di preavviso minime per l\'invio del Modulo 3 all\'assicurazione.')
+                                            ->prefixIcon('heroicon-o-clock')
+                                            ->suffix('ore')
                                             ->numeric()
                                             ->minValue(1)
                                             ->maxValue(720)

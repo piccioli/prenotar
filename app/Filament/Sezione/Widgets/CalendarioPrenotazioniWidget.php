@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Filament\Sezione\Widgets;
 
+use App\Filament\Gr\Resources\PrenotazioneResource as GrPrenotazioneResource;
+use App\Filament\Sezione\Resources\PrenotazioneResource;
 use App\Models\Prenotazione;
 use App\Models\Torre;
+use Filament\Facades\Filament;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\On;
 use Saade\FilamentFullCalendar\Data\EventData;
@@ -13,6 +16,8 @@ use Saade\FilamentFullCalendar\Widgets\FullCalendarWidget;
 
 class CalendarioPrenotazioniWidget extends FullCalendarWidget
 {
+    protected static string $view = 'filament.sezione.widgets.calendario-prenotazioni';
+
     protected int|string|array $columnSpan = 'full';
 
     public ?int $filtroTorreId = null;
@@ -31,25 +36,34 @@ class CalendarioPrenotazioniWidget extends FullCalendarWidget
         $end = Carbon::parse($info['end']);
 
         $torriColori = $this->torriColori();
+        $isGr = Filament::getCurrentPanel()?->getId() === 'gr';
 
         $eventi = Prenotazione::eventiCalendarioPubblico($start, $end, $this->filtroTorreId)
-            ->map(function (Prenotazione $pren) use ($torriColori): array {
+            ->map(function (Prenotazione $pren) use ($torriColori, $isGr): array {
                 $torreId = $pren->torre_id;
                 $colore = ($torreId !== null && isset($torriColori[$torreId]))
                     ? $torriColori[$torreId]
-                    : '#6b7280';
+                    : Torre::COLORE_DEFAULT;
 
                 $torreNome = $pren->torre !== null ? $pren->torre->nome : 'Senza torre';
+                $diPropria = $isGr || $pren->user_id === auth()->id();
 
-                return EventData::make()
+                $evento = EventData::make()
                     ->id($pren->id)
-                    ->title($torreNome)
+                    ->title($diPropria ? $pren->nome_evento : $torreNome)
                     ->start($pren->data_inizio_prenotazione)
                     ->end($pren->data_fine_prenotazione->addDay())
                     ->backgroundColor($colore)
                     ->borderColor($colore)
-                    ->allDay(true)
-                    ->toArray();
+                    ->allDay(true);
+
+                if ($isGr) {
+                    $evento->url(GrPrenotazioneResource::getUrl('view', ['record' => $pren], panel: 'gr'));
+                } elseif ($diPropria) {
+                    $evento->url(PrenotazioneResource::getUrl('view', ['record' => $pren], panel: 'sezione'));
+                }
+
+                return $evento->toArray();
             })
             ->values()
             ->all();
@@ -98,17 +112,32 @@ class CalendarioPrenotazioniWidget extends FullCalendarWidget
         ];
     }
 
+    /**
+     * Override applicato solo sotto il breakpoint mobile (768px), vedi vista Blade
+     * `calendario-prenotazioni.blade.php`: FullCalendar mostra un'agenda/lista invece
+     * della griglia mensile, illeggibile a schermi stretti.
+     *
+     * @return array<string, mixed>
+     */
+    public function mobileConfig(): array
+    {
+        return [
+            'initialView' => 'listMonth',
+            'headerToolbar' => [
+                'left' => 'prev,next today',
+                'center' => 'title',
+                'right' => '',
+            ],
+        ];
+    }
+
     /** @return array<int, string> */
     private function torriColori(): array
     {
-        $palette = ['#2563eb', '#ea580c', '#16a34a', '#9333ea'];
-        $map = [];
-        $i = 0;
-        foreach (Torre::query()->where('is_active', true)->orderBy('id')->get() as $torre) {
-            $map[$torre->id] = $palette[$i] ?? '#6b7280';
-            $i++;
-        }
-
-        return $map;
+        return Torre::query()
+            ->where('is_active', true)
+            ->get()
+            ->mapWithKeys(fn (Torre $torre): array => [$torre->id => Torre::coloreHexPer($torre)])
+            ->all();
     }
 }

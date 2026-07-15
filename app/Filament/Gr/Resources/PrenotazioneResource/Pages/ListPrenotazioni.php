@@ -7,8 +7,11 @@ namespace App\Filament\Gr\Resources\PrenotazioneResource\Pages;
 use App\Enums\PrenotazioneStatus;
 use App\Filament\Gr\Resources\PrenotazioneResource;
 use App\Models\Prenotazione;
+use App\Models\Sezione;
+use App\Models\Sottosezione;
 use Filament\Resources\Components\Tab;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Builder;
 
 class ListPrenotazioni extends ListRecords
@@ -18,6 +21,15 @@ class ListPrenotazioni extends ListRecords
     protected function getHeaderActions(): array
     {
         return [];
+    }
+
+    public function getSubheading(): string|Htmlable|null
+    {
+        return sprintf(
+            'Tutte le richieste delle %d Sezioni e %d Sottosezioni, dalla più vicina.',
+            Sezione::count(),
+            Sottosezione::count(),
+        );
     }
 
     public function getTabs(): array

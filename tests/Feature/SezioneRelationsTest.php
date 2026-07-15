@@ -28,10 +28,8 @@ it('sottosezione label contains S.SEZ. prefix and sezione name', function (): vo
     $sezione = Sezione::factory()->create(['nominativo' => 'SEZ. BERGAMO']);
     $sottosezione = Sottosezione::factory()->create([
         'sezione_id' => $sezione->id,
-        'nominativo' => 'ALBINO',
+        'nominativo' => 'S.SEZ. ALBINO',
     ]);
 
-    expect($sottosezione->label)
-        ->toStartWith('S.SEZ.')
-        ->toContain('SEZ. BERGAMO');
+    expect($sottosezione->label)->toBe('S.SEZ. ALBINO (sez. rif. SEZ. BERGAMO)');
 });

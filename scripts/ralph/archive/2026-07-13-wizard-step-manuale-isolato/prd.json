@@ -1,0 +1,68 @@
+{
+  "project": "Prenotar",
+  "branchName": "ralph/wizard-step-manuale-isolato",
+  "description": "Isola la conferma di lettura del manuale d'istruzioni della torre in un primo step dedicato e sempre obbligatorio del wizard di prenotazione (/sezione), indipendente da quale torre verra' scelta nello step successivo 'Quando e dove' (incluso 'nessuna preferenza'). Rimuove l'accoppiamento manuale<->torre e la logica di reset al cambio torre, dato che le due torri esistenti condividono lo stesso manuale. Nessuna nuova migrazione (colonne manuale_letto_* gia' esistenti).",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Nuovo step isolato 'Manuale d'istruzioni' come primo step del wizard",
+      "description": "Come presidente di sezione/sottosezione, all'apertura del wizard di nuova prenotazione voglio un primo step dedicato che mi chieda di confermare la lettura del manuale d'istruzioni, indipendentemente da quale torre sceglierò poi, cosi da non poter saltare questo controllo di sicurezza scegliendo 'nessuna preferenza'.",
+      "acceptanceCriteria": [
+        "Nuovo primo step del wizard (gli step successivi si rinumerano: 1. Manuale d'istruzioni, 2. Quando e dove, 3. Evento, 4. Logistica trasporto, 5. Responsabile in loco, 6. Riepilogo)",
+        "Lo step mostra il link al manuale d'istruzioni (PDF) e una checkbox 'Ho letto e compreso il manuale d'istruzioni', obbligatoria per procedere",
+        "Il manuale mostrato e' quello della prima torre attiva (per id) tra quelle esistenti con manuale_pdf_path valorizzato - indifferente quale, dato che il contenuto e' identico per le torri attuali",
+        "Se nessuna torre attiva ha un manuale caricato, lo step mostra un avviso 'manuale non ancora disponibile' ma NON blocca l'avanzamento (la checkbox resta comunque obbligatoria per procedere, semplicemente senza link scaricabile)",
+        "Il pulsante 'Continua' dello step resta disabilitato finche' la checkbox non e' spuntata, indipendentemente da quale torre verra' scelta nello step successivo",
+        "Verifica visiva in browser (screenshot) del nuovo step",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Nuovo step 'Manuale d'istruzioni' come primo step, campo temporaneo manuale_step_confermato (dehydrated(false), non persistito) che blocca 'Continua'. Non tocca ancora lo step 'Quando e dove' ne' la persistenza manuale_letto_* - vedi US-002/US-003. Verifica visiva in browser NON eseguita (nessun tool browser disponibile in questa sessione) - verificare manualmente."
+    },
+    {
+      "id": "US-002",
+      "title": "Rimozione dell'accoppiamento manuale<->torre nello step 'Quando e dove'",
+      "description": "Come sviluppatore, voglio rimuovere dallo step 'Quando e dove' la checkbox e la logica di reset legate alla torre selezionata, perche' la conferma di lettura ora avviene una sola volta all'inizio del wizard, indipendentemente dalla torre che verra' scelta.",
+      "acceptanceCriteria": [
+        "Rimossi dallo step 'Quando e dove': Checkbox::make('manuale_letto_confirm'), i campi nascosti duplicati e l'afterStateUpdated sul Radio::make('torre_id') che azzerava i campi manuale al cambio torre",
+        "La selezione torre (torre_id, incluso 'nessuna preferenza') resta identica nello step 'Quando e dove' in tutto il resto (validazione overlap, card torre con indirizzo deposito) - cambia solo l'assenza di effetti sui campi manuale",
+        "Nessuna regressione alla validazione NoOverlapTorre gia' esistente sul campo torre_id",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Rimossi Checkbox::make('manuale_letto_confirm'), i due Hidden manuale_letto_confermato_at/manuale_letto_torre_id e l'afterStateUpdated sul Radio torre_id nello step 'Quando e dove'. CreatePrenotazione::form() semplificato: $bloccaAvanzamento dipende solo da manuale_step_confermato. Riepilogo aggiornato per leggere 'confermato' da manuale_step_confermato invece del campo rimosso. Rimossa anche la blade manuale-checkbox.blade.php (non piu' referenziata). Adattati i test di PrenotazioneManualeLettoTest.php che coprivano il comportamento torre-scoped rimosso (rewrite completo atteso in US-004): la persistenza di manuale_letto_confermato_at/torre_id resta non wired fino a US-003, quindi per ora resta sempre null anche a wizard completato con successo."
+    },
+    {
+      "id": "US-003",
+      "title": "Persistenza della conferma lettura manuale non piu' torre-scoped",
+      "description": "Come sviluppatore, voglio adattare la persistenza dei campi manuale_letto_* per riflettere che e' ora una conferma unica valida per l'intera prenotazione, non piu' legata alla torre scelta piu' avanti nel wizard.",
+      "acceptanceCriteria": [
+        "manuale_letto_confermato_at viene valorizzato al momento della conferma nel nuovo primo step (non piu' nello step 'Quando e dove')",
+        "manuale_letto_torre_id viene valorizzato con l'id della torre di riferimento usata per mostrare il manuale in quel momento (la prima torre attiva con manuale caricato), non con la torre eventualmente scelta piu' avanti nel wizard - resta null se nessuna torre attiva ha un manuale",
+        "mutateFormDataBeforeCreate (o equivalente) aggiornato di conseguenza, senza introdurre nuove colonne",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "torreManualeRiferimento() reso public static (era private) per essere richiamabile da CreatePrenotazione::mutateFormDataBeforeCreate(). Li' impostati manuale_letto_confermato_at = now() e manuale_letto_torre_id = torreManualeRiferimento()?->id incondizionatamente: e' sicuro perche' si arriva a mutateFormDataBeforeCreate solo dopo che la validazione 'accepted' su manuale_step_confermato (primo step) e' passata. Aggiornata l'unica assertion di PrenotazioneManualeLettoTest.php che diventava falsa (manuale_letto_confermato_at non e' piu' sempre null) - riscrittura completa del file resta scoped a US-004."
+    },
+    {
+      "id": "US-004",
+      "title": "Aggiornamento test esistenti sul flusso manuale/wizard",
+      "description": "Come sviluppatore, voglio riscrivere tests/Feature/Sezione/PrenotazioneManualeLettoTest.php per coprire il nuovo comportamento (conferma sempre obbligatoria fin dal primo step, indipendente dalla torre scelta), rimuovendo gli scenari non piu' validi.",
+      "acceptanceCriteria": [
+        "Test: submit senza aver confermato la checkbox nel primo step -> bloccato, indipendentemente dalla torre scelta poi (incluso 'nessuna preferenza') - sostituisce lo scenario 'nessuna torre -> conferma non richiesta', ora invalido",
+        "Test: conferma nel primo step + qualunque torre (o nessuna) scelta nello step successivo -> salvataggio riuscito con manuale_letto_confermato_at valorizzato",
+        "Test: nessuna torre attiva ha un manuale caricato -> lo step mostra l'avviso ma permette comunque di procedere confermando la checkbox",
+        "Rimosso/sostituito il test 'cambio torre resetta la conferma' (non piu' applicabile: la conferma non dipende piu' dalla torre)",
+        "Verificata la compatibilita' di tests/Feature/Sezione/PrenotazioneWizardCreateTest.php (conta gli step del wizard: 'ha il wizard con i 5 step' -> ora diventano 6) e aggiornato se necessario",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest) sull'intera suite"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "Riscritto tests/Feature/Sezione/PrenotazioneManualeLettoTest.php: 6 test totali - due varianti (con torre / senza torre-nessuna preferenza) per il blocco senza conferma, due varianti per il salvataggio con conferma, un test che verifica manuale_letto_torre_id (torre di riferimento con manuale) resta indipendente dal torre_id scelto, un test per lo scenario 'nessuna torre attiva ha il manuale' (assertSee dell'avviso + salvataggio comunque permesso). Rimosso il vecchio test unico 'senza torre selezionata la conferma non e richiesta' (gia' sostituito in US-002). Aggiornato tests/Feature/Sezione/PrenotazioneWizardCreateTest.php: rinominato il test '5 step' -> '6 step' e aggiunto assertSee('Manuale d'istruzioni'). qa (Pint + Larastan + Pest, 274 test) verde."
+    }
+  ]
+}

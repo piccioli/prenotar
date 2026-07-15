@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Collection;
 
 class PrenotazioniDaApprovareWidget extends Widget
 {
+    private const int GIORNI_URGENTE = 20;
+
     protected static string $view = 'filament.gr.widgets.prenotazioni-da-approvare';
 
     protected static bool $isLazy = false;
@@ -49,5 +51,15 @@ class PrenotazioniDaApprovareWidget extends Widget
     public function getUrlPrenotazione(int $id): string
     {
         return PrenotazioneResource::getUrl('view', ['record' => $id]);
+    }
+
+    public function giorniMancanti(Prenotazione $prenotazione): int
+    {
+        return abs((int) now()->startOfDay()->diffInDays($prenotazione->data_inizio_prenotazione->copy()->startOfDay()));
+    }
+
+    public function isUrgente(Prenotazione $prenotazione): bool
+    {
+        return $this->giorniMancanti($prenotazione) <= self::GIORNI_URGENTE;
     }
 }

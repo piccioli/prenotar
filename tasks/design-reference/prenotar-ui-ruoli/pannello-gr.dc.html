@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="_ds/montagna-servizi-design-system-5cc04e95-0654-4ed9-8c55-821b392c3598/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/montagna-servizi-design-system-5cc04e95-0654-4ed9-8c55-821b392c3598/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/montagna-servizi-design-system-5cc04e95-0654-4ed9-8c55-821b392c3598/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/montagna-servizi-design-system-5cc04e95-0654-4ed9-8c55-821b392c3598/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/montagna-servizi-design-system-5cc04e95-0654-4ed9-8c55-821b392c3598/tokens/effects.css">
+  <link rel="stylesheet" href="_ds/montagna-servizi-design-system-5cc04e95-0654-4ed9-8c55-821b392c3598/tokens/base.css">
+  <link rel="stylesheet" href="_ds/montagna-servizi-design-system-5cc04e95-0654-4ed9-8c55-821b392c3598/styles.css">
+  <script src="_ds/montagna-servizi-design-system-5cc04e95-0654-4ed9-8c55-821b392c3598/_ds_bundle.js"></script>
+  <script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js"></script>
+  <style>
+    body { margin: 0; background: #E4E8E5; }
+    a { color: var(--green-700); }
+    a:hover { color: var(--green-900); }
+  </style>
+</helmet>
+
+<section style="padding:48px 56px 96px 56px;font-family:var(--font-sans);display:flex;flex-direction:column;gap:36px">
+
+  <div style="display:flex;flex-direction:column;gap:14px;max-width:1100px">
+    <div style="font-size:12px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--green-600)">Prenotar · CAI GR Lombardia</div>
+    <h1 style="margin:0;font-size:34px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Pannello GR Manager <span style="color:var(--stone-500);font-weight:600">— /gr</span></h1>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:var(--stone-700);max-width:820px">Le schermate del Presidente GR: approvare e rifiutare è il fulcro visivo. Pannello in <strong>verde pino</strong>; le torri mantengono gli stessi colori del pannello Sezione (pino / larice) ovunque.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+      <span style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:#FFFFFF;border:1px solid var(--stone-300);font-size:13px;font-weight:700;color:var(--stone-800)"><span style="width:12px;height:12px;border-radius:4px;background:var(--green-600)"></span>Pino — pannello GR</span>
+      <span style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:#FFFFFF;border:1px solid var(--stone-300);font-size:13px;font-weight:700;color:var(--stone-800)"><span style="width:12px;height:12px;border-radius:4px;background:var(--green-600)"></span>Torre 1 · CityWall 8m</span>
+      <span style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:#FFFFFF;border:1px solid var(--stone-300);font-size:13px;font-weight:700;color:var(--stone-800)"><span style="width:12px;height:12px;border-radius:4px;background:var(--larch-600)"></span>Torre 2 · CityWall 5m</span>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:56px;align-items:flex-start">
+
+  <!-- ============ 1a · DASHBOARD GR ============ -->
+  <div id="1a" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="#1a" style="display:inline-flex;padding:5px 12px;border-radius:999px;background:var(--green-900);color:#FFFFFF;font-size:12px;font-weight:800;letter-spacing:0.06em;text-decoration:none">1A</a>
+      <div>
+        <div style="font-weight:800;font-size:16px;color:var(--stone-900)">Dashboard — "cosa devo fare oggi"</div>
+        <div style="font-size:13px;color:var(--stone-600)">Richieste da approvare in cima, le più urgenti per prime; etichetta S.SEZ. sempre esplicita (BUG-05)</div>
+      </div>
+    </div>
+    <div data-screen-label="GR Dashboard" style="width:1440px;background:#FFFFFF;border:1px solid var(--stone-300);border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden;display:flex;min-height:900px">
+      <aside style="width:248px;flex-shrink:0;background:var(--green-900);display:flex;flex-direction:column;padding:20px 14px 16px 14px;gap:4px">
+        <div style="display:flex;align-items:center;gap:12px;padding:6px 10px 18px 10px;border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:14px">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center"><i data-lucide="mountain" stroke-width="1.75" style="width:22px;height:22px;color:#FFFFFF"></i></div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="font-weight:800;font-size:16px;color:#FFFFFF;letter-spacing:-0.02em;line-height:1">Prenotar</div>
+            <div style="font-size:10.5px;font-weight:700;letter-spacing:0.12em;color:#7FB0A3;text-transform:uppercase">Pannello GR</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,0.16);color:#FFFFFF;font-size:14.5px;font-weight:700"><i data-lucide="house" stroke-width="1.75" style="width:19px;height:19px"></i>Dashboard</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#B9D4CC;font-size:14.5px;font-weight:600"><i data-lucide="clipboard-list" stroke-width="1.75" style="width:19px;height:19px"></i>Prenotazioni</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#B9D4CC;font-size:14.5px;font-weight:600"><i data-lucide="calendar-days" stroke-width="1.75" style="width:19px;height:19px"></i>Calendario torri</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#B9D4CC;font-size:14.5px;font-weight:600"><i data-lucide="settings" stroke-width="1.75" style="width:19px;height:19px"></i>Impostazioni</div>
+        <div style="flex:1"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 10px 4px 10px;border-top:1px solid rgba(255,255,255,0.12)">
+          <div style="width:36px;height:36px;border-radius:999px;background:var(--green-500);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF">GM</div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="font-size:13.5px;font-weight:700;color:#FFFFFF;line-height:1.2">Giacomo Meraviglia</div>
+            <div style="font-size:12px;color:#7FB0A3">Presidente GR Lombardia</div>
+          </div>
+        </div>
+      </aside>
+      <div style="flex:1;background:var(--stone-50);display:flex;flex-direction:column">
+        <div style="height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 36px;border-bottom:1px solid var(--stone-200);background:#FFFFFF">
+          <div style="font-size:14px;font-weight:700;color:var(--stone-800)">Dashboard</div>
+          <div style="display:flex;align-items:center;gap:20px">
+            <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--stone-600)"><i data-lucide="circle-help" stroke-width="1.75" style="width:18px;height:18px"></i>Guida</div>
+            <i data-lucide="bell" stroke-width="1.75" style="width:19px;height:19px;color:var(--stone-500)"></i>
+          </div>
+        </div>
+        <div style="padding:36px;display:flex;flex-direction:column;gap:26px">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <h2 style="margin:0;font-size:26px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Buongiorno, Presidente</h2>
+            <p style="margin:0;font-size:15px;color:var(--stone-600)">Ecco le richieste che aspettano una tua decisione.</p>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:760px">
+            <div style="background:#FFFFFF;border:1.5px solid var(--larch-200);border-radius:20px;padding:24px 26px;display:flex;align-items:center;gap:18px">
+              <div style="width:52px;height:52px;border-radius:14px;background:var(--larch-100);display:flex;align-items:center;justify-content:center"><i data-lucide="inbox" stroke-width="1.75" style="width:26px;height:26px;color:var(--larch-700)"></i></div>
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <div style="font-size:30px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900);line-height:1">5</div>
+                <div style="font-size:14px;font-weight:600;color:var(--stone-600)">richieste da approvare</div>
+              </div>
+            </div>
+            <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:20px;padding:24px 26px;display:flex;align-items:center;gap:18px">
+              <div style="width:52px;height:52px;border-radius:14px;background:var(--green-100);display:flex;align-items:center;justify-content:center"><i data-lucide="circle-check" stroke-width="1.75" style="width:26px;height:26px;color:var(--green-600)"></i></div>
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <div style="font-size:30px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900);line-height:1">3</div>
+                <div style="font-size:14px;font-weight:600;color:var(--stone-600)">approvate nei prossimi 30 giorni</div>
+              </div>
+            </div>
+          </div>
+          <sc-if value="{{ dashboardConRichieste }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:20px;overflow:hidden">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 26px;border-bottom:1px solid var(--stone-200)">
+              <div style="font-size:17px;font-weight:800;color:var(--stone-900)">Richieste in attesa — le più urgenti in cima</div>
+              <span style="font-size:14px;font-weight:700;color:var(--green-700);text-decoration:underline;cursor:pointer">Vedi tutte</span>
+            </div>
+            <div style="display:grid;grid-template-columns:2.4fr 1.8fr 1.2fr 1.1fr 130px;gap:16px;padding:18px 26px;border-bottom:1px solid var(--stone-100);align-items:center">
+              <div style="display:flex;flex-direction:column;gap:3px"><div style="font-size:15px;font-weight:700;color:var(--stone-900)">Corso di arrampicata giovanile</div><div style="font-size:13px;color:var(--stone-500)">Sezione di Bergamo</div></div>
+              <div style="font-size:14.5px;font-weight:600;color:var(--stone-800)">3 – 4 ott 2026</div>
+              <div><span style="display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:var(--stone-100);color:var(--stone-600);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em">Da assegnare</span></div>
+              <div><span style="display:inline-flex;padding:5px 12px;border-radius:999px;background:var(--larch-100);color:var(--larch-700);font-size:12px;font-weight:800">tra 12 giorni</span></div>
+              <div style="text-align:right"><x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="primary" size="sm" hint-size="auto,34px">Esamina</x-import></div>
+            </div>
+            <div style="display:grid;grid-template-columns:2.4fr 1.8fr 1.2fr 1.1fr 130px;gap:16px;padding:18px 26px;border-bottom:1px solid var(--stone-100);align-items:center">
+              <div style="display:flex;flex-direction:column;gap:3px"><div style="font-size:15px;font-weight:700;color:var(--stone-900)">Festa d'autunno in Valsassina</div><div style="font-size:13px;color:var(--stone-600)"><strong>S.SEZ. Valmadrera</strong> <span style="color:var(--stone-500)">(sez. rif. Lecco)</span></div></div>
+              <div style="font-size:14.5px;font-weight:600;color:var(--stone-800)">10 – 11 ott 2026</div>
+              <div><span style="display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:var(--larch-100);color:var(--larch-700);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em"><span style="width:9px;height:9px;border-radius:999px;background:var(--larch-600)"></span>Torre 2</span></div>
+              <div><span style="display:inline-flex;padding:5px 12px;border-radius:999px;background:var(--stone-100);color:var(--stone-600);font-size:12px;font-weight:800">tra 19 giorni</span></div>
+              <div style="text-align:right"><x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="primary" size="sm" hint-size="auto,34px">Esamina</x-import></div>
+            </div>
+            <div style="display:grid;grid-template-columns:2.4fr 1.8fr 1.2fr 1.1fr 130px;gap:16px;padding:18px 26px;border-bottom:1px solid var(--stone-100);align-items:center">
+              <div style="display:flex;flex-direction:column;gap:3px"><div style="font-size:15px;font-weight:700;color:var(--stone-900)">Fiera dei Comuni — Varese</div><div style="font-size:13px;color:var(--stone-500)">Sezione di Varese</div></div>
+              <div style="font-size:14.5px;font-weight:600;color:var(--stone-800)">24 – 25 ott 2026</div>
+              <div><span style="display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:var(--green-100);color:var(--green-800);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em"><span style="width:9px;height:9px;border-radius:999px;background:var(--green-600)"></span>Torre 1</span></div>
+              <div><span style="display:inline-flex;padding:5px 12px;border-radius:999px;background:var(--stone-100);color:var(--stone-600);font-size:12px;font-weight:800">tra 33 giorni</span></div>
+              <div style="text-align:right"><x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="primary" size="sm" hint-size="auto,34px">Esamina</x-import></div>
+            </div>
+            <div style="display:grid;grid-template-columns:2.4fr 1.8fr 1.2fr 1.1fr 130px;gap:16px;padding:18px 26px;align-items:center">
+              <div style="display:flex;flex-direction:column;gap:3px"><div style="font-size:15px;font-weight:700;color:var(--stone-900)">Giornata dello sport scolastico</div><div style="font-size:13px;color:var(--stone-600)"><strong>S.SEZ. Introbio</strong> <span style="color:var(--stone-500)">(sez. rif. Lecco)</span></div></div>
+              <div style="font-size:14.5px;font-weight:600;color:var(--stone-800)">14 nov 2026</div>
+              <div><span style="display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:var(--stone-100);color:var(--stone-600);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em">Da assegnare</span></div>
+              <div><span style="display:inline-flex;padding:5px 12px;border-radius:999px;background:var(--stone-100);color:var(--stone-600);font-size:12px;font-weight:800">tra 54 giorni</span></div>
+              <div style="text-align:right"><x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="primary" size="sm" hint-size="auto,34px">Esamina</x-import></div>
+            </div>
+          </div>
+          </sc-if>
+          <sc-if value="{{ dashboardVuota }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#FFFFFF;border:1.5px dashed var(--stone-300);border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:56px;text-align:center">
+            <div style="width:64px;height:64px;border-radius:999px;background:var(--green-50);display:flex;align-items:center;justify-content:center"><i data-lucide="circle-check" stroke-width="1.5" style="width:32px;height:32px;color:var(--green-600)"></i></div>
+            <div style="font-size:19px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Tutto approvato</div>
+            <div style="font-size:14.5px;color:var(--stone-600);max-width:420px;line-height:1.6">Non ci sono richieste in attesa. Ti avviseremo via email quando una Sezione invierà una nuova richiesta.</div>
+          </div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 1b · LISTA PRENOTAZIONI GR ============ -->
+  <div id="1b" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="#1b" style="display:inline-flex;padding:5px 12px;border-radius:999px;background:var(--green-900);color:#FFFFFF;font-size:12px;font-weight:800;letter-spacing:0.06em;text-decoration:none">1B</a>
+      <div>
+        <div style="font-weight:800;font-size:16px;color:var(--stone-900)">Lista prenotazioni — tutte le sezioni</div>
+        <div style="font-size:13px;color:var(--stone-600)">Filtri per stato / torre / sezione; colori torre coerenti col calendario</div>
+      </div>
+    </div>
+    <div data-screen-label="GR Lista prenotazioni" style="width:1440px;background:#FFFFFF;border:1px solid var(--stone-300);border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden;display:flex;min-height:900px">
+      <aside style="width:248px;flex-shrink:0;background:var(--green-900);display:flex;flex-direction:column;padding:20px 14px 16px 14px;gap:4px">
+        <div style="display:flex;align-items:center;gap:12px;padding:6px 10px 18px 10px;border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:14px">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center"><i data-lucide="mountain" stroke-width="1.75" style="width:22px;height:22px;color:#FFFFFF"></i></div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="font-weight:800;font-size:16px;color:#FFFFFF;letter-spacing:-0.02em;line-height:1">Prenotar</div>
+            <div style="font-size:10.5px;font-weight:700;letter-spacing:0.12em;color:#7FB0A3;text-transform:uppercase">Pannello GR</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#B9D4CC;font-size:14.5px;font-weight:600"><i data-lucide="house" stroke-width="1.75" style="width:19px;height:19px"></i>Dashboard</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,0.16);color:#FFFFFF;font-size:14.5px;font-weight:700"><i data-lucide="clipboard-list" stroke-width="1.75" style="width:19px;height:19px"></i>Prenotazioni</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#B9D4CC;font-size:14.5px;font-weight:600"><i data-lucide="calendar-days" stroke-width="1.75" style="width:19px;height:19px"></i>Calendario torri</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#B9D4CC;font-size:14.5px;font-weight:600"><i data-lucide="settings" stroke-width="1.75" style="width:19px;height:19px"></i>Impostazioni</div>
+        <div style="flex:1"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 10px 4px 10px;border-top:1px solid rgba(255,255,255,0.12)">
+          <div style="width:36px;height:36px;border-radius:999px;background:var(--green-500);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF">GM</div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="font-size:13.5px;font-weight:700;color:#FFFFFF;line-height:1.2">Giacomo Meraviglia</div>
+            <div style="font-size:12px;color:#7FB0A3">Presidente GR Lombardia</div>
+          </div>
+        </div>
+      </aside>
+      <div style="flex:1;background:var(--stone-50);display:flex;flex-direction:column">
+        <div style="height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 36px;border-bottom:1px solid var(--stone-200);background:#FFFFFF">
+          <div style="font-size:14px;font-weight:700;color:var(--stone-800)">Prenotazioni</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--stone-600)"><i data-lucide="circle-help" stroke-width="1.75" style="width:18px;height:18px"></i>Guida</div>
+        </div>
+        <div style="padding:36px;display:flex;flex-direction:column;gap:20px">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <h2 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Prenotazioni</h2>
+            <p style="margin:0;font-size:14px;color:var(--stone-600)">Tutte le richieste delle 152 Sezioni e 77 Sottosezioni, dalla più vicina.</p>
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px solid var(--stone-300);border-radius:10px;background:#FFFFFF;font-size:14px;color:var(--stone-800)">Stato: <strong>Tutti</strong><i data-lucide="chevron-down" stroke-width="1.75" style="width:16px;height:16px;color:var(--stone-500)"></i></div>
+            <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px solid var(--stone-300);border-radius:10px;background:#FFFFFF;font-size:14px;color:var(--stone-800)">Torre: <strong>Tutte</strong><i data-lucide="chevron-down" stroke-width="1.75" style="width:16px;height:16px;color:var(--stone-500)"></i></div>
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid var(--stone-300);border-radius:10px;background:#FFFFFF;font-size:14px;color:var(--stone-500);min-width:280px"><i data-lucide="search" stroke-width="1.75" style="width:16px;height:16px"></i>Cerca sezione o evento…</div>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:16px;overflow:hidden">
+            <div style="display:grid;grid-template-columns:2fr 2fr 1.3fr 1.1fr 1.5fr 90px;gap:16px;padding:14px 24px;background:var(--stone-100);border-bottom:1px solid var(--stone-200)">
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Richiedente</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Evento</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Periodo</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Torre</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--stone-500)">Stato</div>
+              <div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:2fr 2fr 1.3fr 1.1fr 1.5fr 90px;gap:16px;padding:18px 24px;border-bottom:1px solid var(--stone-100);align-items:center">
+              <div style="font-size:14.5px;font-weight:700;color:var(--stone-900)">Sezione di Bergamo</div>
+              <div style="font-size:14px;color:var(--stone-700)">Festa dello Sport — Bergamo</div>
+              <div style="font-size:14px;font-weight:600;color:var(--stone-800)">19 – 21 set 2026</div>
+              <div><span style="display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:var(--green-100);color:var(--green-800);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em"><span style="width:9px;height:9px;border-radius:999px;background:var(--green-600)"></span>Torre 1</span></div>
+              <div><x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Badge" tone="success" variant="soft" hint-size="auto,24px">Approvata</x-import></div>
+              <div style="font-size:14px;font-weight:700;color:var(--green-700);text-align:right;cursor:pointer">Vedi →</div>
+            </div>
+            <div style="display:grid;grid-template-columns:2fr 2fr 1.3fr 1.1fr 1.5fr 90px;gap:16px;padding:18px 24px;border-bottom:1px solid var(--stone-100);align-items:center">
+              <div style="display:flex;flex-direction:column;gap:2px"><div style="font-size:14.5px;font-weight:700;color:var(--stone-900)">S.SEZ. Valmadrera</div><div style="font-size:12.5px;color:var(--stone-500)">sez. rif. Lecco</div></div>
+              <div style="font-size:14px;color:var(--stone-700)">Festa d'autunno in Valsassina</div>
+              <div style="font-size:14px;font-weight:600;color:var(--stone-800)">10 – 11 ott 2026</div>
+              <div><span style="display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:var(--larch-100);color:var(--larch-700);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em"><span style="width:9px;height:9px;border-radius:999px;background:var(--larch-600)"></span>Torre 2</span></div>
+              <div><x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Badge" tone="warning" variant="soft" hint-size="auto,24px">Inviata</x-import></div>
+              <div style="font-size:14px;font-weight:700;color:var(--green-700);text-align:right;cursor:pointer">Vedi →</div>
+            </div>
+            <div style="display:grid;grid-template-columns:2fr 2fr 1.3fr 1.1fr 1.5fr 90px;gap:16px;padding:18px 24px;border-bottom:1px solid var(--stone-100);align-items:center">
+              <div style="font-size:14.5px;font-weight:700;color:var(--stone-900)">Sezione di Varese</div>
+              <div style="font-size:14px;color:var(--stone-700)">Fiera dei Comuni — Varese</div>
+              <div style="font-size:14px;font-weight:600;color:var(--stone-800)">24 – 25 ott 2026</div>
+              <div><span style="display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:var(--green-100);color:var(--green-800);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em"><span style="width:9px;height:9px;border-radius:999px;background:var(--green-600)"></span>Torre 1</span></div>
+              <div><x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Badge" tone="warning" variant="soft" hint-size="auto,24px">Inviata</x-import></div>
+              <div style="font-size:14px;font-weight:700;color:var(--green-700);text-align:right;cursor:pointer">Vedi →</div>
+            </div>
+            <div style="display:grid;grid-template-columns:2fr 2fr 1.3fr 1.1fr 1.5fr 90px;gap:16px;padding:18px 24px;border-bottom:1px solid var(--stone-100);align-items:center">
+              <div style="font-size:14.5px;font-weight:700;color:var(--stone-900)">Sezione di Como</div>
+              <div style="font-size:14px;color:var(--stone-700)">Fiera di Como</div>
+              <div style="font-size:14px;font-weight:600;color:var(--stone-800)">25 – 27 set 2026</div>
+              <div><span style="display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:var(--larch-100);color:var(--larch-700);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em"><span style="width:9px;height:9px;border-radius:999px;background:var(--larch-600)"></span>Torre 2</span></div>
+              <div><x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Badge" tone="info" variant="solid" hint-size="auto,24px">Inviata all'assicurazione</x-import></div>
+              <div style="font-size:14px;font-weight:700;color:var(--green-700);text-align:right;cursor:pointer">Vedi →</div>
+            </div>
+            <div style="display:grid;grid-template-columns:2fr 2fr 1.3fr 1.1fr 1.5fr 90px;gap:16px;padding:18px 24px;border-bottom:1px solid var(--stone-100);align-items:center">
+              <div style="font-size:14.5px;font-weight:700;color:var(--stone-900)">Sezione di Sondrio</div>
+              <div style="font-size:14px;color:var(--stone-700)">150° CAI — Manifestazione regionale</div>
+              <div style="font-size:14px;font-weight:600;color:var(--stone-800)">7 – 9 nov 2026</div>
+              <div><span style="display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:var(--larch-100);color:var(--larch-700);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em"><span style="width:9px;height:9px;border-radius:999px;background:var(--larch-600)"></span>Torre 2</span></div>
+              <div><x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Badge" tone="info" variant="soft" hint-size="auto,24px">PDF firmato inviato</x-import></div>
+              <div style="font-size:14px;font-weight:700;color:var(--green-700);text-align:right;cursor:pointer">Vedi →</div>
+            </div>
+            <div style="display:grid;grid-template-columns:2fr 2fr 1.3fr 1.1fr 1.5fr 90px;gap:16px;padding:18px 24px;border-bottom:1px solid var(--stone-100);align-items:center">
+              <div style="font-size:14.5px;font-weight:700;color:var(--stone-900)">Sezione di Mantova</div>
+              <div style="font-size:14px;color:var(--stone-700)">Sagra del paese</div>
+              <div style="font-size:14px;font-weight:600;color:var(--stone-800)">12 set 2026</div>
+              <div><span style="display:inline-flex;padding:5px 12px;border-radius:999px;background:var(--stone-100);color:var(--stone-600);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em">—</span></div>
+              <div><x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Badge" tone="danger" variant="soft" hint-size="auto,24px">Annullata</x-import></div>
+              <div style="font-size:14px;font-weight:700;color:var(--green-700);text-align:right;cursor:pointer">Vedi →</div>
+            </div>
+            <div style="display:grid;grid-template-columns:2fr 2fr 1.3fr 1.1fr 1.5fr 90px;gap:16px;padding:18px 24px;align-items:center">
+              <div style="font-size:14.5px;font-weight:700;color:var(--stone-900)">Sezione di Brescia</div>
+              <div style="font-size:14px;color:var(--stone-700)">Adamello Ultra Trail — villaggio</div>
+              <div style="font-size:14px;font-weight:600;color:var(--stone-800)">28 – 30 ago 2026</div>
+              <div><span style="display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:var(--green-100);color:var(--green-800);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em"><span style="width:9px;height:9px;border-radius:999px;background:var(--green-600)"></span>Torre 1</span></div>
+              <div><x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Badge" tone="neutral" variant="solid" hint-size="auto,24px">Concluso</x-import></div>
+              <div style="font-size:14px;font-weight:700;color:var(--green-700);text-align:right;cursor:pointer">Vedi →</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 1c · DETTAGLIO — tab Dettagli ============ -->
+  <div id="1c" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="#1c" style="display:inline-flex;padding:5px 12px;border-radius:999px;background:var(--green-900);color:#FFFFFF;font-size:12px;font-weight:800;letter-spacing:0.06em;text-decoration:none">1C</a>
+      <div>
+        <div style="font-weight:800;font-size:16px;color:var(--stone-900)">Dettaglio prenotazione — tab Dettagli, stato Inviata</div>
+        <div style="font-size:13px;color:var(--stone-600)">Approva e Rifiuta sono le azioni dominanti; le altre si abilitano con lo stato</div>
+      </div>
+    </div>
+    <div data-screen-label="GR Dettaglio prenotazione" style="width:1440px;background:#FFFFFF;border:1px solid var(--stone-300);border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden;display:flex;min-height:900px">
+      <aside style="width:248px;flex-shrink:0;background:var(--green-900);display:flex;flex-direction:column;padding:20px 14px 16px 14px;gap:4px">
+        <div style="display:flex;align-items:center;gap:12px;padding:6px 10px 18px 10px;border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:14px">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center"><i data-lucide="mountain" stroke-width="1.75" style="width:22px;height:22px;color:#FFFFFF"></i></div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="font-weight:800;font-size:16px;color:#FFFFFF;letter-spacing:-0.02em;line-height:1">Prenotar</div>
+            <div style="font-size:10.5px;font-weight:700;letter-spacing:0.12em;color:#7FB0A3;text-transform:uppercase">Pannello GR</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#B9D4CC;font-size:14.5px;font-weight:600"><i data-lucide="house" stroke-width="1.75" style="width:19px;height:19px"></i>Dashboard</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,0.16);color:#FFFFFF;font-size:14.5px;font-weight:700"><i data-lucide="clipboard-list" stroke-width="1.75" style="width:19px;height:19px"></i>Prenotazioni</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#B9D4CC;font-size:14.5px;font-weight:600"><i data-lucide="calendar-days" stroke-width="1.75" style="width:19px;height:19px"></i>Calendario torri</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#B9D4CC;font-size:14.5px;font-weight:600"><i data-lucide="settings" stroke-width="1.75" style="width:19px;height:19px"></i>Impostazioni</div>
+        <div style="flex:1"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 10px 4px 10px;border-top:1px solid rgba(255,255,255,0.12)">
+          <div style="width:36px;height:36px;border-radius:999px;background:var(--green-500);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF">GM</div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="font-size:13.5px;font-weight:700;color:#FFFFFF;line-height:1.2">Giacomo Meraviglia</div>
+            <div style="font-size:12px;color:#7FB0A3">Presidente GR Lombardia</div>
+          </div>
+        </div>
+      </aside>
+      <div style="flex:1;background:var(--stone-50);display:flex;flex-direction:column">
+        <div style="height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 36px;border-bottom:1px solid var(--stone-200);background:#FFFFFF">
+          <div style="font-size:14px;color:var(--stone-500)">Prenotazioni <span style="color:var(--stone-400)">/</span> <span style="font-weight:700;color:var(--stone-800)">Festa d'autunno in Valsassina</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--stone-600)"><i data-lucide="circle-help" stroke-width="1.75" style="width:18px;height:18px"></i>Guida</div>
+        </div>
+        <div style="padding:36px;display:flex;flex-direction:column;gap:22px">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <h2 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Festa d'autunno in Valsassina</h2>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <span style="font-size:14.5px;font-weight:700;color:var(--stone-800)">S.SEZ. Valmadrera <span style="font-weight:600;color:var(--stone-500)">(sez. rif. Lecco)</span></span>
+              <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Badge" tone="warning" variant="soft" hint-size="auto,24px">Inviata</x-import>
+              <span style="font-size:14px;color:var(--stone-600)">richiesta il 28 giugno 2026</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:4px;border-bottom:1.5px solid var(--stone-200)">
+            <div style="padding:12px 22px;font-size:14.5px;font-weight:800;color:var(--green-900);border-bottom:2.5px solid var(--green-600);margin-bottom:-1.5px">Dettagli</div>
+            <div style="padding:12px 22px;font-size:14.5px;font-weight:600;color:var(--stone-500);display:flex;align-items:center;gap:8px">Allegati <span style="display:inline-flex;padding:2px 8px;border-radius:999px;background:var(--stone-100);color:var(--stone-500);font-size:12px;font-weight:800">3</span></div>
+            <div style="padding:12px 22px;font-size:14.5px;font-weight:600;color:var(--stone-500)">Storico</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 380px;gap:24px;align-items:start">
+            <div style="display:flex;flex-direction:column;gap:18px">
+              <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:16px;padding:22px 24px;display:flex;flex-direction:column;gap:12px">
+                <div style="display:flex;align-items:center;gap:10px;font-size:15px;font-weight:800;color:var(--stone-900)"><i data-lucide="calendar-range" stroke-width="1.75" style="width:19px;height:19px;color:var(--green-600)"></i>Quando e dove</div>
+                <div style="display:grid;grid-template-columns:200px 1fr;gap:8px 24px;font-size:14.5px">
+                  <div style="color:var(--stone-500)">Periodo di utilizzo</div><div style="color:var(--stone-800);font-weight:600">10 – 11 ottobre 2026</div>
+                  <div style="color:var(--stone-500)">Torre richiesta</div><div style="color:var(--stone-800);font-weight:600;display:flex;align-items:center;gap:8px"><span style="width:9px;height:9px;border-radius:999px;background:var(--larch-600)"></span>Torre 2 · CityWall 5m</div>
+                  <div style="color:var(--stone-500)">Deposito torre</div><div style="color:var(--stone-800);font-weight:600">Via Nazionale 88, Colico (LC)</div>
+                  <div style="color:var(--stone-500)">Manuale d'istruzioni</div><div style="color:var(--green-700);font-weight:700;display:flex;align-items:center;gap:6px"><i data-lucide="circle-check" stroke-width="1.75" style="width:16px;height:16px"></i>Lettura confermata</div>
+                </div>
+              </div>
+              <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:16px;padding:22px 24px;display:flex;flex-direction:column;gap:12px">
+                <div style="display:flex;align-items:center;gap:10px;font-size:15px;font-weight:800;color:var(--stone-900)"><i data-lucide="flag" stroke-width="1.75" style="width:19px;height:19px;color:var(--green-600)"></i>Evento</div>
+                <div style="display:grid;grid-template-columns:200px 1fr;gap:8px 24px;font-size:14.5px">
+                  <div style="color:var(--stone-500)">Tipo</div><div style="color:var(--stone-800);font-weight:600">Manifestazione CAI</div>
+                  <div style="color:var(--stone-500)">Indirizzo</div><div style="color:var(--stone-800);font-weight:600">Piazza Mons. Citterio, Valmadrera (LC)</div>
+                  <div style="color:var(--stone-500)">Date evento</div><div style="color:var(--stone-800);font-weight:600">10 – 11 ottobre 2026</div>
+                </div>
+              </div>
+              <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:16px;padding:22px 24px;display:flex;flex-direction:column;gap:12px">
+                <div style="display:flex;align-items:center;gap:10px;font-size:15px;font-weight:800;color:var(--stone-900)"><i data-lucide="truck" stroke-width="1.75" style="width:19px;height:19px;color:var(--green-600)"></i>Logistica e responsabile</div>
+                <div style="display:grid;grid-template-columns:200px 1fr;gap:8px 24px;font-size:14.5px">
+                  <div style="color:var(--stone-500)">Ritiro / riconsegna</div><div style="color:var(--stone-800);font-weight:600">9 ott · 12 ott 2026 — Deposito Colico (LC)</div>
+                  <div style="color:var(--stone-500)">Mezzo</div><div style="color:var(--stone-800);font-weight:600">Aziendale · Montagna Servizi SCPA · targa FX 209 KL</div>
+                  <div style="color:var(--stone-500)">Responsabile in loco</div><div style="color:var(--stone-800);font-weight:600">Elena Rusconi · Accompagnatrice AE · 338 470 2211</div>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:18px">
+              <div style="background:#FFFFFF;border:1.5px solid var(--green-200);border-radius:20px;padding:24px 26px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow-xs)">
+                <div style="font-size:16px;font-weight:800;color:var(--stone-900)">Decisione</div>
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  <label style="font-size:13px;font-weight:700;color:var(--stone-700)">Torre assegnata</label>
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1.5px solid var(--stone-300);border-radius:10px;background:#FFFFFF"><span style="font-size:14.5px;color:var(--stone-800);display:flex;align-items:center;gap:8px"><span style="width:9px;height:9px;border-radius:999px;background:var(--larch-600)"></span>Torre 2 · CityWall 5m (richiesta)</span><i data-lucide="chevron-down" stroke-width="1.75" style="width:17px;height:17px;color:var(--stone-500)"></i></div>
+                </div>
+                <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="primary" size="md" full-width="{{ vero }}" hint-size="100%,44px">Approva richiesta</x-import>
+                <span style="display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border:1.5px solid var(--danger-600);border-radius:999px;color:var(--danger-600);font-size:14.5px;font-weight:700;cursor:pointer"><i data-lucide="x" stroke-width="2" style="width:16px;height:16px"></i>Rifiuta — motivo obbligatorio</span>
+              </div>
+              <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:20px;padding:22px 26px;display:flex;flex-direction:column;gap:12px">
+                <div style="font-size:15px;font-weight:800;color:var(--stone-900)">Documenti</div>
+                <div style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;color:var(--green-700);cursor:pointer"><i data-lucide="download" stroke-width="1.75" style="width:17px;height:17px"></i>PDF Richiesta parete</div>
+                <div style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;color:var(--green-700);cursor:pointer"><i data-lucide="download" stroke-width="1.75" style="width:17px;height:17px"></i>PDF Modulo 3 — assicurazione</div>
+              </div>
+              <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:20px;padding:22px 26px;display:flex;flex-direction:column;gap:14px">
+                <div style="font-size:15px;font-weight:800;color:var(--stone-900)">Altre azioni</div>
+                <div style="display:flex;flex-direction:column;gap:10px">
+                  <div style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;color:var(--stone-400)"><i data-lucide="send" stroke-width="1.75" style="width:17px;height:17px"></i>Invia all'assicurazione</div>
+                  <div style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;color:var(--stone-400)"><i data-lucide="flag-off" stroke-width="1.75" style="width:17px;height:17px"></i>Segna come conclusa</div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:var(--stone-500);line-height:1.5"><i data-lucide="info" stroke-width="1.75" style="width:14px;height:14px;flex-shrink:0;margin-top:2px"></i>Disponibili dopo l'approvazione e il caricamento del PDF firmato da parte della Sezione.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 1d · DETTAGLIO — tab Storico ============ -->
+  <div id="1d" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="#1d" style="display:inline-flex;padding:5px 12px;border-radius:999px;background:var(--green-900);color:#FFFFFF;font-size:12px;font-weight:800;letter-spacing:0.06em;text-decoration:none">1D</a>
+      <div>
+        <div style="font-weight:800;font-size:16px;color:var(--stone-900)">Dettaglio prenotazione — tab Storico</div>
+        <div style="font-size:13px;color:var(--stone-600)">Timeline delle transizioni di stato: autore, data, nota</div>
+      </div>
+    </div>
+    <div data-screen-label="GR Dettaglio Storico" style="width:1440px;background:#FFFFFF;border:1px solid var(--stone-300);border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden;display:flex;min-height:900px">
+      <aside style="width:248px;flex-shrink:0;background:var(--green-900);display:flex;flex-direction:column;padding:20px 14px 16px 14px;gap:4px">
+        <div style="display:flex;align-items:center;gap:12px;padding:6px 10px 18px 10px;border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:14px">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center"><i data-lucide="mountain" stroke-width="1.75" style="width:22px;height:22px;color:#FFFFFF"></i></div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="font-weight:800;font-size:16px;color:#FFFFFF;letter-spacing:-0.02em;line-height:1">Prenotar</div>
+            <div style="font-size:10.5px;font-weight:700;letter-spacing:0.12em;color:#7FB0A3;text-transform:uppercase">Pannello GR</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#B9D4CC;font-size:14.5px;font-weight:600"><i data-lucide="house" stroke-width="1.75" style="width:19px;height:19px"></i>Dashboard</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,0.16);color:#FFFFFF;font-size:14.5px;font-weight:700"><i data-lucide="clipboard-list" stroke-width="1.75" style="width:19px;height:19px"></i>Prenotazioni</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#B9D4CC;font-size:14.5px;font-weight:600"><i data-lucide="calendar-days" stroke-width="1.75" style="width:19px;height:19px"></i>Calendario torri</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#B9D4CC;font-size:14.5px;font-weight:600"><i data-lucide="settings" stroke-width="1.75" style="width:19px;height:19px"></i>Impostazioni</div>
+        <div style="flex:1"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 10px 4px 10px;border-top:1px solid rgba(255,255,255,0.12)">
+          <div style="width:36px;height:36px;border-radius:999px;background:var(--green-500);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF">GM</div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="font-size:13.5px;font-weight:700;color:#FFFFFF;line-height:1.2">Giacomo Meraviglia</div>
+            <div style="font-size:12px;color:#7FB0A3">Presidente GR Lombardia</div>
+          </div>
+        </div>
+      </aside>
+      <div style="flex:1;background:var(--stone-50);display:flex;flex-direction:column">
+        <div style="height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 36px;border-bottom:1px solid var(--stone-200);background:#FFFFFF">
+          <div style="font-size:14px;color:var(--stone-500)">Prenotazioni <span style="color:var(--stone-400)">/</span> <span style="font-weight:700;color:var(--stone-800)">Fiera di Como</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--stone-600)"><i data-lucide="circle-help" stroke-width="1.75" style="width:18px;height:18px"></i>Guida</div>
+        </div>
+        <div style="padding:36px;display:flex;flex-direction:column;gap:22px">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <h2 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Fiera di Como</h2>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <span style="font-size:14.5px;font-weight:700;color:var(--stone-800)">Sezione di Como</span>
+              <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Badge" tone="info" variant="solid" hint-size="auto,24px">Inviata all'assicurazione</x-import>
+              <span style="display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:var(--larch-100);color:var(--larch-700);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em"><span style="width:9px;height:9px;border-radius:999px;background:var(--larch-600)"></span>Torre 2</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:4px;border-bottom:1.5px solid var(--stone-200)">
+            <div style="padding:12px 22px;font-size:14.5px;font-weight:600;color:var(--stone-500)">Dettagli</div>
+            <div style="padding:12px 22px;font-size:14.5px;font-weight:600;color:var(--stone-500);display:flex;align-items:center;gap:8px">Allegati <span style="display:inline-flex;padding:2px 8px;border-radius:999px;background:var(--stone-100);color:var(--stone-500);font-size:12px;font-weight:800">5</span></div>
+            <div style="padding:12px 22px;font-size:14.5px;font-weight:800;color:var(--green-900);border-bottom:2.5px solid var(--green-600);margin-bottom:-1.5px">Storico</div>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:20px;padding:30px 34px;max-width:860px;display:flex;flex-direction:column">
+            <div style="display:flex;gap:18px">
+              <div style="display:flex;flex-direction:column;align-items:center"><span style="width:34px;height:34px;border-radius:999px;background:var(--info-100);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="send" stroke-width="1.75" style="width:16px;height:16px;color:var(--info-600)"></i></span><span style="width:2px;flex:1;background:var(--stone-200)"></span></div>
+              <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:26px">
+                <div style="font-size:15px;font-weight:800;color:var(--stone-900)">Inviata all'assicurazione</div>
+                <div style="font-size:13.5px;color:var(--stone-600)">Giacomo Meraviglia (GR) · 2 settembre 2026, 09:41</div>
+                <div style="font-size:13.5px;color:var(--stone-700);background:var(--stone-50);border:1px solid var(--stone-200);border-radius:10px;padding:10px 14px;margin-top:6px">Modulo 3 inviato a assicurazioni@caigrlombardia.it e broker@alpinsurance.it</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:18px">
+              <div style="display:flex;flex-direction:column;align-items:center"><span style="width:34px;height:34px;border-radius:999px;background:var(--info-100);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="file-check-2" stroke-width="1.75" style="width:16px;height:16px;color:var(--info-600)"></i></span><span style="width:2px;flex:1;background:var(--stone-200)"></span></div>
+              <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:26px">
+                <div style="font-size:15px;font-weight:800;color:var(--stone-900)">PDF firmato inviato</div>
+                <div style="font-size:13.5px;color:var(--stone-600)">Sezione di Como · 29 agosto 2026, 17:12</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:18px">
+              <div style="display:flex;flex-direction:column;align-items:center"><span style="width:34px;height:34px;border-radius:999px;background:var(--green-100);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="circle-check" stroke-width="1.75" style="width:16px;height:16px;color:var(--green-600)"></i></span><span style="width:2px;flex:1;background:var(--stone-200)"></span></div>
+              <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:26px">
+                <div style="font-size:15px;font-weight:800;color:var(--stone-900)">Approvata — assegnata Torre 2</div>
+                <div style="font-size:13.5px;color:var(--stone-600)">Giacomo Meraviglia (GR) · 24 agosto 2026, 08:55</div>
+                <div style="font-size:13.5px;color:var(--stone-700);background:var(--stone-50);border:1px solid var(--stone-200);border-radius:10px;padding:10px 14px;margin-top:6px">Torre 1 già impegnata nel periodo: assegnata Torre 2 come da disponibilità.</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:18px">
+              <div style="display:flex;flex-direction:column;align-items:center"><span style="width:34px;height:34px;border-radius:999px;background:var(--warning-100);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="mail" stroke-width="1.75" style="width:16px;height:16px;color:var(--warning-600)"></i></span><span style="width:2px;flex:1;background:var(--stone-200)"></span></div>
+              <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:26px">
+                <div style="font-size:15px;font-weight:800;color:var(--stone-900)">Inviata al GR</div>
+                <div style="font-size:13.5px;color:var(--stone-600)">Sezione di Como · 20 agosto 2026, 11:30</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:18px">
+              <div style="display:flex;flex-direction:column;align-items:center"><span style="width:34px;height:34px;border-radius:999px;background:var(--stone-100);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="file-plus-2" stroke-width="1.75" style="width:16px;height:16px;color:var(--stone-500)"></i></span></div>
+              <div style="display:flex;flex-direction:column;gap:3px">
+                <div style="font-size:15px;font-weight:800;color:var(--stone-900)">Creata come Bozza</div>
+                <div style="font-size:13.5px;color:var(--stone-600)">Sezione di Como · 12 agosto 2026, 15:03</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 1e · CALENDARIO UNICO ============ -->
+  <div id="1e" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="#1e" style="display:inline-flex;padding:5px 12px;border-radius:999px;background:var(--green-900);color:#FFFFFF;font-size:12px;font-weight:800;letter-spacing:0.06em;text-decoration:none">1E</a>
+      <div>
+        <div style="font-weight:800;font-size:16px;color:var(--stone-900)">Calendario unico — 2 torri a colori</div>
+        <div style="font-size:13px;color:var(--stone-600)">Nessuna tab per torre (BUG-07); click su evento → dettaglio; depositi in legenda (BUG-08)</div>
+      </div>
+    </div>
+    <div data-screen-label="GR Calendario" style="width:1440px;background:#FFFFFF;border:1px solid var(--stone-300);border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden;display:flex;min-height:900px">
+      <aside style="width:248px;flex-shrink:0;background:var(--green-900);display:flex;flex-direction:column;padding:20px 14px 16px 14px;gap:4px">
+        <div style="display:flex;align-items:center;gap:12px;padding:6px 10px 18px 10px;border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:14px">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center"><i data-lucide="mountain" stroke-width="1.75" style="width:22px;height:22px;color:#FFFFFF"></i></div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="font-weight:800;font-size:16px;color:#FFFFFF;letter-spacing:-0.02em;line-height:1">Prenotar</div>
+            <div style="font-size:10.5px;font-weight:700;letter-spacing:0.12em;color:#7FB0A3;text-transform:uppercase">Pannello GR</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#B9D4CC;font-size:14.5px;font-weight:600"><i data-lucide="house" stroke-width="1.75" style="width:19px;height:19px"></i>Dashboard</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#B9D4CC;font-size:14.5px;font-weight:600"><i data-lucide="clipboard-list" stroke-width="1.75" style="width:19px;height:19px"></i>Prenotazioni</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,0.16);color:#FFFFFF;font-size:14.5px;font-weight:700"><i data-lucide="calendar-days" stroke-width="1.75" style="width:19px;height:19px"></i>Calendario torri</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#B9D4CC;font-size:14.5px;font-weight:600"><i data-lucide="settings" stroke-width="1.75" style="width:19px;height:19px"></i>Impostazioni</div>
+        <div style="flex:1"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 10px 4px 10px;border-top:1px solid rgba(255,255,255,0.12)">
+          <div style="width:36px;height:36px;border-radius:999px;background:var(--green-500);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF">GM</div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="font-size:13.5px;font-weight:700;color:#FFFFFF;line-height:1.2">Giacomo Meraviglia</div>
+            <div style="font-size:12px;color:#7FB0A3">Presidente GR Lombardia</div>
+          </div>
+        </div>
+      </aside>
+      <div style="flex:1;background:var(--stone-50);display:flex;flex-direction:column">
+        <div style="height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 36px;border-bottom:1px solid var(--stone-200);background:#FFFFFF">
+          <div style="font-size:14px;font-weight:700;color:var(--stone-800)">Calendario torri</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--stone-600)"><i data-lucide="circle-help" stroke-width="1.75" style="width:18px;height:18px"></i>Guida</div>
+        </div>
+        <div style="padding:36px;display:flex;flex-direction:column;gap:20px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:16px">
+              <div style="display:flex;gap:6px">
+                <span style="width:36px;height:36px;border:1px solid var(--stone-300);border-radius:10px;display:inline-flex;align-items:center;justify-content:center;background:#FFFFFF"><i data-lucide="chevron-left" stroke-width="1.75" style="width:18px;height:18px;color:var(--stone-600)"></i></span>
+                <span style="width:36px;height:36px;border:1px solid var(--stone-300);border-radius:10px;display:inline-flex;align-items:center;justify-content:center;background:#FFFFFF"><i data-lucide="chevron-right" stroke-width="1.75" style="width:18px;height:18px;color:var(--stone-600)"></i></span>
+              </div>
+              <h2 style="margin:0;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Settembre 2026</h2>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+              <span style="display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:var(--green-100);font-size:13px;font-weight:700;color:var(--green-800)"><span style="width:11px;height:11px;border-radius:4px;background:var(--green-600)"></span>Torre 1 · CityWall 8m — dep. Zanica (BG)</span>
+              <span style="display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:var(--larch-100);font-size:13px;font-weight:700;color:var(--larch-700)"><span style="width:11px;height:11px;border-radius:4px;background:var(--larch-600)"></span>Torre 2 · CityWall 5m — dep. Colico (LC)</span>
+            </div>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:16px;overflow:hidden">
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--stone-200);background:var(--stone-100)">
+              <div style="padding:10px 0;text-align:center;font-size:12px;font-weight:800;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.08em">Lunedì</div>
+              <div style="padding:10px 0;text-align:center;font-size:12px;font-weight:800;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.08em">Martedì</div>
+              <div style="padding:10px 0;text-align:center;font-size:12px;font-weight:800;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.08em">Mercoledì</div>
+              <div style="padding:10px 0;text-align:center;font-size:12px;font-weight:800;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.08em">Giovedì</div>
+              <div style="padding:10px 0;text-align:center;font-size:12px;font-weight:800;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.08em">Venerdì</div>
+              <div style="padding:10px 0;text-align:center;font-size:12px;font-weight:800;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.08em">Sabato</div>
+              <div style="padding:10px 0;text-align:center;font-size:12px;font-weight:800;color:var(--stone-500);text-transform:uppercase;letter-spacing:0.08em">Domenica</div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr)">
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-400);padding-left:4px">31</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">1</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">2</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">3</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px;display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">4</div><div style="height:26px;border-radius:7px 0 0 7px;background:var(--green-600);color:#FFFFFF;font-size:12px;font-weight:700;display:flex;align-items:center;padding:0 8px;white-space:nowrap;overflow:hidden;margin-right:-7px">Sagra di Clusone</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px;display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">5</div><div style="height:26px;background:var(--green-600);margin-left:-7px;margin-right:-7px"></div></div>
+              <div style="height:118px;border-bottom:1px solid var(--stone-100);padding:8px 6px;display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">6</div><div style="height:26px;border-radius:0 7px 7px 0;background:var(--green-600);margin-left:-7px"></div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">7</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">8</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">9</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">10</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">11</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px;display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">12</div><div style="height:26px;border-radius:7px 0 0 7px;background:var(--larch-600);color:#FFFFFF;font-size:12px;font-weight:700;display:flex;align-items:center;padding:0 8px;white-space:nowrap;overflow:hidden;margin-right:-7px">Open day CAI Lecco</div></div>
+              <div style="height:118px;border-bottom:1px solid var(--stone-100);padding:8px 6px;display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">13</div><div style="height:26px;border-radius:0 7px 7px 0;background:var(--larch-600);margin-left:-7px"></div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">14</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">15</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">16</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">17</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">18</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px;display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">19</div><div style="height:26px;border-radius:7px 0 0 7px;background:var(--green-600);color:#FFFFFF;font-size:12px;font-weight:700;display:flex;align-items:center;padding:0 8px;white-space:nowrap;overflow:hidden;margin-right:-7px">Festa dello Sport — Bergamo</div></div>
+              <div style="height:118px;border-bottom:1px solid var(--stone-100);padding:8px 6px;display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">20</div><div style="height:26px;background:var(--green-600);margin-left:-7px;margin-right:-7px"></div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px;display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">21</div><div style="height:26px;border-radius:0 7px 7px 0;background:var(--green-600);margin-left:-7px"></div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">22</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">23</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">24</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px;display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">25</div><div style="height:26px;border-radius:7px 0 0 7px;background:var(--larch-600);color:#FFFFFF;font-size:12px;font-weight:700;display:flex;align-items:center;padding:0 8px;white-space:nowrap;overflow:hidden;margin-right:-7px">Fiera di Como</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);border-bottom:1px solid var(--stone-100);padding:8px 6px;display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">26</div><div style="height:26px;background:var(--larch-600);margin-left:-7px;margin-right:-7px"></div></div>
+              <div style="height:118px;border-bottom:1px solid var(--stone-100);padding:8px 6px;display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">27</div><div style="height:26px;border-radius:0 7px 7px 0;background:var(--larch-600);margin-left:-7px"></div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">28</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">29</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-700);padding-left:4px">30</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-400);padding-left:4px">1</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-400);padding-left:4px">2</div></div>
+              <div style="height:118px;border-right:1px solid var(--stone-100);padding:8px 6px"><div style="font-size:13px;color:var(--stone-400);padding-left:4px">3</div></div>
+              <div style="height:118px;padding:8px 6px"><div style="font-size:13px;color:var(--stone-400);padding-left:4px">4</div></div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--stone-500)"><i data-lucide="pointer" stroke-width="1.75" style="width:15px;height:15px"></i>Click su un evento per aprire il dettaglio della prenotazione.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 1f · IMPOSTAZIONI ============ -->
+  <div id="1f" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="#1f" style="display:inline-flex;padding:5px 12px;border-radius:999px;background:var(--green-900);color:#FFFFFF;font-size:12px;font-weight:800;letter-spacing:0.06em;text-decoration:none">1F</a>
+      <div>
+        <div style="font-weight:800;font-size:16px;color:var(--stone-900)">Impostazioni — pagina a tab</div>
+        <div style="font-size:13px;color:var(--stone-600)">Notifiche, assicurazione, firma del Presidente, parametri operativi</div>
+      </div>
+    </div>
+    <div data-screen-label="GR Impostazioni" style="width:1440px;background:#FFFFFF;border:1px solid var(--stone-300);border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden;display:flex;min-height:900px">
+      <aside style="width:248px;flex-shrink:0;background:var(--green-900);display:flex;flex-direction:column;padding:20px 14px 16px 14px;gap:4px">
+        <div style="display:flex;align-items:center;gap:12px;padding:6px 10px 18px 10px;border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:14px">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center"><i data-lucide="mountain" stroke-width="1.75" style="width:22px;height:22px;color:#FFFFFF"></i></div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="font-weight:800;font-size:16px;color:#FFFFFF;letter-spacing:-0.02em;line-height:1">Prenotar</div>
+            <div style="font-size:10.5px;font-weight:700;letter-spacing:0.12em;color:#7FB0A3;text-transform:uppercase">Pannello GR</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#B9D4CC;font-size:14.5px;font-weight:600"><i data-lucide="house" stroke-width="1.75" style="width:19px;height:19px"></i>Dashboard</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#B9D4CC;font-size:14.5px;font-weight:600"><i data-lucide="clipboard-list" stroke-width="1.75" style="width:19px;height:19px"></i>Prenotazioni</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#B9D4CC;font-size:14.5px;font-weight:600"><i data-lucide="calendar-days" stroke-width="1.75" style="width:19px;height:19px"></i>Calendario torri</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,0.16);color:#FFFFFF;font-size:14.5px;font-weight:700"><i data-lucide="settings" stroke-width="1.75" style="width:19px;height:19px"></i>Impostazioni</div>
+        <div style="flex:1"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 10px 4px 10px;border-top:1px solid rgba(255,255,255,0.12)">
+          <div style="width:36px;height:36px;border-radius:999px;background:var(--green-500);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#FFFFFF">GM</div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="font-size:13.5px;font-weight:700;color:#FFFFFF;line-height:1.2">Giacomo Meraviglia</div>
+            <div style="font-size:12px;color:#7FB0A3">Presidente GR Lombardia</div>
+          </div>
+        </div>
+      </aside>
+      <div style="flex:1;background:var(--stone-50);display:flex;flex-direction:column">
+        <div style="height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 36px;border-bottom:1px solid var(--stone-200);background:#FFFFFF">
+          <div style="font-size:14px;font-weight:700;color:var(--stone-800)">Impostazioni</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--stone-600)"><i data-lucide="circle-help" stroke-width="1.75" style="width:18px;height:18px"></i>Guida</div>
+        </div>
+        <div style="padding:36px;display:flex;flex-direction:column;gap:22px">
+          <h2 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-0.02em;color:var(--stone-900)">Impostazioni</h2>
+          <div style="display:flex;gap:4px;border-bottom:1.5px solid var(--stone-200)">
+            <div style="padding:12px 22px;font-size:14.5px;font-weight:800;color:var(--green-900);border-bottom:2.5px solid var(--green-600);margin-bottom:-1.5px">Notifiche e assicurazione</div>
+            <div style="padding:12px 22px;font-size:14.5px;font-weight:600;color:var(--stone-500)">Firma del Presidente</div>
+            <div style="padding:12px 22px;font-size:14.5px;font-weight:600;color:var(--stone-500)">Parametri operativi</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;max-width:1060px">
+            <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:20px;padding:26px 28px;display:flex;flex-direction:column;gap:16px">
+              <div style="display:flex;flex-direction:column;gap:3px">
+                <div style="font-size:16px;font-weight:800;color:var(--stone-900)">Email di notifica del GR</div>
+                <div style="font-size:13.5px;color:var(--stone-600)">Ricevono un avviso a ogni nuova richiesta inviata.</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border:1px solid var(--stone-200);border-radius:10px;background:var(--stone-50)"><span style="font-size:14px;font-weight:600;color:var(--stone-800)">presidente@caigrlombardia.it</span><i data-lucide="x" stroke-width="1.75" style="width:16px;height:16px;color:var(--stone-500)"></i></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border:1px solid var(--stone-200);border-radius:10px;background:var(--stone-50)"><span style="font-size:14px;font-weight:600;color:var(--stone-800)">segreteria@caigrlombardia.it</span><i data-lucide="x" stroke-width="1.75" style="width:16px;height:16px;color:var(--stone-500)"></i></div>
+              </div>
+              <div style="display:flex;gap:10px">
+                <div style="flex:1;padding:11px 14px;border:1.5px solid var(--stone-300);border-radius:10px;background:#FFFFFF;font-size:14px;color:var(--stone-500)">aggiungi email…</div>
+                <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="secondary" size="sm" hint-size="auto,40px">Aggiungi</x-import>
+              </div>
+            </div>
+            <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:20px;padding:26px 28px;display:flex;flex-direction:column;gap:16px">
+              <div style="display:flex;flex-direction:column;gap:3px">
+                <div style="font-size:16px;font-weight:800;color:var(--stone-900)">Email assicurazione</div>
+                <div style="font-size:13.5px;color:var(--stone-600)">Destinatari del Modulo 3 all'invio in assicurazione.</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border:1px solid var(--stone-200);border-radius:10px;background:var(--stone-50)"><span style="font-size:14px;font-weight:600;color:var(--stone-800)">assicurazioni@caigrlombardia.it</span><i data-lucide="x" stroke-width="1.75" style="width:16px;height:16px;color:var(--stone-500)"></i></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border:1px solid var(--stone-200);border-radius:10px;background:var(--stone-50)"><span style="font-size:14px;font-weight:600;color:var(--stone-800)">broker@alpinsurance.it</span><i data-lucide="x" stroke-width="1.75" style="width:16px;height:16px;color:var(--stone-500)"></i></div>
+              </div>
+              <div style="display:flex;gap:10px">
+                <div style="flex:1;padding:11px 14px;border:1.5px solid var(--stone-300);border-radius:10px;background:#FFFFFF;font-size:14px;color:var(--stone-500)">aggiungi email…</div>
+                <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="secondary" size="sm" hint-size="auto,40px">Aggiungi</x-import>
+              </div>
+            </div>
+            <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:20px;padding:26px 28px;display:flex;flex-direction:column;gap:16px">
+              <div style="display:flex;flex-direction:column;gap:3px">
+                <div style="font-size:16px;font-weight:800;color:var(--stone-900)">Firma del Presidente GR</div>
+                <div style="font-size:13.5px;color:var(--stone-600)">Usata sui PDF generati (Richiesta parete, Modulo 3).</div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  <label style="font-size:13px;font-weight:700;color:var(--stone-700)">Nome e cognome</label>
+                  <div style="padding:11px 14px;border:1.5px solid var(--stone-300);border-radius:10px;background:#FFFFFF;font-size:14.5px;color:var(--stone-800)">Giacomo Meraviglia</div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  <label style="font-size:13px;font-weight:700;color:var(--stone-700)">Luogo di firma</label>
+                  <div style="padding:11px 14px;border:1.5px solid var(--stone-300);border-radius:10px;background:#FFFFFF;font-size:14.5px;color:var(--stone-800)">Milano</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;border:1px dashed var(--stone-300);border-radius:12px;background:var(--stone-50)">
+                <i data-lucide="pen-line" stroke-width="1.75" style="width:20px;height:20px;color:var(--green-600);flex-shrink:0"></i>
+                <div style="display:flex;flex-direction:column;gap:2px;flex:1">
+                  <div style="font-size:14px;font-weight:700;color:var(--stone-800)">firma-presidente.png</div>
+                  <div style="font-size:12.5px;color:var(--stone-500)">caricata il 12/01/2026</div>
+                </div>
+                <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="ghost" size="sm" hint-size="auto,34px">Sostituisci</x-import>
+              </div>
+            </div>
+            <div style="background:#FFFFFF;border:1px solid var(--stone-200);border-radius:20px;padding:26px 28px;display:flex;flex-direction:column;gap:16px;grid-column:1 / -1">
+              <div style="display:flex;flex-direction:column;gap:3px">
+                <div style="font-size:16px;font-weight:800;color:var(--stone-900)">Parametri operativi</div>
+                <div style="font-size:13.5px;color:var(--stone-600)">Vincoli temporali applicati automaticamente alle richieste delle Sezioni.</div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  <label style="font-size:13px;font-weight:700;color:var(--stone-700)">Giorni minimi per caricare i documenti prima dell'evento</label>
+                  <div style="display:flex;align-items:center;gap:10px"><div style="width:110px;padding:11px 14px;border:1.5px solid var(--stone-300);border-radius:10px;background:#FFFFFF;font-size:15px;font-weight:700;color:var(--stone-800);text-align:center">14</div><span style="font-size:13.5px;color:var(--stone-500)">giorni</span></div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  <label style="font-size:13px;font-weight:700;color:var(--stone-700)">Ore minime di preavviso per la richiesta assicurazione</label>
+                  <div style="display:flex;align-items:center;gap:10px"><div style="width:110px;padding:11px 14px;border:1.5px solid var(--stone-300);border-radius:10px;background:#FFFFFF;font-size:15px;font-weight:700;color:var(--stone-800);text-align:center">48</div><span style="font-size:13.5px;color:var(--stone-500)">ore</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;max-width:1060px">
+            <x-import component-from-global-scope="MontagnaServiziDesignSystem_5cc04e.Button" variant="primary" size="md" hint-size="auto,44px">Salva impostazioni</x-import>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;dashboardVuota&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: false, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Dashboard&quot;, &quot;description&quot;: &quot;Mostra lo stato vuoto 'Tutto approvato' al posto della lista richieste&quot; }
+}">
+class Component extends DCLogic {
+  componentDidMount() { this._icons(); }
+  componentDidUpdate() { this._icons(); }
+  _icons() {
+    const run = () => {
+      if (window.lucide && window.lucide.createIcons) {
+        try { window.lucide.createIcons(); } catch (e) {}
+      } else {
+        setTimeout(run, 300);
+      }
+    };
+    run();
+  }
+  renderVals() {
+    const dashboardVuota = this.props.dashboardVuota ?? false;
+    return {
+      dashboardVuota,
+      dashboardConRichieste: !dashboardVuota,
+      vero: true,
+    };
+  }
+}
+</script>
+</body>
+</html>

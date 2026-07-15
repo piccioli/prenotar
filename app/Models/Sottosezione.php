@@ -37,10 +37,14 @@ class Sottosezione extends Model
         ];
     }
 
-    /** Etichetta con prefisso S.SEZ. e riferimento alla sezione padre (risolve BUG-05). */
+    /**
+     * Etichetta con riferimento alla sezione padre (risolve BUG-05). Il
+     * `nominativo` include già il prefisso "S.SEZ." dalla fonte dati (Excel
+     * reale/seeder), non va riaggiunto qui altrimenti risulta duplicato.
+     */
     public function getLabelAttribute(): string
     {
-        return 'S.SEZ. '.$this->nominativo.' (sez. rif. '.$this->sezione?->nominativo.')';
+        return $this->nominativo.' (sez. rif. '.$this->sezione?->nominativo.')';
     }
 
     /** @return BelongsTo<Sezione, $this> */

@@ -12,11 +12,22 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Storage;
 
 class ListExcelImports extends ListRecords
 {
     protected static string $resource = ExcelImportResource::class;
+
+    public function getHeading(): string|Htmlable
+    {
+        return 'Log import Excel';
+    }
+
+    public function getSubheading(): string|Htmlable|null
+    {
+        return 'Anagrafica sezioni e sottosezioni, aggiornata tramite import manuale dall\'amministratore.';
+    }
 
     protected function getHeaderActions(): array
     {
@@ -24,6 +35,7 @@ class ListExcelImports extends ListRecords
             Action::make('uploadNew')
                 ->label('Carica nuovo Excel')
                 ->icon('heroicon-o-arrow-up-tray')
+                ->outlined()
                 ->form([
                     FileUpload::make('file')
                         ->label('File Excel (.xlsx)')

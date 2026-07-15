@@ -1,158 +1,104 @@
 {
   "project": "Prenotar",
-  "branchName": "ralph/cicd-email-infra",
-  "description": "Strategia di branching/CI/CD (pre-commit, branch develop, CD automatico develop/produzione con backup DB, hotfix, versionamento) e architettura email per i tre ambienti (locale/develop/produzione, MailPit su develop via sotto-URL con basic auth, SMTP Gmail reale in produzione). Fonti: tasks/prd-cicd-branching-strategy.md e tasks/prd-architettura-email-ambienti.md. Nessuna esecuzione reale su infrastruttura esterna (SSH sulla macchina di produzione, invio email reali): solo codice, configurazione e documentazione nel repository.",
+  "branchName": "ralph/semplificazione-trasporto-torri",
+  "description": "Semplifica lo step 'Logistica trasporto' del wizard di prenotazione (/sezione): rimuove luogo ritiro/riconsegna, distinzione mezzo aziendale/privato con preset 'Montagna Servizi', e categoria patente condizionata. Aggiunge nome conducente (obbligatorio) e un'unica dichiarazione sempre obbligatoria di possesso patente B+E con timestamp. Introduce il vincolo data_ritiro <= data_inizio_prenotazione. Migrazione con drop diretto delle colonne obsolete (produzione senza dati reali). US-005/US-006 aggiungono, sullo stesso branch, un acceleratore di test dev-only: bottone per-step nel wizard di creazione che compila i campi con dati Faker validi, vedi docs/superpowers/specs/2026-07-14-wizard-autofill-test-design.md.",
   "userStories": [
     {
       "id": "US-001",
-      "title": "Hook di pre-commit locale (QA obbligatoria)",
-      "description": "Come developer, voglio che al commit vengano lanciati automaticamente Pint, Larastan e Pest, cosi da non poter commettere codice che rompe la QA.",
+      "title": "Migrazione - rimozione campi obsoleti, nuovi campi conducente e dichiarazione patente",
+      "description": "Come sviluppatore, voglio una migrazione che rimuova le colonne non piu' necessarie e aggiunga i due nuovi campi (nome conducente, timestamp dichiarazione patente B+E), cosi da allineare lo schema alla nuova logica prima di modificare il form.",
       "acceptanceCriteria": [
-        "Nuovo script eseguibile .githooks/pre-commit (bash) che lancia './vendor/bin/sail composer qa' e blocca il commit (exit non-zero) se il comando fallisce",
-        "Se i container Sail non sono in esecuzione, lo script stampa un messaggio d'errore chiaro invece di un fallimento criptico",
-        "README.md o CLAUDE.md aggiornato con la procedura di attivazione: 'git config core.hooksPath .githooks' da eseguire una tantum su ogni macchina di sviluppo",
-        "Verificato manualmente: 'git config core.hooksPath .githooks' seguito da un commit di prova con codice che fallisce Pint viene bloccato",
-        "Typecheck/Larastan passa"
+        "Nuova migrazione che droppa da prenotazioni: luogo_ritiro, luogo_riconsegna, tipo_mezzo, azienda_trasporto, categoria_patente_privato (drop diretto, non deprecazione - produzione non ha ancora prenotazioni reali)",
+        "Nuova migrazione (o la stessa) che aggiunge: nome_conducente (string, nullable a livello DB, obbligatorio a livello di validazione form) e patente_be_dichiarata_at (timestamp, nullable)",
+        "app/Models/Prenotazione.php aggiornato: fillable e casts coerenti con i campi rimossi/aggiunti; rimossi i cast verso TipoMezzo/CategoriaPatente",
+        "Se gli enum App\\Enums\\TipoMezzo e App\\Enums\\CategoriaPatente non sono piu' referenziati da nessun'altra parte del codice dopo questo PRD, rimuoverli; se restano referenziati altrove, lasciarli e segnalarlo nelle note",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
       ],
       "priority": 1,
       "passes": true,
-      "notes": ""
+      "notes": "Migrazione 2026_07_13_090000: drop luogo_ritiro/luogo_riconsegna/tipo_mezzo/azienda_trasporto/categoria_patente_privato, add nome_conducente + patente_be_dichiarata_at. Enum App\\Enums\\TipoMezzo e App\\Enums\\CategoriaPatente NON rimossi: restano referenziati in app/Filament/Sezione/Resources/PrenotazioneResource.php (form wizard, ToggleButtons/Radio) - rimozione prevista in US-002. Rimosse dai due ViewPrenotazione.php (Gr e Sezione) le TextEntry per i campi droppati (causavano property.notFound in Larastan su $record->tipo_mezzo); non ancora aggiunti i nuovi TextEntry per nome_conducente/patente dichiarata, riservato a US-003. Eliminato tests/Feature/Sezione/PrenotazioneTipoMezzoValidationTest.php perche' le sue asserzioni su tipo_mezzo/categoria_patente_privato persistiti sono invalidate direttamente da questa migrazione; la sostituzione con test sui nuovi campi resta a carico di US-004 come da acceptance criteria. Aggiornata anche PrenotazioneFactory (usa Model::unguarded() quindi non e' protetta da fillable) per non referenziare piu' le colonne droppate."
     },
     {
       "id": "US-002",
-      "title": "Rinominare lo stack 'staging' in 'develop'",
-      "description": "Come developer, voglio che tutti i riferimenti a 'staging' nel repo vengano rinominati in 'develop' (file, variabili, dominio), perche l'ambiente develop e lo stack staging esistente sono lo stesso ambiente.",
+      "title": "Step 'Logistica trasporto' semplificato nel wizard",
+      "description": "Come presidente di sezione/sottosezione, nello step logistica del wizard voglio inserire solo il nome del conducente, la targa e le date di ritiro/riconsegna, confermando un'unica dichiarazione di possesso patente B+E, senza dover piu' scegliere tipo di mezzo o azienda di trasporto.",
       "acceptanceCriteria": [
-        "docker-compose.staging.yml rinominato in docker-compose.develop.yml (git mv, per preservare la history)",
-        ".env.staging.example rinominato in .env.develop.example con APP_ENV=develop, APP_URL=https://develop.prenotar.montagnaservizi.it, MAIL_FROM_ADDRESS aggiornato allo stesso dominio",
-        "Variabili/prefissi rinominati coerentemente nel nuovo .env.develop.example: DB_DATABASE=prenotar_staging -> prenotar_develop, DB_USERNAME=prenotar_staging -> prenotar_develop, CACHE_PREFIX=prenotar_staging_ -> prenotar_develop_, commenti che citano 'staging' aggiornati",
-        "DEPLOY.md: sezione 'Ambiente staging (UAT)' rinominata in 'Ambiente develop', tutti i comandi 'docker compose -f docker-compose.staging.yml --env-file .env.staging' sostituiti con la versione develop, esempio Nginx server_name aggiornato a develop.prenotar.montagnaservizi.it",
-        "CHANGELOG.md: nuova voce in '## [Non rilasciato]' che documenta il rename staging -> develop",
-        "grep -rn 'staging' su tutto il repo (esclusi .git/ e node_modules/) non produce nessun risultato residuo relativo a questo stack (ok se 'staging' compare solo nei PRD in tasks/ come riferimento storico)",
-        "Typecheck/Larastan passa"
+        "Rimossi dallo step: luogo_ritiro, luogo_riconsegna, tipo_mezzo (ToggleButtons), azienda_trasporto, categoria_patente_privato (Radio) e ogni testo/placeholder condizionato al tipo di mezzo",
+        "Campi rimasti/aggiunti nello step: data_ritiro (DatePicker, invariato), data_riconsegna (DatePicker, invariato), targa_autoveicolo (TextInput, invariato), nuovo nome_conducente (TextInput, obbligatorio), nuova checkbox unica di dichiarazione patente (obbligatoria, accepted)",
+        "Testo della dichiarazione patente (checkbox): 'Dichiaro, sotto la mia responsabilita', di essere in possesso di patente di guida di categoria B+E (o superiore), idonea al traino del rimorchio della torre di arrampicata, e che quanto dichiarato corrisponde al vero.'",
+        "Alla conferma della checkbox, patente_be_dichiarata_at viene valorizzato con l'istante corrente; se la checkbox viene deselezionata, torna null",
+        "Nuova validazione: data_ritiro deve essere minore o uguale a data_inizio_prenotazione, con messaggio d'errore esplicativo (es. 'La data di ritiro non puo' essere successiva alla data di inizio della prenotazione') che blocca l'avanzamento/salvataggio in caso di violazione",
+        "Nessuna regressione al vincolo di overlap gia' esistente su data_inizio_prenotazione/data_fine_prenotazione (NoOverlapTorre)",
+        "Verifica visiva in browser (screenshot) del nuovo step semplificato",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
       ],
       "priority": 2,
       "passes": true,
-      "notes": ""
+      "notes": "Aggiornati sia wizardSteps() (create) sia form() (edit, usato da EditPrenotazione) in app/Filament/Sezione/Resources/PrenotazioneResource.php: rimossi luogo_ritiro/luogo_riconsegna/tipo_mezzo/azienda_trasporto/categoria_patente_privato da entrambi (form() non era esplicitamente citato dagli acceptance criteria ma conteneva la stessa sezione duplicata e referenziava gli stessi enum, quindi va aggiornato in questa story per poter rimuovere TipoMezzo/CategoriaPatente come previsto da US-001). Aggiunti nome_conducente (TextInput required) e checkbox patente_be_confermata (dehydrated(false), rules ['accepted'], afterStateUpdated valorizza/azzera patente_be_dichiarata_at via Hidden field); in form() aggiunto anche afterStateHydrated per pre-selezionare la checkbox quando il record ha gia' patente_be_dichiarata_at valorizzato (nel wizard di creazione non serve, CreatePrenotazione non parte mai da un record esistente). Nuova regola app/Rules/DataRitiroEntroInizioPrenotazione.php (pattern identico a NoOverlapTorre) applicata a data_ritiro in entrambi i form. Rimossi enum App\\Enums\\TipoMezzo e App\\Enums\\CategoriaPatente (non piu' referenziati da nessuna parte) e la view radio-option-cards.blade.php (usata solo dal Radio categoria_patente_privato ora rimosso). Aggiornato anche tests/Feature/Sezione/PrenotazioneManualeLettoTest.php: il suo helper datiPrenotazioneManualeLettoBase() non passava nome_conducente/patente_be_confermata e falliva sui nuovi campi required, pur non essendo uno dei 4 file esplicitamente elencati in US-004 (e' stata una regressione diretta di questa story, quindi corretta subito per mantenere QA verde). Verifica visiva in browser NON eseguita: nessun tool MCP/browser disponibile in questa sessione (nessun risultato da ToolSearch per playwright/screenshot) - verifica manuale ancora da fare."
     },
     {
       "id": "US-003",
-      "title": "Branch develop e verifica CI su PR verso develop e main",
-      "description": "Come developer, voglio che ogni PR verso develop o verso main esegua automaticamente Pint + Larastan + Pest via GitHub Actions, per non introdurre regressioni ne nel branch di integrazione ne in produzione.",
+      "title": "Aggiornamento PDF e viste di dettaglio (GR/Sezione) per i nuovi campi",
+      "description": "Come Presidente GR o presidente di sezione, nei PDF generati (Richiesta parete, Modulo 3) e nelle viste di dettaglio prenotazione voglio vedere il nome del conducente e la dichiarazione patente al posto dei campi ormai rimossi, cosi da avere una documentazione coerente con il nuovo modulo trasporto.",
       "acceptanceCriteria": [
-        "Branch 'develop' creato a partire da 'main' (git branch, non serve pusharlo in questa story se il push non e richiesto esplicitamente dall'utente)",
-        ".github/workflows/ci.yml verificato: il trigger 'pull_request:' attuale (senza filtro 'branches') copre gia le PR verso develop e verso main, nessuna modifica al file necessaria",
-        "CLAUDE.md aggiornato nella sezione branching/workflow (o nuova sezione se non esiste) per documentare che tutto lo sviluppo parte da 'develop', non da 'main', e che main riceve solo PR da develop o da branch hotfix/*",
-        "Typecheck/Larastan passa"
+        "resources/views/pdf/richiesta_parete.blade.php e resources/views/pdf/modulo3.blade.php non referenziano piu' tipo_mezzo, categoria_patente_privato, azienda_trasporto, luogo_ritiro, luogo_riconsegna; mostrano invece nome_conducente, targa (invariata), date ritiro/riconsegna (invariate) e un'indicazione che la patente B+E e' stata dichiarata (con la data della dichiarazione)",
+        "app/Filament/Gr/Resources/PrenotazioneResource/Pages/ViewPrenotazione.php e app/Filament/Sezione/Resources/PrenotazioneResource/Pages/ViewPrenotazione.php aggiornate allo stesso modo (rimossi i TextEntry per i campi eliminati, aggiunti quelli per i nuovi campi)",
+        "Il modale di riassegnazione date lato GR (data_ritiro/data_riconsegna) resta funzionante e non referenzia campi rimossi",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest)"
       ],
       "priority": 3,
       "passes": true,
-      "notes": ""
+      "notes": "resources/views/pdf/richiesta_parete.blade.php e modulo3.blade.php: sezione 'Logistica trasporto'/'Viaggio e periodo'/'Veicolo' aggiornate - rimossi azienda_trasporto/luogo_ritiro/luogo_riconsegna, aggiunti nome_conducente e una riga 'Patente B+E' che mostra 'Dichiarata il d/m/Y H:i' o 'Non dichiarata' da patente_be_dichiarata_at. Aggiornata anche resources/views/emails/modulo3.blade.php (stesso motivo, non era negli acceptance criteria espliciti ma referenziava gli stessi campi rimossi). Entrambi i ViewPrenotazione.php (Gr e Sezione) - i TextEntry per i campi droppati erano gia' stati rimossi in US-001, qui aggiunti i nuovi TextEntry nome_conducente e patente_be_dichiarata_at (stesso formatStateUsing 'Dichiarata il .../Non dichiarata'); import Carbon\\Carbon aggiunto in Sezione/.../ViewPrenotazione.php (Gr ce l'aveva gia'). Il modale 'Modifica date trasporto' lato Gr (InfolistAction change_dates) non referenziava campi rimossi, nessuna modifica necessaria. composer qa verde: Pint ok, Larastan 162/162 no errors, Pest 272 passed."
     },
     {
       "id": "US-004",
-      "title": "MailPit su develop raggiungibile via sotto-URL con basic auth",
-      "description": "Come developer/tester, voglio consultare le email inviate dall'ambiente develop tramite un sotto-URL dell'app (es. https://develop.prenotar.montagnaservizi.it/mailpit), protetto da credenziali dedicate, senza dover aprire un tunnel SSH.",
+      "title": "Aggiornamento test esistenti sul modulo trasporto",
+      "description": "Come sviluppatore, voglio riscrivere i test che coprivano la vecchia logica (tipo mezzo, categoria patente condizionata) con test sulla nuova logica semplificata, incluso il nuovo vincolo sulla data di ritiro.",
       "acceptanceCriteria": [
-        "Nell'esempio di configurazione Nginx per l'ambiente develop in DEPLOY.md (sezione rinominata in US-002), aggiunta una location /mailpit/ che fa proxy_pass verso http://127.0.0.1:${MAILPIT_UI_PORT:-8027}/ (la UI MailPit e gia pubblicata su quella porta host dal compose develop, nessuna modifica al docker-compose.develop.yml necessaria per la raggiungibilita)",
-        "La location /mailpit/ include la direttiva auth_basic con riferimento a un file .htpasswd (path configurabile, es. /etc/nginx/.htpasswd-mailpit-develop), credenziali NON committate nel repo",
-        "DEPLOY.md documenta il comando per generare il file .htpasswd (es. 'htpasswd -c /etc/nginx/.htpasswd-mailpit-develop <utente>') e chi ne e responsabile: l'admin tecnico gestisce generazione ed eventuale rotazione manuale, nessun processo di rotazione periodica automatica",
-        "Nessuna azione reale su server esterni in questa story: solo l'esempio di configurazione Nginx e la documentazione in DEPLOY.md",
-        "Typecheck/Larastan passa"
+        "tests/Feature/Sezione/PrenotazioneTipoMezzoValidationTest.php sostituito con test sui nuovi campi: nome_conducente obbligatorio, checkbox patente obbligatoria (con patente_be_dichiarata_at valorizzato solo se confermata), submit senza dichiarazione patente bloccato con messaggio esplicativo",
+        "Nuovo test: data_ritiro successiva a data_inizio_prenotazione blocca il salvataggio con messaggio esplicativo; data_ritiro uguale o precedente passa",
+        "Aggiornati (rimossi i riferimenti ai campi obsoleti) tests/Feature/Sezione/PrenotazioneWizardCreateTest.php, tests/Feature/Gr/PrenotazioneChangeDatesTest.php, tests/Feature/Gr/PrenotazioneWorkflowFase4Test.php, tests/Feature/Jobs/SendReminderT2ggTest.php (verificarne la compatibilita' con lo schema aggiornato)",
+        "`./vendor/bin/sail composer qa` passa (Pint + Larastan + Pest) sull'intera suite"
       ],
       "priority": 4,
       "passes": true,
-      "notes": ""
+      "notes": "Sostituito tests/Feature/Sezione/PrenotazioneTipoMezzoValidationTest.php (gia' eliminato in US-001) con il nuovo tests/Feature/Sezione/PrenotazioneLogisticaTrasportoTest.php: nome_conducente required, checkbox patente_be_confermata required (accepted), patente_be_dichiarata_at valorizzato al submit se confermata e azzerato live se la checkbox viene deselezionata, data_ritiro > data_inizio_prenotazione blocca il salvataggio (assertHasFormErrors con la FQCN della rule, pattern gia' visto per NoOverlapTorre), data_ritiro uguale o precedente passa e salva, piu' un test diretto sulla regola DataRitiroEntroInizioPrenotazione via Validator::make per il messaggio esplicativo. Aggiornato anche tests/Feature/Sezione/PrenotazioneWizardCreateTest.php: rimosso 'azienda_trasporto' dal Prenotazione::create() diretto (chiave gia' silenziosamente ignorata da Eloquent perche' non fillable, ma comunque un residuo del vecchio schema da ripulire). Verificato che PrenotazioneChangeDatesTest.php, PrenotazioneWorkflowFase4Test.php e SendReminderT2ggTest.php non referenziano alcun campo obsoleto (data_ritiro/data_riconsegna, invariati, sono gli unici campi trasporto toccati) e passano gia' cosi' come sono, nessuna modifica necessaria. composer qa verde: Pint ok, Larastan 162/162 no errors, Pest 280 passed (era 272 prima di questa story)."
     },
     {
       "id": "US-005",
-      "title": "Configurazione produzione per SMTP Gmail reale (solo config, nessun invio reale)",
-      "description": "Come GR manager, voglio che la configurazione di produzione sia pronta per inviare email reali tramite SMTP Gmail invece di catturarle con MailPit, cosi che appena le credenziali saranno disponibili basti valorizzare il .env.",
+      "title": "Classe helper PrenotazioneWizardAutofill con generazione dati di test",
+      "description": "Come sviluppatore, voglio una classe helper pura che generi dati di test validi (Faker it_IT) per ogni step del wizard prenotazione, cosi' che il bottone di autofill (US-006) possa richiamarla senza duplicare logica di generazione ne' violare le regole di business esistenti.",
       "acceptanceCriteria": [
-        ".env.production.example aggiornato: MAIL_MAILER=smtp, MAIL_HOST=smtp.gmail.com, MAIL_PORT=587, MAIL_ENCRYPTION=tls, MAIL_USERNAME e MAIL_PASSWORD lasciati vuoti con commento che spiega che sono un'app password Gmail (o relay Workspace) da fornire, commento sul vecchio MAIL_HOST=mailpit rimosso",
-        "docker-compose.production.yml: servizio 'mailpit' e ogni sua 'condition: service_started' come dependency rimossi (produzione non cattura piu le email)",
-        "DEPLOY.md, sezione posta in produzione: aggiornata per riflettere SMTP Gmail invece di MailPit, con una nota esplicita 'BLOCCATO: credenziali SMTP Gmail non ancora disponibili, responsabile e data non assegnati - il mailer va lasciato configurato ma non attivabile fino alla loro consegna'",
-        "Nessun invio di email reale eseguito in questa story: la verifica end-to-end resta un passo manuale futuro, esplicitamente documentato come tale in DEPLOY.md",
-        "Typecheck/Larastan passa"
+        "Nuova classe App\\Support\\Testing\\PrenotazioneWizardAutofill con metodi statici pubblici: manuale(Forms\\Set $set), quandoDove(Forms\\Set $set), evento(Forms\\Set $set, Forms\\Get $get), logisticaTrasporto(Forms\\Set $set, Forms\\Get $get), responsabileInLoco(Forms\\Set $set) - usa fake('it_IT') internamente",
+        "manuale(): imposta manuale_step_confermato=true",
+        "quandoDove(): data_inizio_prenotazione = oggi + GrSettings::giorni_minimi_caricamento_documenti + offset random 1-20gg; data_fine_prenotazione = inizio + random 1-5gg; torre_id resta non impostato (nessuna preferenza)",
+        "evento(): nome_evento/descrizione_evento/indirizzo_evento da Faker; tipo_evento random tra le opzioni esistenti (fiera, manifestazione_cai, evento_promozionale, corso, altro); data_inizio_evento = $get('data_inizio_prenotazione') se presente, altrimenti fallback oggi+10gg; data_fine_evento = inizio evento + random 1-3gg",
+        "logisticaTrasporto(): data_ritiro = $get('data_inizio_prenotazione') se presente altrimenti fallback oggi+10gg (rispetta DataRitiroEntroInizioPrenotazione); data_riconsegna = ritiro + random 1-3gg; targa_autoveicolo nel formato [A-Z]{2}[0-9]{3}[A-Z]{2}; nome_conducente da Faker; patente_be_confermata=true e patente_be_dichiarata_at=now()",
+        "responsabileInLoco(): responsabile_nome/responsabile_telefono/responsabile_email da Faker; responsabile_tipo random tra i case di App\\Enums\\ResponsabileTipo; responsabile_titolo_cai da Faker",
+        "Nuovo test tests/Unit/Support/PrenotazioneWizardAutofillTest.php: per ciascun metodo verifica che i valori scritti rispettino i vincoli (data_ritiro <= data_inizio_prenotazione, data_fine_evento >= data_inizio_evento, formato targa valido via regex), nessun DB coinvolto",
+        "./vendor/bin/sail composer qa passa (Pint + Larastan + Pest)"
       ],
       "priority": 5,
       "passes": true,
-      "notes": ""
+      "notes": "Nuova classe app/Support/Testing/PrenotazioneWizardAutofill.php con i 5 metodi statici richiesti (manuale, quandoDove, evento, logisticaTrasporto, responsabileInLoco), tutti conformi allo spec docs/superpowers/specs/2026-07-14-wizard-autofill-test-design.md. Helper privato condiviso dataInizioPrenotazioneOFallback(Get) per il fallback oggi+10gg usato sia da evento() che da logisticaTrasporto(). Nuovo test tests/Unit/Support/PrenotazioneWizardAutofillTest.php: nessun DB coinvolto, Set/Get simulati con Mockery::mock(Filament\\Forms\\Set/Get::class) su un array condiviso; per quandoDove() (unico metodo dipendente da app(GrSettings::class)) la settings class e' istanziata via ReflectionClass::newInstanceWithoutConstructor() e la property valorizzata a mano prima del binding app()->instance(), per evitare che il container provi a costruire la classe reale (repository 'database' di spatie/laravel-settings, che fallirebbe comunque perche' i tests/Unit non bootano l'app Laravel). composer qa verde: Pint ok, Larastan no errors, Pest 287 passed (era 280 prima di questa story)."
     },
     {
       "id": "US-006",
-      "title": "Workflow GitHub Actions: CD automatico verso l'ambiente develop",
-      "description": "Come developer/tester, voglio che ogni push su develop aggiorni automaticamente l'ambiente develop (build, migration, eventuali seeder), per avere sempre una versione pubblica aggiornata da testare.",
+      "title": "Bottone 'Compila con dati di test' per step, visibile solo in ambiente locale",
+      "description": "Come sviluppatore, voglio un bottone in ogni step compilabile del wizard di creazione prenotazione che richiami PrenotazioneWizardAutofill (US-005) per popolare i campi di quello step, visibile e utilizzabile solo quando APP_ENV=local, cosi' da accelerare i test manuali senza rischiare che la funzionalita' arrivi in develop o produzione.",
       "acceptanceCriteria": [
-        "Nuovo file .github/workflows/cd-develop.yml, trigger 'on: push: branches: [develop]'",
-        "Il job dichiara 'runs-on: [self-hosted, develop]' (label dedicata, distinta da quella di produzione)",
-        "Step del workflow: checkout, poi comandi remoti equivalenti a 'docker compose -f docker-compose.develop.yml --env-file .env.develop build' seguito da 'up -d' e 'exec app php artisan migrate --force' (eseguiti dal runner self-hosted gia posizionato sulla macchina, nessuna connessione SSH aggiuntiva nel workflow)",
-        "Commento nel workflow che chiarisce che il seeder (db:seed) resta un'operazione manuale, non automatica, salvo diversa configurazione futura",
-        "DEPLOY.md aggiornato con una breve sezione che descrive questo workflow e come verificarne l'esito dalla tab Actions di GitHub",
-        "Typecheck/Larastan passa"
+        "In app/Filament/Sezione/Resources/PrenotazioneResource.php, wizardSteps(): ogni step tra Manuale d'istruzioni, Quando & dove, Evento, Logistica trasporto, Responsabile in loco riceve in testa al proprio schema un Forms\\Components\\Actions::make([...]) con una singola Action label 'Compila con dati di test', icon heroicon-o-beaker, color gray",
+        "Step 'Riepilogo' NON riceve alcun bottone (nessun campo compilabile)",
+        "Ogni action e' ->visible(fn () => app()->environment('local')) E, come prima istruzione dentro al proprio ->action(...), esegue abort_unless(app()->environment('local'), 404) prima di richiamare il metodo helper corrispondente di PrenotazioneWizardAutofill",
+        "Dopo l'esecuzione, la action mostra una Notification::make()->title('Dati di test inseriti')->success()->send()",
+        "app/Filament/Sezione/Resources/PrenotazioneResource/Pages/EditPrenotazione.php e il metodo form() (usato da EditPrenotazione) NON vengono toccati - il bottone resta esclusivo del wizard di creazione",
+        "Nuovo test tests/Feature/Sezione/PrenotazioneWizardAutofillTest.php (RefreshDatabase): con l'ambiente forzato a 'local' l'azione di ciascuno step e' visibile e la sua esecuzione produce uno stato del form valido (nessun errore di validazione al submit finale); con l'ambiente di default dei test ('testing') l'azione non e' visibile e una chiamata Livewire forzata all'azione restituisce 404",
+        "Verifica visiva in browser (screenshot) del bottone su almeno uno step, con APP_ENV=local",
+        "./vendor/bin/sail composer qa passa (Pint + Larastan + Pest) sull'intera suite"
       ],
       "priority": 6,
       "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-007",
-      "title": "Workflow GitHub Actions: CD verso produzione con backup DB pre-deploy",
-      "description": "Come admin tecnico, voglio che ogni push su main esegua un backup del database di produzione prima di qualunque migration/deploy, per poter fare rollback in caso di problemi.",
-      "acceptanceCriteria": [
-        "Nuovo file .github/workflows/cd-production.yml, trigger 'on: push: branches: [main]'",
-        "Il job dichiara 'runs-on: [self-hosted, production]' (label dedicata, distinta da quella di develop)",
-        "Primo step del workflow: dump del DB MariaDB di produzione (mysqldump o mariadb-dump) salvato con timestamp in una directory dedicata (es. /var/backups/prenotar/) con nome file che include data e ora",
-        "Step di retention: dopo il dump, vengono mantenuti solo gli ultimi 5 file di backup nella directory, i piu vecchi rimossi automaticamente (es. con 'ls -t | tail -n +6 | xargs rm --')",
-        "Step successivi: build immagine, 'migrate --force', restart stack tramite docker-compose.production.yml",
-        "DEPLOY.md aggiornato con il comando di rollback manuale da un dump salvato (es. 'docker compose ... exec -T mariadb mysql ... < backup.sql')",
-        "Typecheck/Larastan passa"
-      ],
-      "priority": 7,
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-008",
-      "title": "Documentare il flusso di hotfix su produzione",
-      "description": "Come developer, voglio una procedura documentata per aprire un branch di hotfix direttamente da main e risolvere un bug urgente in produzione, senza aspettare il ciclo normale di release da develop.",
-      "acceptanceCriteria": [
-        "Nuova sezione in CLAUDE.md (o CONTRIBUTING.md se piu adatto, verificare se esiste) intitolata 'Flusso di hotfix' che descrive: branch hotfix/<nome> creato da main -> fix -> PR verso main (CI verde, .github/workflows/ci.yml gia la copre) -> merge -> CD produzione (US-007) parte automaticamente",
-        "La sezione specifica esplicitamente che alla chiusura dell'hotfix va aperta anche una PR verso develop per non perdere la fix nel flusso normale",
-        "La sezione specifica che il merge di un hotfix su main corrisponde sempre a un bump di patch version (terzo numero) in CHANGELOG.md e a un nuovo tag git creato sul commit di merge su main",
-        "Typecheck/Larastan passa"
-      ],
-      "priority": 8,
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-009",
-      "title": "Documentare il versionamento su develop con tag + CHANGELOG",
-      "description": "Come developer, voglio che la procedura di versionamento (major/minor deciso su develop, patch da hotfix su main) sia documentata in modo che chiunque nel team la segua allo stesso modo.",
-      "acceptanceCriteria": [
-        "Nuova sezione in CLAUDE.md (vicino a quella sul branching di US-003/US-008) che descrive: bump versione in CHANGELOG.md + creazione tag git eseguiti sul branch develop PRIMA di aprire la PR develop -> main",
-        "La sezione specifica esplicitamente che la PR develop -> main non deve modificare il numero di versione (gia deciso su develop)",
-        "La sezione rimanda alla sezione hotfix (US-008) per l'unica eccezione (patch release taggate direttamente su main)",
-        "Typecheck/Larastan passa"
-      ],
-      "priority": 9,
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-010",
-      "title": "Checklist di setup macchina produzione (solo documentazione, nessuna esecuzione reale)",
-      "description": "Come admin tecnico, voglio una checklist scritta in DEPLOY.md per ripartire da una macchina pulita e installare develop e produzione, cosi da poter eseguire io stesso le operazioni quando saro pronto, senza che l'agente esegua nulla sulla macchina reale.",
-      "acceptanceCriteria": [
-        "Nuova sezione in DEPLOY.md 'Setup iniziale macchina (root@116.203.88.140)' con una checklist ordinata: 1) pulizia container/volumi Docker della vecchia installazione (con avviso esplicito che e distruttivo e va confermato manualmente prima di procedere), 2) installazione dello stack develop (docker-compose.develop.yml), 3) installazione dello stack produzione (docker-compose.production.yml), 4) registrazione dei due self-hosted runner GitHub Actions con le rispettive label 'develop' e 'production' (US-006/US-007)",
-        "La sezione elenca esplicitamente le operazioni manuali richieste all'utente: puntamento DNS per develop.prenotar.montagnaservizi.it, emissione/rinnovo certificati TLS, verifica che la chiave SSH sia gia autorizzata su root@116.203.88.140 (nessuno step di distribuzione chiave necessario)",
-        "La sezione specifica chiaramente in testa che si tratta di una checklist manuale: nessuno script del repo o comando eseguito da un agente automatico si connette a root@116.203.88.140",
-        "Typecheck/Larastan passa"
-      ],
-      "priority": 10,
-      "passes": true,
-      "notes": ""
+      "notes": "Nuovo helper privato PrenotazioneResource::autofillAction(string $name, callable $autofill) che costruisce Forms\\Components\\Actions::make([Action::make($name)->label('Compila con dati di test')->icon('heroicon-o-beaker')->color('gray')->visible(local)->action(abort_unless(local,404); $autofill($set,$get); Notification...)])->fullWidth(); usato in testa a ciascuno dei 5 step compilabili di wizardSteps() (non Riepilogo), passando i callable statici di PrenotazioneWizardAutofill (US-005). form()/EditPrenotazione non toccati. Nuovo test tests/Feature/Sezione/PrenotazioneWizardAutofillTest.php (3 test: happy path in ambiente local con submit finale valido; bottone assente e chiamata forzata senza effetto in ambiente di default; abort_unless verificato con NotFoundHttpException invocando il closure via reflection, unico modo per esercitarlo davvero dato che Filament esclude le action nascoste dall'albero dei componenti prima ancora che l'abort_unless possa girare). Verifica visiva in browser NON eseguita (nessun tool MCP disponibile in sessione), resta manuale. composer qa verde: Pint ok, Larastan 163/163 no errors, Pest 290 passed (era 287 prima di questa story)."
     }
   ]
 }

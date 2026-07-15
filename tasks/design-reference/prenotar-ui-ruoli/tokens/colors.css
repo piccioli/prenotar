@@ -1,0 +1,76 @@
+/* Montagna Servizi — Color tokens
+   Brand primary sampled from the logo mark: #1D574B (deep pine green).
+   Warm "larch/sunrise" accent used sparingly for highlights only. */
+:root {
+  /* ---- Pine green scale (brand) ---- */
+  --green-900: #0F332B;
+  --green-800: #123F35;
+  --green-700: #164A3F;
+  --green-600: #1D574B;   /* BRAND PRIMARY — sampled from logo */
+  --green-500: #2A6E5F;
+  --green-400: #4A8C7C;
+  --green-300: #7FB0A3;
+  --green-200: #B9D4CC;
+  --green-100: #E3EFEB;
+  --green-50:  #F1F7F5;
+
+  /* ---- Larch accent (warm, used sparingly) ---- */
+  --larch-700: #A9611E;
+  --larch-600: #C77E2A;
+  --larch-500: #E0963B;
+  --larch-200: #F3D9B4;
+  --larch-100: #F8ECD9;
+
+  /* ---- Stone neutrals (slightly warm/green-tinted) ---- */
+  --stone-900: #1C201E;
+  --stone-800: #2E3532;
+  --stone-700: #454E4A;
+  --stone-600: #5E6863;
+  --stone-500: #7C857F;
+  --stone-400: #A7AEA9;
+  --stone-300: #CBD1CD;
+  --stone-200: #E4E8E5;
+  --stone-100: #F1F4F2;
+  --stone-50:  #F8FAF9;
+  --white:     #FFFFFF;
+
+  /* ---- Semantic raw ---- */
+  --success-600: #2A6E5F;
+  --success-100: #E3EFEB;
+  --warning-600: #C77E2A;
+  --warning-100: #F8ECD9;
+  --danger-600:  #C0473B;
+  --danger-100:  #F7E6E3;
+  --info-600:    #3B7AA0;
+  --info-100:    #E4EEF4;
+
+  /* ================= Semantic aliases ================= */
+  /* Text */
+  --text-strong:  var(--stone-900);
+  --text-body:    var(--stone-700);
+  --text-muted:   var(--stone-500);
+  --text-brand:   var(--green-600);
+  --text-inverse: var(--white);
+  --text-on-brand:var(--white);
+  --text-accent:  var(--larch-700);
+
+  /* Surfaces */
+  --surface-page:         var(--white);
+  --surface-subtle:       var(--green-50);
+  --surface-muted:        var(--stone-100);
+  --surface-card:         var(--white);
+  --surface-brand:        var(--green-600);
+  --surface-brand-strong: var(--green-800);
+  --surface-inverse:      var(--green-900);
+  --surface-accent:       var(--larch-100);
+
+  /* Borders */
+  --border-subtle:  var(--stone-200);
+  --border-default: var(--stone-300);
+  --border-strong:  var(--green-600);
+  --border-inverse: rgba(255,255,255,0.16);
+
+  /* Interaction */
+  --focus-ring: var(--green-400);
+  --overlay:    rgba(15,51,43,0.55);
+}

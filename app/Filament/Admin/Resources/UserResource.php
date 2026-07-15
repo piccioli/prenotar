@@ -17,13 +17,13 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Spatie\Activitylog\Models\Activity;
 use STS\FilamentImpersonate\Tables\Actions\Impersonate;
 
 class UserResource extends Resource
@@ -82,6 +82,7 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->recordUrl(fn (User $record): string => Pages\EditUser::getUrl(['record' => $record]))
             ->columns([
                 TextColumn::make('name')
                     ->label('Nome')
@@ -91,28 +92,38 @@ class UserResource extends Resource
                     ->label('Email')
                     ->searchable()
                     ->limit(35),
+                TextColumn::make('ruolo')
+                    ->label('Ruolo')
+                    ->badge()
+                    ->getStateUsing(fn (User $record): string => self::ruoloLabel($record))
+                    ->color(fn (string $state): string => self::ruoloColor($state)),
+                TextColumn::make('appartenenza')
+                    ->label('Appartenenza')
+                    ->html()
+                    ->getStateUsing(fn (User $record): string => self::appartenenzaLabel($record)),
+                TextColumn::make('is_active')
+                    ->label('Stato')
+                    ->html()
+                    ->sortable()
+                    ->getStateUsing(fn (User $record): string => self::statoLabel($record)),
                 TextColumn::make('codice_cai')
                     ->label('Codice CAI')
-                    ->searchable(),
-                TextColumn::make('roles.name')
-                    ->label('Ruolo')
-                    ->badge(),
-
-                IconColumn::make('is_active')
-                    ->label('Attivo')
-                    ->boolean(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 IconColumn::make('email_is_fallback')
                     ->label('Email fallback')
                     ->boolean()
                     ->trueIcon('heroicon-o-exclamation-triangle')
                     ->falseIcon('heroicon-o-check-circle')
                     ->trueColor('warning')
-                    ->falseColor('success'),
+                    ->falseColor('success')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('last_login_at')
                     ->label('Ultimo accesso')
                     ->dateTime('d/m/Y H:i')
                     ->sortable()
-                    ->placeholder('—'),
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 SelectFilter::make('roles')
@@ -131,12 +142,18 @@ class UserResource extends Resource
                     ->query(fn (Builder $query) => $query->where('email_is_fallback', true)),
             ])
             ->actions([
-                EditAction::make(),
                 Impersonate::make()
+                    ->label('Impersona')
+                    ->button()
+                    ->outlined()
+                    ->color('primary')
                     ->visible(fn (User $record) => auth()->user()?->can('impersonate', $record) && $record->canBeImpersonated()),
                 Action::make('reset_password')
                     ->label('Reset password')
                     ->icon('heroicon-o-key')
+                    ->iconButton()
+                    ->color('gray')
+                    ->tooltip('Reset password')
                     ->requiresConfirmation()
                     ->modalDescription(fn (User $record) => "Invierà un'email \"Imposta password\" a {$record->effective_contact_email}.")
                     ->visible(fn (User $record) => auth()->user()?->can('resetPassword', $record))
@@ -147,9 +164,12 @@ class UserResource extends Resource
                     }),
                 Action::make('toggle_active')
                     ->label(fn (User $record) => $record->is_active ? 'Disattiva' : 'Attiva')
-                    ->icon(fn (User $record) => $record->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
+                    ->icon(fn (User $record) => $record->is_active ? 'heroicon-o-user-minus' : 'heroicon-o-user-plus')
                     ->color(fn (User $record) => $record->is_active ? 'danger' : 'success')
+                    ->iconButton()
+                    ->tooltip(fn (User $record) => $record->is_active ? 'Disattiva' : 'Attiva')
                     ->requiresConfirmation()
+                    ->modalHeading(fn (User $record) => $record->is_active ? 'Disattiva utente' : 'Attiva utente')
                     ->form([
                         Textarea::make('motivo')
                             ->label('Motivazione')
@@ -173,6 +193,64 @@ class UserResource extends Resource
             ->bulkActions([BulkActionGroup::make([])])
             ->defaultSort('name')
             ->searchPlaceholder('Cerca per nome, email, codice CAI');
+    }
+
+    public static function ruoloLabel(User $record): string
+    {
+        return match (true) {
+            $record->isAdmin() => 'Admin',
+            $record->isGrManager() => 'GR Manager',
+            $record->sottosezione_id !== null => 'Sottosezione',
+            default => 'Sezione',
+        };
+    }
+
+    public static function ruoloColor(string $label): string
+    {
+        return match ($label) {
+            'Admin' => 'warning',
+            'GR Manager' => 'success',
+            default => 'info',
+        };
+    }
+
+    public static function appartenenzaLabel(User $record): string
+    {
+        if ($record->sottosezione !== null) {
+            return view('filament.components.etichetta-sezione', ['sottosezione' => $record->sottosezione])->render();
+        }
+
+        if ($record->sezione !== null) {
+            return view('filament.components.etichetta-sezione', ['sezione' => $record->sezione])->render();
+        }
+
+        if ($record->isGrManager()) {
+            return 'GR Lombardia';
+        }
+
+        return '—';
+    }
+
+    public static function statoLabel(User $record): string
+    {
+        return view('filament.admin.components.stato-utente', [
+            'attivo' => $record->is_active,
+            'motivo' => $record->is_active ? null : self::ultimoMotivoDisattivazione($record),
+        ])->render();
+    }
+
+    private static function ultimoMotivoDisattivazione(User $record): ?string
+    {
+        $motivo = Activity::query()
+            ->where('subject_type', User::class)
+            ->where('subject_id', $record->getKey())
+            ->where('event', 'user.toggle_active')
+            ->latest()
+            ->first()
+            ?->properties
+            ->get('motivo');
+
+        return is_string($motivo) ? $motivo : null;
     }
 
     /** @return Builder<User> */

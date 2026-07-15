@@ -19,6 +19,8 @@ class Torre extends Model
 
     use LogsActivity;
 
+    public const COLORE_DEFAULT = '#64748B';
+
     protected $table = 'torri';
 
     protected $fillable = [
@@ -29,6 +31,7 @@ class Torre extends Model
         'specs_tecniche_pdf_path',
         'manuale_pdf_path',
         'is_active',
+        'colore_hex',
     ];
 
     protected function casts(): array
@@ -58,5 +61,18 @@ class Torre extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
+    }
+
+    /**
+     * Fonte unica del colore di una torre, con fallback quando la torre non è
+     * assegnata o non ha ancora un colore configurato (BUG-07).
+     */
+    public static function coloreHexPer(?self $torre): string
+    {
+        if ($torre === null) {
+            return self::COLORE_DEFAULT;
+        }
+
+        return $torre->colore_hex ?? self::COLORE_DEFAULT;
     }
 }

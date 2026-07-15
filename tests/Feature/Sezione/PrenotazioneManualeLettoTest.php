@@ -36,10 +36,12 @@ function datiPrenotazioneManualeLettoBase(): array
         'responsabile_tipo' => 'istruttore',
         'responsabile_telefono' => '0123456789',
         'responsabile_email' => 'mario@example.com',
+        'nome_conducente' => 'Luigi Bianchi',
+        'patente_be_confermata' => true,
     ];
 }
 
-test('con torre selezionata il wizard non può essere inviato senza spuntare la conferma di lettura del manuale', function (): void {
+test('senza confermare la checkbox del primo step il wizard non può essere inviato, con una torre selezionata', function (): void {
     actingAs($this->user);
     $torre = Torre::factory()->create(['is_active' => true]);
 
@@ -49,63 +51,86 @@ test('con torre selezionata il wizard non può essere inviato senza spuntare la 
             'torre_id' => $torre->id,
         ])
         ->call('create')
-        ->assertHasFormErrors(['manuale_letto_confirm' => 'accepted']);
+        ->assertHasFormErrors(['manuale_step_confermato' => 'accepted']);
 
     expect(Prenotazione::count())->toBe(0);
 });
 
-test('con torre selezionata e conferma di lettura spuntata il wizard salva la prenotazione con audit del manuale', function (): void {
-    actingAs($this->user);
-    $torre = Torre::factory()->create(['is_active' => true]);
-
-    Livewire::test(CreatePrenotazione::class)
-        ->fillForm([
-            ...datiPrenotazioneManualeLettoBase(),
-            'torre_id' => $torre->id,
-        ])
-        ->set('data.manuale_letto_confirm', true)
-        ->call('create')
-        ->assertHasNoFormErrors();
-
-    $prenotazione = Prenotazione::sole();
-    expect($prenotazione->torre_id)->toBe($torre->id)
-        ->and($prenotazione->manuale_letto_torre_id)->toBe($torre->id)
-        ->and($prenotazione->manuale_letto_confermato_at)->not->toBeNull();
-});
-
-test('senza torre selezionata il wizard non richiede la conferma di lettura del manuale', function (): void {
+test('senza confermare la checkbox del primo step il wizard non può essere inviato, senza torre selezionata (nessuna preferenza)', function (): void {
     actingAs($this->user);
 
     Livewire::test(CreatePrenotazione::class)
         ->fillForm(datiPrenotazioneManualeLettoBase())
         ->call('create')
+        ->assertHasFormErrors(['manuale_step_confermato' => 'accepted']);
+
+    expect(Prenotazione::count())->toBe(0);
+});
+
+test('con la conferma di lettura spuntata e una torre selezionata il wizard salva la prenotazione', function (): void {
+    actingAs($this->user);
+    $torre = Torre::factory()->create(['is_active' => true]);
+
+    Livewire::test(CreatePrenotazione::class)
+        ->fillForm([
+            ...datiPrenotazioneManualeLettoBase(),
+            'torre_id' => $torre->id,
+        ])
+        ->set('data.manuale_step_confermato', true)
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $prenotazione = Prenotazione::sole();
+    expect($prenotazione->torre_id)->toBe($torre->id)
+        ->and($prenotazione->manuale_letto_confermato_at)->not->toBeNull();
+});
+
+test('con la conferma di lettura spuntata e nessuna torre selezionata (nessuna preferenza) il wizard salva la prenotazione', function (): void {
+    actingAs($this->user);
+
+    Livewire::test(CreatePrenotazione::class)
+        ->fillForm(datiPrenotazioneManualeLettoBase())
+        ->set('data.manuale_step_confermato', true)
+        ->call('create')
         ->assertHasNoFormErrors();
 
     $prenotazione = Prenotazione::sole();
     expect($prenotazione->torre_id)->toBeNull()
-        ->and($prenotazione->manuale_letto_torre_id)->toBeNull()
-        ->and($prenotazione->manuale_letto_confermato_at)->toBeNull();
+        ->and($prenotazione->manuale_letto_confermato_at)->not->toBeNull();
 });
 
-test('cambiare la torre selezionata dopo la conferma resetta il flag e richiede una nuova conferma', function (): void {
+test('la conferma del manuale è indipendente dalla torre scelta: manuale_letto_torre_id riflette la torre di riferimento, non quella selezionata', function (): void {
     actingAs($this->user);
-    $torre1 = Torre::factory()->create(['is_active' => true]);
-    $torre2 = Torre::factory()->create(['is_active' => true]);
+    $torreConManuale = Torre::factory()->create(['is_active' => true, 'manuale_pdf_path' => 'torri/manuale.pdf']);
+    $torreScelta = Torre::factory()->create(['is_active' => true]);
 
-    $component = Livewire::test(CreatePrenotazione::class)
+    Livewire::test(CreatePrenotazione::class)
         ->fillForm([
             ...datiPrenotazioneManualeLettoBase(),
-            'torre_id' => $torre1->id,
+            'torre_id' => $torreScelta->id,
         ])
-        ->set('data.manuale_letto_confirm', true)
-        ->assertSet('data.manuale_letto_torre_id', $torre1->id);
-
-    $component->set('data.torre_id', $torre2->id)
-        ->assertSet('data.manuale_letto_confirm', false)
-        ->assertSet('data.manuale_letto_confermato_at', null)
-        ->assertSet('data.manuale_letto_torre_id', null)
+        ->set('data.manuale_step_confermato', true)
         ->call('create')
-        ->assertHasFormErrors(['manuale_letto_confirm' => 'accepted']);
+        ->assertHasNoFormErrors();
 
-    expect(Prenotazione::count())->toBe(0);
+    $prenotazione = Prenotazione::sole();
+    expect($prenotazione->torre_id)->toBe($torreScelta->id)
+        ->and($prenotazione->manuale_letto_torre_id)->toBe($torreConManuale->id)
+        ->and($prenotazione->manuale_letto_torre_id)->not->toBe($prenotazione->torre_id);
+});
+
+test('quando nessuna torre attiva ha il manuale caricato lo step mostra un avviso ma permette comunque di procedere', function (): void {
+    actingAs($this->user);
+    Torre::factory()->create(['is_active' => true, 'manuale_pdf_path' => null]);
+
+    Livewire::test(CreatePrenotazione::class)
+        ->assertSee('Manuale non ancora disponibile.')
+        ->fillForm(datiPrenotazioneManualeLettoBase())
+        ->set('data.manuale_step_confermato', true)
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $prenotazione = Prenotazione::sole();
+    expect($prenotazione->manuale_letto_torre_id)->toBeNull()
+        ->and($prenotazione->manuale_letto_confermato_at)->not->toBeNull();
 });

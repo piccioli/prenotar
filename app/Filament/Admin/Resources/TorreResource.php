@@ -6,6 +6,7 @@ namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\TorreResource\Pages;
 use App\Models\Torre;
+use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -13,6 +14,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Support\Colors\Color;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\EditAction;
@@ -44,8 +46,15 @@ class TorreResource extends Resource
                 ->rows(3),
             TextInput::make('indirizzo_deposito')
                 ->label('Indirizzo deposito')
+                ->prefixIcon('heroicon-o-map-pin')
+                ->helperText('Visibile ovunque nell\'app: dashboard, calendario, dettaglio prenotazione (fix BUG-08).')
                 ->required()
                 ->maxLength(255),
+            ColorPicker::make('colore_hex')
+                ->label('Colore torre')
+                ->helperText('Colore usato per riconoscere questa torre in calendario, badge e dettaglio prenotazione.')
+                ->regex('/^#[0-9A-Fa-f]{6}$/')
+                ->required(),
             Textarea::make('specs_tecniche')
                 ->label('Specifiche tecniche')
                 ->rows(4),
@@ -82,6 +91,8 @@ class TorreResource extends Resource
             ->columns([
                 TextColumn::make('nome')
                     ->label('Nome')
+                    ->badge()
+                    ->color(fn (Torre $record): array => Color::hex(Torre::coloreHexPer($record)))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('indirizzo_deposito')

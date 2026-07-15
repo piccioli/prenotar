@@ -95,8 +95,11 @@ for i in $(seq 1 $MAX_ITERATIONS); do
     OUTPUT=$(claude --dangerously-skip-permissions --print < "$SCRIPT_DIR/CLAUDE.md" 2>&1 | tee /dev/stderr) || true
   fi
   
-  # Check for completion signal
-  if echo "$OUTPUT" | grep -q "<promise>COMPLETE</promise>"; then
+  # Check for completion signal — the tag must stand alone on its own line
+  # (whitespace-only padding allowed), never just appear anywhere in the text.
+  # Otherwise an agent explaining "I won't emit <promise>COMPLETE</promise>
+  # because work remains" false-triggers completion via a naive substring match.
+  if echo "$OUTPUT" | grep -qE '^[[:space:]]*<promise>COMPLETE</promise>[[:space:]]*$'; then
     echo ""
     echo "Ralph completed all tasks!"
     echo "Completed at iteration $i of $MAX_ITERATIONS"

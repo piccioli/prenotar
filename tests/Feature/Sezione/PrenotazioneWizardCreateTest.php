@@ -53,7 +53,6 @@ test('la prenotazione di default ha status Bozza e i campi utente correttamente 
         'data_fine_evento' => today()->addDays(35),
         'data_inizio_prenotazione' => today()->addDays(30),
         'data_fine_prenotazione' => today()->addDays(35),
-        'azienda_trasporto' => 'Montagna Servizi',
         'responsabile_nome' => 'Mario Rossi',
         'responsabile_tipo' => 'istruttore',
         'responsabile_telefono' => '0123456789',
@@ -66,10 +65,11 @@ test('la prenotazione di default ha status Bozza e i campi utente correttamente 
         ->and($prenotazione->sottosezione_id)->toBeNull();
 });
 
-test('la pagina crea ha il wizard con i 5 step', function (): void {
+test('la pagina crea ha il wizard con i 6 step', function (): void {
     actingAs(User::factory()->sezione()->create())
         ->get(PrenotazioneResource::getUrl('create', panel: 'sezione'))
         ->assertSuccessful()
+        ->assertSee('Manuale d\'istruzioni')
         ->assertSee('Quando & dove')
         ->assertSee('Evento');
 });
