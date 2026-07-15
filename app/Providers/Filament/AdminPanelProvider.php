@@ -43,7 +43,8 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->brandName('Prenotar — Admin')
-            ->brandLogo(asset('images/cai-lombardia-placeholder.svg'))
+            ->brandLogo(asset('images/prenotar-logo.svg'))
+            ->favicon(asset('images/prenotar-mark.svg'))
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\\Filament\\Admin\\Resources')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\\Filament\\Admin\\Pages')
             ->pages([

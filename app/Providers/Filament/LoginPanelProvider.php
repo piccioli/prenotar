@@ -31,7 +31,8 @@ class LoginPanelProvider extends PanelProvider
             ])
             ->viteTheme('resources/css/filament/login/theme.css')
             ->brandName('CAI GR Lombardia')
-            ->brandLogo(asset('images/cai-lombardia-placeholder.svg'))
+            ->brandLogo(asset('images/prenotar-logo.svg'))
+            ->favicon(asset('images/prenotar-mark.svg'))
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

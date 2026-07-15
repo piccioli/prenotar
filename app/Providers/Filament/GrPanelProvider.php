@@ -43,7 +43,8 @@ class GrPanelProvider extends PanelProvider
             ])
             ->viteTheme('resources/css/filament/gr/theme.css')
             ->brandName('Prenotar — GR Lombardia')
-            ->brandLogo(asset('images/cai-lombardia-placeholder.svg'))
+            ->brandLogo(asset('images/prenotar-logo.svg'))
+            ->favicon(asset('images/prenotar-mark.svg'))
             ->discoverResources(in: app_path('Filament/Gr/Resources'), for: 'App\\Filament\\Gr\\Resources')
             ->discoverPages(in: app_path('Filament/Gr/Pages'), for: 'App\\Filament\\Gr\\Pages')
             ->pages([

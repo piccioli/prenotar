@@ -42,7 +42,8 @@ class SezionePanelProvider extends PanelProvider
             ])
             ->viteTheme('resources/css/filament/sezione/theme.css')
             ->brandName('Prenotar — Sezione')
-            ->brandLogo(asset('images/cai-lombardia-placeholder.svg'))
+            ->brandLogo(asset('images/prenotar-logo.svg'))
+            ->favicon(asset('images/prenotar-mark.svg'))
             ->plugins([
                 FilamentFullCalendarPlugin::make(),
             ])
