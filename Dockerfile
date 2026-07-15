@@ -1,18 +1,5 @@
 # syntax=docker/dockerfile:1
 
-FROM node:22-bookworm AS assets
-
-WORKDIR /app
-
-COPY package.json ./
-RUN npm install --ignore-scripts
-
-COPY vite.config.js tailwind.config.js postcss.config.js ./
-COPY resources ./resources
-COPY public ./public
-
-RUN npm run build
-
 FROM composer:2 AS vendor
 
 ARG COMPOSER_INSTALL_DEV=0
@@ -28,6 +15,33 @@ RUN if [ "$COMPOSER_INSTALL_DEV" = "1" ]; then \
     else \
       composer install --no-dev --no-scripts --no-autoloader --prefer-dist --ignore-platform-reqs; \
     fi
+
+FROM node:22-bookworm AS assets
+
+WORKDIR /app
+
+COPY package.json ./
+RUN npm install --ignore-scripts
+
+COPY vite.config.js tailwind.config.js postcss.config.js ./
+COPY resources ./resources
+COPY public ./public
+
+# resources/css/filament/*/theme.css importa vendor/filament/filament/resources/css/theme.css:
+# serve il vendor/ di Composer anche in questo stage Node, altrimenti npm run build fallisce con ENOENT.
+COPY --from=vendor /app/vendor ./vendor
+
+RUN npm run build
+
+FROM composer:2 AS build
+
+ARG COMPOSER_INSTALL_DEV=0
+
+WORKDIR /app
+
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
+COPY --from=vendor /app/vendor ./vendor
 
 COPY . .
 
@@ -66,7 +80,7 @@ COPY docker/php/fpm-zzz-prenotar.conf /usr/local/etc/php-fpm.d/zzz-prenotar.conf
 
 WORKDIR /var/www/html
 
-COPY --from=vendor /app /var/www/html
+COPY --from=build /app /var/www/html
 
 COPY docker/php/docker-entrypoint-app.sh /usr/local/bin/docker-entrypoint-app.sh
 COPY docker/php/docker-entrypoint-worker.sh /usr/local/bin/docker-entrypoint-worker.sh
