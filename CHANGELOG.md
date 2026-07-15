@@ -4,6 +4,29 @@ Tutte le modifiche rilevanti al progetto sono elencate in questo file.
 
 Il formato segue le idee di [Keep a Changelog](https://keepachangelog.com/it/1.1.0/); le versioni rispettano il [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.11.0] - 2026-07-15
+
+### Aggiunto
+
+- **Tema Filament condiviso** con i design token Montagna Servizi e **shell mobile condivisa** (topbar, hamburger, bottom tab bar, FAB) in tutti i pannelli.
+- **Restyle mobile/desktop** di dashboard Sezione e GR, calendario torri, lista "Le mie prenotazioni" e wizard di creazione prenotazione.
+- **Login unificato** (`/login`) con redirect automatico basato sul ruolo; le vecchie URL per-pannello (`/admin/login`, `/gr/login`, `/sezione/login`) ora reindirizzano.
+- **Step "Manuale d'istruzioni"** isolato come primo step del wizard, con conferma di lettura persistita indipendente dalla torre scelta.
+- **Acceleratore di test per il wizard** (dev-only): bottone "Compila con dati di test" per step, visibile e utilizzabile solo con `APP_ENV=local` (doppio gate `visible()` + `abort_unless`), che compila i campi con dati Faker validi.
+- **Logo Prenotar** (icona + wordmark, scelto tra le proposte del design system Montagna Servizi) e **favicon**, in sostituzione del placeholder testuale su tutti i pannelli.
+
+### Modificato
+
+- **Step "Logistica trasporto" semplificato**: rimossi luogo ritiro/riconsegna, distinzione mezzo aziendale/privato e categoria patente condizionata; aggiunti nome conducente (obbligatorio) e un'unica dichiarazione di possesso patente B+E con timestamp; nuovo vincolo `data_ritiro <= data_inizio_prenotazione`.
+- **PDF** (Richiesta parete, Modulo 3) e **viste di dettaglio** (GR e Sezione) aggiornati per riflettere i nuovi campi del modulo trasporto.
+- **Colore torri** unificato in tutta l'app (calendario, badge tabella prenotazioni).
+
+### Fix
+
+- **CI**: mancava la build degli asset Vite (`npm ci` + `npm run build`) prima dei test Pest — qualunque test che renderizza una pagina Filament con tema custom falliva con "Vite manifest not found".
+- **Build immagine Docker** (produzione/develop): `npm run build` falliva con `ENOENT` su `vendor/filament/filament/resources/css/theme.css` per una dipendenza circolare tra gli stage Docker `assets` (Node) e `vendor` (Composer); riordinati gli stage.
+- **Rimosso widget placeholder** "Pannello Sezione in costruzione", residuo di una fase iniziale di sviluppo mai ripulito, che mostrava un messaggio fuorviante sopra la dashboard Sezione reale.
+
 ## [0.10.1] - 2026-07-12
 
 ### Fix
